@@ -1,0 +1,150 @@
+# RecruitAgent
+
+[日本語](README.md) | [English](README.en.md) | [简体中文](README.zh-CN.md)
+
+A local AI interview and learning tool built for preparing for a career move in Japan. Organize your work experience, practice explaining it in Japanese, and review technical knowledge in one place. Voice interviews and the voice demo are optional features.
+
+Released under the MIT license. Documents, learning records and login credentials are stored on your computer. When you use AI, the questions, code, documents or audio needed for that task are sent to the relevant service.
+
+## Features
+
+- **Interview preparation:** prepare common questions, technical follow-ups and job-specific questions based on your résumé, project experience and job description (JD).
+- **Answers and reflection:** practice stating your conclusion, your own actions and how you verified the result. Keep real experience separate from study material.
+- **Technical review:** practice algorithms and programming languages, work through engineering scenarios, test technical breadth and explore knowledge cards.
+- **Documents and progress:** manage local documents, revisit practice records, review knowledge and create backups.
+- **Languages:** set the interface language and AI output language independently. Japanese, English and Chinese are supported.
+
+## Screenshots
+
+These screenshots show the Japanese interface in an isolated demo environment. Documents and practice records are samples; no personal details, contact information or real account information are included. `Test Model` is a demo model.
+
+### Interview preparation
+
+Choose an interview type and topic, then prepare questions using the documents you selected.
+
+![Japanese interview preparation: interview types, question settings and answer guidance](docs/images/interview-practice.jpg)
+
+### Algorithm practice
+
+Read the problem, write code, and request hints or a static assessment when needed.
+
+![Japanese algorithm practice: problem, code editor and hints](docs/images/algorithm-practice.jpg)
+
+### Technical breadth
+
+Choose a technical field and topic to review your knowledge.
+
+![Japanese technical breadth: fields and quiz settings](docs/images/technical-breadth.jpg)
+
+### Knowledge cards
+
+Choose a category and start exploring the knowledge cards.
+
+![Japanese knowledge card entry: categories and exploration](docs/images/knowledge-cards.jpg)
+
+## Download and launch
+
+Requires **Node.js 22.19.0 or later**, including npm. The first launch needs an internet connection to download dependencies. Web assets are built on each launch.
+
+Download and extract the project ZIP from GitHub, or clone the repository. Launch from the project folder:
+
+- macOS: double-click `start.command`. If the executable permission was lost during download, run `chmod +x start.command` in a terminal.
+- Windows: double-click `start.cmd`.
+- Linux: run `sh start.sh` in a terminal.
+
+You can also launch from a terminal on any of these systems:
+
+```sh
+node scripts/launch.mjs
+```
+
+The launcher checks the Node.js version and port, installs missing dependencies from the lockfile, builds the web assets and opens your browser. The default URL is [http://localhost:3000](http://localhost:3000). Stop the server with `Ctrl+C`.
+
+Once dependencies are installed, `npm start` also works. Use `npm run doctor` to check your environment, and run `npm ci --ignore-scripts` after dependency changes.
+
+## First use
+
+The initial interface language is Chinese. In `设置 → 语言设置` (Settings → Language settings), change `界面语言` (Interface language) and `用户语言` (User language) to `English` and save. Choose `日本語` for Japanese interview practice. Existing documents and AI output keep their original language; newly generated content uses the selected user language. This setting does not translate the Chinese text of the built-in knowledge cards.
+
+1. Open Settings → Getting started and choose Connect Codex at the top right.
+2. Authenticate with your own account on the official OpenAI page. Model access and usage limits depend on actual request results.
+3. Algorithms, programming language practice, study and chat are ready to use. For interview practice, first upload your own PDF or Markdown to the local document library.
+4. In Interview practice → Question sources, select each document's role and save. Select at least one résumé or project experience document. Give personal cases and technical study material separate roles.
+5. For scanned PDFs or images, organize them in the library first to extract text. A [starter template in Chinese](examples/resume-template.md) is also available.
+
+Browsing documents and uploading text documents do not call a model. Automatic organization, AI practice and chat do. Code assessments are static; user code is not executed.
+
+If the authorization window is blocked, open the link in the authorization dialog. If the local callback port is unavailable, follow the dialog's instructions to paste the callback URL. Do not paste API keys or OAuth tokens.
+
+## Optional voice features
+
+Voice features additionally require **Codex CLI** on your computer and a separate CLI login. Follow the [official Codex CLI instructions](https://developers.openai.com/codex/cli), then run:
+
+```sh
+codex login
+```
+
+Check the voice connection under Settings → Getting started, or open the voice demo. Authorization at the top of the web interface is for text features and does not replace CLI login. Other learning features remain available without the CLI.
+
+Voice uses the experimental Codex app-server / WebRTC interface. Availability depends on the CLI version, account and server permissions. Recording starts only after microphone access is granted. Interviews save answer transcripts and feedback; the demo does not save recordings or captions. Audio is sent to OpenAI during a call.
+
+## Configuration
+
+Copy `.env.example` to `.env` and edit it as needed. It is loaded at startup; environment variables set in your terminal take precedence. Relative paths are resolved from the project folder.
+
+| Variable | Default / purpose |
+| --- | --- |
+| `PORT` | `3000`: local server port |
+| `DATA_DIR` | `./data`: learning records, credentials and original documents |
+| `SOURCE_DIR` | `./sources`: compatible import of existing PDFs and Markdown; optional |
+| `PI_MODEL` | `gpt-5.5`: initial text model; a saved model selection takes precedence |
+| `CODEX_BIN` | `codex`: CLI path for voice features |
+| `OPEN_BROWSER` | `1` in the launcher; set to `0` to disable automatic browser opening |
+
+Restart after changing configuration. If the port is busy, change `PORT`. The model list comes from the backend SDK; choose models and their visibility in the interface.
+
+Existing `data/state.json` and document folders remain compatible. Once you save a new question source selection, interview preparation uses those selected documents. Personal document folders are excluded from public releases.
+
+## Backup and restore
+
+Download a `.json.gz` backup from Settings → Data backup, or stop the application and run:
+
+```sh
+npm run backup
+```
+
+Backups are written to `backups/` by default. To specify a filename:
+
+```sh
+npm run backup -- backups/my-study.json.gz
+```
+
+A backup includes learning records and original library documents, **excluding login credentials, Pi sessions and voice logs**. It contains personal documents and must not be committed to GitHub. The built-in limit is 512 MB. For a larger library, stop the application and copy the entire data folder; that folder also contains credentials.
+
+Restore into a new folder that does not already exist:
+
+```sh
+npm run restore -- backups/my-study.json.gz --data-dir ./data-restored
+```
+
+Restore validates the format, checksums and file paths, preserving existing folders. Stop the application, set `DATA_DIR` to `./data-restored` in `.env`, then restart and authenticate again. See the [release checklist in Chinese](docs/release-checklist.md) for upgrade steps.
+
+## Development and release
+
+```sh
+npm ci --ignore-scripts
+npm run check
+npm test
+npm run release:check
+npm run release:prepare
+```
+
+`release:prepare` creates a public project folder and checksum manifest under `release/`. It copies only code, public documentation, reviewed demo screenshots, synthetic test material and templates. Personal documents, credentials, installed dependencies, unreviewed screenshots and existing Git history are excluded. You can create a GitHub repository from this folder.
+
+`.gitignore` does not remove sensitive files that were already committed or clean existing history. Before publishing the original working folder, check the files and history using the [release checklist in Chinese](docs/release-checklist.md).
+
+CI is configured for Linux, macOS and Windows; actual results must be checked in GitHub Actions. Synthetic model tests validate program logic. They do not verify real accounts, usage limits, microphones or experimental voice connections.
+
+The server listens only on the local loopback address. Each person runs it on their own computer; GitHub hosts the source and downloads. This version does not provide a public server for multiple users.
+
+[CLI generation and type safety](docs/code-generation.md)

@@ -1,0 +1,14 @@
+node_modules/
+public/assets/
+data/
+.env
+.env.*
+!.env.example
+# User documents and local validation artifacts are never published.
+/sources/
+/screenshots/
+/backups/
+/release/
+/docs/*.local.md
+*.log
+.DS_Store

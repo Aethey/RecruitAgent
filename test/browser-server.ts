@@ -1,0 +1,10 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createApp } from "../src/server.ts";
+import { FakeAI, fakeInterviewSources, fakeJobReader } from "./fixtures.ts";
+const dataDir = await mkdtemp(join(tmpdir(), "algo-browser-test-"));
+const ai = new FakeAI(); ai.delay = 500;
+const app = await createApp({ dataDir, ai, sourceDir:null, interviewSources: fakeInterviewSources, jobReader: fakeJobReader });
+app.server.listen(3001, "127.0.0.1", () => console.log("Isolated browser fixture: http://localhost:3001"));
+process.on("SIGTERM", () => { void app.close().then(() => rm(dataDir, { recursive: true, force: true })).then(() => process.exit(0)); });

@@ -1,0 +1,59 @@
+{
+  "name": "algo-practice",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "start": "node --import tsx src/server.ts",
+    "dev": "node --watch --import tsx src/server.ts",
+    "check": "npm run generated:check && npm run check:server && npm run check:web",
+    "test": "node --import tsx --test \"test/*.test.ts\"",
+    "build": "node scripts/build-web.mjs",
+    "prestart": "npm run build",
+    "predev": "npm run build",
+    "pretest": "npm run build",
+    "launch": "node scripts/launch.mjs",
+    "doctor": "node scripts/launch.mjs --check",
+    "backup": "node --import tsx scripts/data.ts backup",
+    "restore": "node --import tsx scripts/data.ts restore",
+    "release:check": "node scripts/release.mjs --check",
+    "release:prepare": "node scripts/release.mjs",
+    "generate": "node scripts/generate-contracts.mjs",
+    "generate:codex": "node scripts/generate-codex.mjs",
+    "generate:all": "npm run generate:codex && npm run generate",
+    "generated:check": "node scripts/generate-codex.mjs --check && node scripts/generate-contracts.mjs --check",
+    "check:server": "tsc --noEmit",
+    "check:web": "tsc --noEmit -p tsconfig.web.json",
+    "prebuild": "node scripts/generate-contracts.mjs --check"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.99.2",
+    "@napi-rs/canvas": "1.0.10",
+    "ajv": "8.20.0",
+    "cheerio": "1.2.0",
+    "dompurify": "3.4.16",
+    "marked": "18.0.14",
+    "monaco-editor": "0.57.0",
+    "pdfjs-dist": "6.3.289",
+    "@openai/codex": "0.154.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.3",
+    "esbuild": "0.28.2",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.9.9",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-json-schema": "0.68.0"
+  },
+  "overrides": {
+    "monaco-editor": {
+      "dompurify": "3.4.16"
+    }
+  },
+  "description": "Local-first AI practice, interview preparation and study library",
+  "license": "MIT"
+}

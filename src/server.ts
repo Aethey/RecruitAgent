@@ -1,0 +1,368 @@
+import { translateSource } from "./ui-messages.ts";
+import { DEFAULT_LOCALE, LOCALE_TAGS, isLocale } from "./locales.ts";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { readFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { loadConfig, openBrowser, serverPort } from "../scripts/runtime.mjs";
+import { exportBackup } from "./backup.ts";
+import { apiContract, validateApiValue } from './contract-validation.ts';
+import { Auth } from "./auth.ts";
+import { AppError, codeInput, DEFAULT_TEACHER_SETTINGS, DIFFICULTIES, evidenceBasis, LANGUAGES, object, REVIEW_LABEL, selection, statistics, teacherSettings, text, TOPICS } from "./domain.ts";
+import { PiAI, type AI } from "./pi.ts";
+import { Store } from "./store.ts";
+import { Tasks } from "./tasks.ts";
+import { Chat } from "./chat.ts";
+import { CodexVoice, type VoiceRpc } from "./codex-voice.ts";
+import { VoiceInterviews } from "./voice-interview.ts";
+import { LANGUAGE_SYLLABUS, languageSelection } from "./language.ts";
+import { INTERVIEW_TYPES, INTERVIEW_TOPICS, interviewSelection, interviewAnswers, publicInterview } from "./interview.ts";
+import { FileInterviewSources, LibraryInterviewSources, type InterviewSources } from "./interview-sources.ts";
+import { importJob, type JobReader } from "./job-import.ts";
+import { Library, LIBRARY_LIMIT, librarySummary, type PublicResourceReader } from "./library.ts";
+
+import { TRAINING_KINDS, DIAGNOSIS_TOPICS, debriefEntries, diagnosisSelection, draftInput, publicTraining, trainingRecord, type TrainingKind } from "./training.ts";
+
+import { Study, STUDY_CATEGORIES, STUDY_FACETS, studySelection, publicBatch } from "./study.ts";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+function json(response: ServerResponse, status: number, body: unknown) {
+  if (status >= 200 && status < 300) {
+    const contract = apiContract(response.req.method ?? 'GET', new URL(response.req.url ?? '/', 'http://localhost').pathname);
+    if (!contract || !validateApiValue(contract.response, body)) throw new AppError(500, '接口返回的数据格式不正确。');
+  }
+  response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+  response.end(JSON.stringify(body));
+}
+async function body(request: IncomingMessage) {
+  if (!request.headers["content-type"]?.startsWith("application/json")) throw new AppError(415, "请求必须使用 JSON。");
+  let bytes = 0;
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) {
+    bytes += chunk.length;
+    if (bytes > 400000) throw new AppError(413, "请求内容过大。");
+    chunks.push(chunk);
+  }
+  let input: unknown;
+  try { input = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
+  catch { throw new AppError(400, "JSON 格式不正确。"); }
+  const contract = apiContract(request.method ?? 'GET', new URL(request.url ?? '/', 'http://localhost').pathname);
+  if (contract?.request && !validateApiValue(contract.request, input)) throw new AppError(400, '请求的数据结构不正确。');
+  return input;
+}
+export async function createApp(options: { dataDir?: string; ai?: AI; interviewSources?: InterviewSources; jobReader?: JobReader; sourceDir?: string | null; libraryReader?: PublicResourceReader; studyClock?: () => Date; voiceRpcFactory?: () => Promise<VoiceRpc> } = {}) {
+  const dataDir = resolve(root, options.dataDir ?? process.env.DATA_DIR ?? "data");
+  const store = new Store(resolve(dataDir, "state.json"));
+  await store.load();
+  const chats = new Chat(store);
+  const voice = new CodexVoice(dataDir, options.voiceRpcFactory);
+  await chats.recover();
+  const library=new Library(store,resolve(dataDir,"library"),options.libraryReader);
+  const sourceDir = options.sourceDir === null ? null : resolve(root, options.sourceDir ?? process.env.SOURCE_DIR ?? "sources");
+  if(sourceDir)await library.importExisting(sourceDir);
+  const ai = options.ai ?? await PiAI.create(dataDir);
+  const voiceInterviews = new VoiceInterviews(store,voice,ai);
+  await voiceInterviews.recover();
+  const savedModel = store.snapshot().settings?.model;
+  if (savedModel && ai.models().some(model => model.id === savedModel)) ai.setModel(savedModel);
+  const materialSources = new LibraryInterviewSources(store, library, sourceDir ? new FileInterviewSources(sourceDir) : undefined);
+  const interviewSources = options.interviewSources ?? materialSources;
+  const study = new Study(store, options.studyClock);
+  const auth = new Auth(ai), tasks = new Tasks(ai, store, interviewSources,library,study);
+  let modelChanging = false;
+  function ensureModelReady() { if (modelChanging) throw new AppError(409, "模型正在切换，请稍后重试。"); }
+  async function modelSettings() {
+    const { model } = await ai.status();
+    const settings = store.snapshot().settings, saved = settings?.visibleModels;
+    return { model, visibleModels: ai.models().filter(option => !saved || saved.includes(option.id) || option.id === model).map(option => option.id), teacher: settings?.teacher ?? DEFAULT_TEACHER_SETTINGS, uiLanguage: settings?.uiLanguage ?? DEFAULT_LOCALE, userLanguage: settings?.userLanguage ?? DEFAULT_LOCALE };
+  }
+  const server = createServer((request, response) => { void route(request, response); });
+  async function route(request: IncomingMessage, response: ServerResponse) {
+    try {
+      const host = request.headers.host ?? "";
+      if (!/^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(host)) throw new AppError(403, "只允许本机访问。");
+      const origin = request.headers.origin;
+      if (origin && origin !== `http://${host}`) throw new AppError(403, "不允许跨站请求。");
+      response.setHeader("X-Content-Type-Options", "nosniff");
+      response.setHeader("Referrer-Policy", "no-referrer");
+      // Monaco needs runtime styles; PDF image decoders need WASM compilation, without JavaScript eval.
+      response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+      const url = new URL(request.url ?? "/", `http://${host}`), path = url.pathname, method = request.method;
+      const after = Number(request.headers["last-event-id"] ?? "0") || 0;
+      if (method === "GET" && path === "/api/health") { json(response, 200, { ok: true, app: "RecruitAgent" }); return; }
+      if (method === "GET" && path === "/api/backup") {
+        const data = await exportBackup(store, dataDir);
+        response.writeHead(200, { "Content-Type": "application/gzip", "Cache-Control": "no-store", "Content-Disposition": `attachment; filename="recruitagent-${new Date().toISOString().slice(0, 10)}.json.gz"` });
+        response.end(data); return;
+      }
+      if (method === "GET" && path === "/api/interview-sources") { json(response, 200, await interviewSources.status()); return; }
+      if (method === "PUT" && path === "/api/interview-sources") { json(response, 200, await materialSources.save(await body(request))); return; }
+      if (method === "GET" && path === "/api/voice/status") { json(response,200,await voice.status()); return; }
+      if (method === "GET" && path === "/api/voice/options") { json(response,200,await voice.options()); return; }
+      if (method === "POST" && path === "/api/voice/sessions") {
+        const input = object(await body(request)), language = store.snapshot().settings?.userLanguage ?? DEFAULT_LOCALE;
+        if (input.preview && input.interviewId) throw new AppError(400,"音色试听不属于面试回答。");
+        json(response,201,input.preview === true ? await voice.startPreview(input,language) : input.interviewId ? await voiceInterviews.start(input,language) : await voice.start(input,language)); return;
+      }
+      const voiceAction = path.match(/^\/api\/voice\/sessions\/([\w-]+)\/(action|verify|preview|control)$/);
+      if (method === "POST" && voiceAction) { const input = await body(request); json(response,200,voiceAction[2] === "control" ? await voice.control(voiceAction[1],input) : voiceAction[2] === "action" ? await voiceInterviews.action(voiceAction[1],input) : voiceAction[2] === "preview" ? await voice.preview(voiceAction[1]) : await voice.verifyAudio(voiceAction[1],input)); return; }
+      const voiceSession = path.match(/^\/api\/voice\/sessions\/([\w-]+)(\/events)?$/);
+      if (method === "GET" && voiceSession?.[2]) { voice.connect(voiceSession[1],response,after); return; }
+      if (method === "DELETE" && voiceSession && !voiceSession[2]) { await voice.end(voiceSession[1]); json(response,200,{ended:true}); return; }
+      if (method === "GET" && path === "/api/state") {
+        const { chats: _chats, ...state } = store.snapshot();
+        json(response, 200, { ...state, studyBatches: (state.studyBatches ?? []).map(publicBatch), study: study.overview(), trainings: (state.trainings??[]).map(publicTraining), library: (state.library??[]).map(librarySummary), languageDrills: state.languageDrills ?? [], interviews: (state.interviews ?? []).map(publicInterview), interviewJobs: state.interviewJobs ?? [], stats: statistics(state.problems), analysisStale: state.analysis ? state.analysis.basis !== evidenceBasis(state.problems) : false, activeJob: tasks.activeJob(), reviewLabel: REVIEW_LABEL }); return;
+      }
+      if (method === "GET" && path === "/api/config") { json(response, 200, { studyCategories: STUDY_CATEGORIES, studyFacets: STUDY_FACETS, trainingKinds:TRAINING_KINDS, diagnosisTopics:DIAGNOSIS_TOPICS, topics: TOPICS, difficulties: DIFFICULTIES, languages: LANGUAGES, models: ai.models(), libraryLimit:LIBRARY_LIMIT, languageSyllabus: LANGUAGE_SYLLABUS, interviewTypes: INTERVIEW_TYPES, interviewTopics: INTERVIEW_TOPICS, interviewSources: await interviewSources.status() }); return; }
+      if (method === "GET" && path === "/api/chats") { json(response, 200, { threads: chats.list(), activeJob: tasks.activeJob() }); return; }
+      if (method === "POST" && path === "/api/chats") { await body(request); json(response, 201, await chats.create()); return; }
+      const chat = path.match(/^\/api\/chats\/([\w-]+)$/);
+      if (method === "GET" && chat) { json(response, 200, chats.get(chat[1])); return; }
+      if (method === "DELETE" && chat) {
+        if (tasks.activeJob()?.chatId === chat[1]) throw new AppError(409, "请先停止这段对话的生成，再删除。");
+        await chats.delete(chat[1]); json(response, 200, { deleted: true }); return;
+      }
+      const chatMessage = path.match(/^\/api\/chats\/([\w-]+)\/(messages|retry)$/);
+      if (method === "POST" && chatMessage) {
+        ensureModelReady(); const job = await tasks.chat(chats, chatMessage[1], await body(request), chatMessage[2] === "retry");
+        json(response, 202, { jobId: job.id, chatId: chatMessage[1] }); return;
+      }
+      const teacherProblem = path.match(/^\/api\/problems\/([\w-]+)\/teacher$/);
+      if (method === "POST" && teacherProblem) { await body(request); json(response, 200, await chats.teacher(teacherProblem[1])); return; }
+      const teacher = path.match(/^\/api\/teachers\/([\w-]+)$/);
+      if (method === "GET" && teacher) { json(response, 200, chats.getTeacher(teacher[1])); return; }
+      const teacherMessage = path.match(/^\/api\/teachers\/([\w-]+)\/messages$/);
+      if (method === "POST" && teacherMessage) {
+        ensureModelReady(); const input = object(await body(request));
+        if (input.trigger === "observe" && store.snapshot().settings?.teacher?.trigger === "manual") throw new AppError(409, "实时教师已设为仅手动分析，请点击分析当前代码或发送追问。");
+        const job = await tasks.teacher(chats, teacherMessage[1], input);
+        json(response, 202, { jobId: job.id, chatId: teacherMessage[1] }); return;
+      }
+      if (method === 'GET' && path === '/api/study/catalog') {
+        const q = (url.searchParams.get('q') ?? '').toLowerCase(), category = url.searchParams.get('category'), language = url.searchParams.get('language');
+        json(response, 200, { points: study.points().filter(p => (!category || category === 'all' || p.category === category) && (!language || !p.language || p.language === language) && (!q || [p.title,p.topic,p.description].join(' ').toLowerCase().includes(q))) }); return;
+      }
+      if (method === 'GET' && path === '/api/breadth') { json(response, 200, study.breadthOverview()); return; }
+      if (method === 'POST' && path === '/api/study/points') { json(response, 201, await study.add(await body(request))); return; }
+      if (method === 'POST' && path === '/api/study/import') { ensureModelReady(); const v = object(await body(request)); const job = await tasks.importStudy(text(v.kind,30),text(v.id,100)); json(response,202,{jobId:job.id}); return; }
+      if (method === 'POST' && path === '/api/study/batches') { ensureModelReady(); const job = await tasks.generateStudy(studySelection(await body(request))); json(response,202,{jobId:job.id}); return; }
+      const studyBatch = path.match(/^\/api\/study\/batches\/([\w-]+)$/);
+      if (method === 'GET' && studyBatch) { json(response,200,publicBatch(study.batch(studyBatch[1]))); return; }
+      if (method === 'PUT' && studyBatch) { await study.save(studyBatch[1],await body(request)); json(response,200,{saved:true}); return; }
+      const studyReveal = path.match(/^\/api\/study\/batches\/([\w-]+)\/items\/([\w-]+)\/reveal$/);
+      if (method === 'POST' && studyReveal) { await body(request); json(response,200,await study.reveal(studyReveal[1],studyReveal[2])); return; }
+      const studyClose = path.match(/^\/api\/study\/batches\/([\w-]+)\/close$/);
+      if (method === 'POST' && studyClose) { await body(request); json(response,200,await study.closeBatch(studyClose[1])); return; }
+      const studyReview = path.match(/^\/api\/study\/batches\/([\w-]+)\/review$/);
+      if (method === 'POST' && studyReview) { ensureModelReady(); const job = await tasks.reviewStudy(studyReview[1],await body(request)); json(response,202,{jobId:job.id}); return; }
+      if(method==="GET"&&path==="/api/library"){
+        const q=(url.searchParams.get("q")??"").toLowerCase(),category=url.searchParams.get("category"),kind=url.searchParams.get("kind"),tag=url.searchParams.get("tag");
+        const items=library.all().filter(i=>(!category||i.category===category)&&(!kind||i.kind===kind)&&(!tag||i.tags.includes(tag))&&(!q||[i.title,i.filename,i.summary,i.notes,...i.tags,i.extractedText].join("\n").toLowerCase().includes(q))).reverse().map(librarySummary);
+        json(response,200,{items});return;
+      }
+      if(method==="POST"&&path==="/api/library/files"){
+        if(Number(request.headers["content-length"])>LIBRARY_LIMIT)throw new AppError(413,"文件超过20 MB。");
+        let filename:string;try{filename=decodeURIComponent(request.headers["x-file-name"] as string??"");}catch{throw new AppError(400,"文件名无效。");}
+        text(filename,500);let length=0;const chunks:Buffer[]=[];
+        for await(const chunk of request){length+=chunk.length;if(length>LIBRARY_LIMIT)throw new AppError(413,"文件超过20 MB。");chunks.push(chunk);}
+        const result=await library.importFile(filename,Buffer.concat(chunks));json(response,result.duplicate?200:201,{item:librarySummary(result.item),duplicate:result.duplicate});return;
+      }
+      if(method==="POST"&&path==="/api/library/urls"){
+        const input=object(await body(request));const result=await library.importURL(text(input.url,2000));json(response,result.duplicate?200:201,{item:librarySummary(result.item),duplicate:result.duplicate});return;
+      }
+      if(method==="POST"&&path==="/api/library/import-existing"){
+        await body(request);const ids=sourceDir?await library.importExisting(sourceDir):[];json(response,200,{imported:ids.length,ids});return;
+      }
+      if(method==="POST"&&path==="/api/library/organize"){
+        ensureModelReady();const input=object(await body(request));if(!Array.isArray(input.ids)||input.ids.some(id=>typeof id!=="string"))throw new AppError(400,"请选择要整理的资料。");
+        const job=await tasks.organizeLibrary(input.ids as string[]);json(response,202,{jobId:job.id});return;
+      }
+      const libraryItem=path.match(/^\/api\/library\/([\w-]+)$/);
+      if(method==="GET"&&libraryItem){const i=library.get(libraryItem[1]);json(response,200,{...librarySummary(i),extractedText:i.extractedText,pages:i.pages?.map(({text:_,...p})=>p)});return;}
+      if(method==="PUT"&&libraryItem){const i=await library.edit(libraryItem[1],await body(request));json(response,200,librarySummary(i));return;}
+      const original=path.match(/^\/api\/library\/([\w-]+)\/original$/);
+      if(method==="GET"&&original){const{item,data}=await library.original(original[1]);response.writeHead(200,{"Content-Type":item.mime,"Cache-Control":"no-store","Content-Disposition":`${url.searchParams.get("download")==="1"?"attachment":"inline"}; filename*=UTF-8''${encodeURIComponent(item.filename)}`});response.end(data);return;}
+      if (method === "GET" && path === "/api/settings") { json(response, 200, await modelSettings()); return; }
+      if (method === "PUT" && path === "/api/settings") {
+        const input = object(await body(request));
+        const ids = input.visibleModels;
+        if (ids === undefined && input.teacher === undefined && input.uiLanguage === undefined && input.userLanguage === undefined) throw new AppError(400, "请选择要更新的设置。");
+        if (ids !== undefined && (!Array.isArray(ids) || !ids.length || ids.length > ai.models().length || ids.some(id => typeof id !== "string" || !ai.models().some(option => option.id === id)) || new Set(ids).size !== ids.length)) throw new AppError(400, "请至少选择一个有效模型，且不要重复选择。");
+        const teacher = input.teacher === undefined ? undefined : teacherSettings(input.teacher);
+        for (const key of ["uiLanguage", "userLanguage"] as const) {
+          if (input[key] !== undefined && !isLocale(input[key])) throw new AppError(400, "请选择中文、英文或日语。");
+        }
+        const uiLanguage = isLocale(input.uiLanguage) ? input.uiLanguage : undefined;
+        const userLanguage = isLocale(input.userLanguage) ? input.userLanguage : undefined;
+        ensureModelReady(); modelChanging = true;
+        try {
+          const { model } = await ai.status();
+          if (Array.isArray(ids) && !ids.includes(model)) throw new AppError(400, "当前使用的模型必须保留；请先切换模型，再隐藏它。");
+          await store.update(state => { state.settings = { ...state.settings, model, ...(Array.isArray(ids) ? { visibleModels: [...ids] } : {}), ...(teacher ? { teacher } : {}), ...(uiLanguage ? { uiLanguage } : {}), ...(userLanguage ? { userLanguage } : {}) }; });
+        } finally { modelChanging = false; }
+        json(response, 200, await modelSettings()); return;
+      }
+      if (method === "PUT" && path === "/api/model") {
+        const model = text(object(await body(request)).model, 150);
+        ensureModelReady();
+        if (tasks.activeJob()) throw new AppError(409, "请先等待或取消当前任务，再切换模型。");
+        if (!ai.models().some(option => option.id === model)) throw new AppError(400, "请选择列表中的 Codex 模型。");
+        modelChanging = true;
+        try {
+          if (!(await modelSettings()).visibleModels.includes(model)) throw new AppError(400, "该模型已隐藏，请先在设置中勾选显示。");
+          await store.update(state => { state.settings = { ...state.settings, model }; });
+          ai.setModel(model);
+        } finally { modelChanging = false; }
+        json(response, 200, await ai.status()); return;
+      }
+      if (method === "GET" && path === "/api/auth/status") { json(response, 200, await ai.status()); return; }
+      if (method === "POST" && path === "/api/auth/login") {
+        await body(request);
+        if (tasks.activeJob()) throw new AppError(409, "请先等待或取消当前任务。");
+        const login = auth.start(); json(response, 202, { id: login.id }); return;
+      }
+      const authEvents = path.match(/^\/api\/auth\/([\w-]+)\/events$/);
+      if (method === "GET" && authEvents) { auth.get(authEvents[1]).events.connect(response, after); return; }
+      const authAnswer = path.match(/^\/api\/auth\/([\w-]+)\/answer$/);
+      if (method === "POST" && authAnswer) {
+        const input = object(await body(request)); auth.answer(authAnswer[1], text(input.promptId, 100), text(input.value, 10000)); json(response, 200, { ok: true }); return;
+      }
+      if (method === "POST" && path === "/api/auth/cancel") { await body(request); await auth.stop(); json(response, 200, { ok: true }); return; }
+      if (method === "POST" && path === "/api/problems") {
+        ensureModelReady();
+        const job = await tasks.generate(selection(await body(request))); json(response, 202, { jobId: job.id }); return;
+      }
+      if (method === "POST" && path === "/api/language-drills") {
+        ensureModelReady();
+        const job = await tasks.generateLanguage(languageSelection(await body(request))); json(response, 202, { jobId: job.id }); return;
+      }
+      if (method === "POST" && path === "/api/interview-jobs") {
+        const job = await importJob(await body(request), options.jobReader);
+        await store.update(state => { (state.interviewJobs ??= []).push(job); });
+        json(response, 201, job); return;
+      }
+      if(method==="POST"&&path==="/api/trainings/diagnosis"){
+        ensureModelReady();const job=await tasks.generateDiagnosis(diagnosisSelection(await body(request)));json(response,202,{jobId:job.id});return;
+      }
+      if(method==="POST"&&path==="/api/trainings"){
+        const v=object(await body(request));if(!["compression","followup","debrief"].includes(v.kind as string))throw new AppError(400,"请选择训练类型。");
+        const kind=v.kind as TrainingKind;let question:string|undefined,original="",sources:import("./interview.ts").Source[]=[],seed:import("./interview.ts").Question|undefined;
+        if(kind!=="debrief"){
+          if(v.interviewId){const set=store.interview(text(v.interviewId,100));seed=set.questions.find(q=>q.id===v.questionId);if(!seed)throw new AppError(404,"面试题不存在。");question=seed.question;original=v.original===undefined?(set.answers[seed.id]??""):typeof v.original==="string"&&v.original.length<=10000?v.original:(()=>{throw new AppError(400,"原回答过长。");})();sources=set.sources;}
+          else if(v.debriefId){const parent=store.training(text(v.debriefId,100));if(parent.kind!=="debrief")throw new AppError(400,"来源不是面试复盘。");const review=parent.reviews.find(r=>r.id===v.reviewId);if(!review)throw new AppError(404,"复盘评价不存在。");const entry=debriefEntries(review.input).find(e=>e.id===v.entryId);if(!entry)throw new AppError(404,"复盘问题不存在。");question=entry.question;original=entry.answer;sources=[{id:"debrief-entry",kind:"personal",title:"本人记录的面试问题与回答",content:JSON.stringify(entry)}];}
+          else{question=text(v.question,400);original=v.original===undefined?"":text(v.original,10000);sources=[{id:"personal-answer",kind:"personal",title:"本人输入的回答材料",content:original||"本人尚未补充回答。"}];}
+          seed??={id:"q1",question:question!,kind:"technical",focus:"理由、边界与验证",keywords:["結論を先に述べる","理由と本人の行動を説明する","確認できる結果・不明点を分ける"],answerBasis:"needs-detail",evidenceNote:"用户记录，需要本人补充实际依据。",sourceIds:sources.map(s=>s.id).slice(0,6)};
+        }
+        const draft:Record<string,string>=kind==="compression"?{original,points:""}:kind==="followup"?{["answer:"+seed!.id]:original}: {company:"",role:"",date:"",stage:"",notes:"","question:1":"","answer:1":"","feedback:1":""};
+        const record=trainingRecord(kind,kind==="debrief"?"新面试复盘":question!.slice(0,120),draft,sources);Object.assign(record,{question,...(v.interviewId?{interviewId:v.interviewId,questionId:v.questionId}:{}),...(v.debriefId?{debriefId:v.debriefId,entryId:v.entryId}:{}),...(kind==="followup"?{turns:[seed],finished:false}:{})});
+        await store.update(s=>{(s.trainings??=[]).push(record);});json(response,201,publicTraining(record));return;
+      }
+      const training=path.match(/^\/api\/trainings\/([\w-]+)$/);
+      if(method==="GET"&&training){json(response,200,publicTraining(store.training(training[1])));return;}
+      if(method==="PUT"&&training){const patch=draftInput(await body(request),store.training(training[1]));await store.update(s=>{const i=s.trainings!.find(t=>t.id===training[1])!;Object.assign(i.draft,patch);i.updatedAt=new Date().toISOString();if(i.kind==="debrief")i.title=[i.draft.company,i.draft.role].filter(Boolean).join(" · ").slice(0,150)||"新面试复盘";});json(response,200,{saved:true});return;}
+      const trainingAction=path.match(/^\/api\/trainings\/([\w-]+)\/(analyze|rewrite|next|review|reveal)$/);
+      if(method==="POST"&&trainingAction){const [,id,action]=trainingAction;
+        if(action==="reveal"){await body(request);const record=store.training(id);if(record.kind!=="diagnosis"||!record.reviews.length)throw new AppError(400,"先提交一次故障诊断，再查看参考修复。");await store.update(s=>{const i=s.trainings!.find(t=>t.id===id)!;i.revealedAt??=new Date().toISOString();});json(response,200,publicTraining(store.training(id)));return;}
+        ensureModelReady();const job=await tasks.train(id,action,await body(request));json(response,202,{jobId:job.id});return;
+      }
+      if (method === "POST" && path === "/api/interviews") {
+        ensureModelReady(); const job = await tasks.generateInterview(interviewSelection(await body(request))); json(response, 202, { jobId: job.id }); return;
+      }
+      const interview = path.match(/^\/api\/interviews\/([\w-]+)$/);
+      const interviewVoiceSettings = path.match(/^\/api\/interviews\/([\w-]+)\/voice-settings$/);
+      if (method === "PUT" && interviewVoiceSettings) { json(response,200,await voiceInterviews.saveSettings(interviewVoiceSettings[1],await body(request))); return; }
+      const interviewVoiceContent = path.match(/^\/api\/interviews\/([\w-]+)\/voice-content$/);
+      if (method === "POST" && interviewVoiceContent) { ensureModelReady(); json(response,200,await voiceInterviews.prepare(interviewVoiceContent[1],await body(request))); return; }
+      if (method === "GET" && interview) { json(response, 200, publicInterview(store.interview(interview[1]))); return; }
+      if (method === "PUT" && interview) {
+        const answers = interviewAnswers(await body(request), store.interview(interview[1]));
+        await store.update(state => { const item = state.interviews!.find(s => s.id === interview[1])!; Object.assign(item.answers, answers); item.updatedAt = new Date().toISOString(); });
+        json(response, 200, { saved: true }); return;
+      }
+      const interviewReview = path.match(/^\/api\/interviews\/([\w-]+)\/review$/);
+      if (method === "POST" && interviewReview) {
+        ensureModelReady(); const answers = interviewAnswers(await body(request), store.interview(interviewReview[1]), true);
+        const job = await tasks.reviewInterview(interviewReview[1], answers); json(response, 202, { jobId: job.id }); return;
+      }
+      const drill = path.match(/^\/api\/language-drills\/([\w-]+)$/);
+      if (method === "GET" && drill) { json(response, 200, store.languageDrill(drill[1])); return; }
+      if (method === "PUT" && drill) {
+        const code = codeInput(await body(request)); store.languageDrill(drill[1]);
+        await store.update(state => { const item = state.languageDrills!.find(d => d.id === drill[1])!; item.code = code; item.updatedAt = new Date().toISOString(); });
+        json(response, 200, { saved: true }); return;
+      }
+      const reveal = path.match(/^\/api\/language-drills\/([\w-]+)\/reveal$/);
+      if (method === "POST" && reveal) {
+        await body(request); store.languageDrill(reveal[1]);
+        const revealedAt = await store.update(state => { const item = state.languageDrills!.find(d => d.id === reveal[1])!; item.revealedAt ??= new Date().toISOString(); return item.revealedAt; });
+        json(response, 200, { revealedAt }); return;
+      }
+      const problem = path.match(/^\/api\/problems\/([\w-]+)$/);
+      if (method === "GET" && problem) { json(response, 200, store.problem(problem[1])); return; }
+      if (method === "PUT" && problem) {
+        const code = codeInput(await body(request)); store.problem(problem[1]);
+        await store.update(state => { const item = state.problems.find(p => p.id === problem[1])!; item.code = code; item.updatedAt = new Date().toISOString(); });
+        json(response, 200, { saved: true }); return;
+      }
+      const action = path.match(/^\/api\/problems\/([\w-]+)\/(hint|review)$/);
+      if (method === "POST" && action) {
+        ensureModelReady();
+        const code = codeInput(await body(request));
+        const job = await (action[2] === "hint" ? tasks.hint(action[1], code) : tasks.review(action[1], code));
+        json(response, 202, { jobId: job.id }); return;
+      }
+      if (method === "POST" && path === "/api/analysis") { ensureModelReady(); await body(request); const job = await tasks.analyze(); json(response, 202, { jobId: job.id }); return; }
+      const jobEvents = path.match(/^\/api\/jobs\/([\w-]+)\/events$/);
+      if (method === "GET" && jobEvents) { tasks.get(jobEvents[1]).events.connect(response, after); return; }
+      const abort = path.match(/^\/api\/jobs\/([\w-]+)\/abort$/);
+      if (method === "POST" && abort) { await body(request); await tasks.abort(abort[1]); json(response, 200, { ok: true }); return; }
+      const jobInfo = path.match(/^\/api\/jobs\/([\w-]+)$/);
+      if (method === "GET" && jobInfo) { const job = tasks.get(jobInfo[1]); json(response, 200, { id: job.id, kind: job.kind, status: job.status, result: job.result, error: job.error }); return; }
+      const bundle = path.match(/^\/assets\/([a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*\.(js|css|ttf|txt))$/);
+      const pdfResource=path.match(/^\/assets\/pdf\/(cmaps|standard_fonts|wasm)\/([a-zA-Z0-9_.-]+)$/);
+      if(method==="GET"&&pdfResource){let data:Buffer;try{data=await readFile(resolve(root,"node_modules/pdfjs-dist",pdfResource[1],pdfResource[2]));}catch{throw new AppError(404,"PDF资源不存在。");}response.writeHead(200,{"Content-Type":pdfResource[2].endsWith(".wasm")?"application/wasm":pdfResource[2].endsWith(".js")?"text/javascript":"application/octet-stream","Cache-Control":"public, max-age=86400"});response.end(data);return;}
+      if (method === "GET" && bundle) {
+        const mime: Record<string, string> = { js: "text/javascript", css: "text/css", ttf: "font/ttf", txt: "text/plain" };
+        let content: Buffer;
+        try { content = await readFile(resolve(root, "public/assets", bundle[1])); }
+        catch (error) {
+          if (error instanceof Error && "code" in error && error.code === "ENOENT") throw new AppError(404, "资源不存在。");
+          throw error;
+        }
+        response.writeHead(200, { "Content-Type": mime[bundle[2]], "Cache-Control": "no-cache" }); response.end(content); return;
+      }
+      const assets: Record<string, [string, string]> = { "/": ["index.html", "text/html"], "/style.css": ["style.css", "text/css"], "/voice-test-1.wav": ["voice-test-1.wav", "audio/wav"], "/voice-test-2.wav": ["voice-test-2.wav", "audio/wav"], "/interview-test.wav": ["interview-test.wav", "audio/wav"] };
+      if (method === "GET" && assets[path]) {
+        const [file, mime] = assets[path]; response.writeHead(200, { "Content-Type": `${mime}; charset=utf-8`, "Cache-Control": "no-cache" }); const content = await readFile(resolve(root, "public", file));
+        const preferences = store.snapshot().settings;
+        const uiLanguage = preferences?.uiLanguage ?? DEFAULT_LOCALE, userLanguage = preferences?.userLanguage ?? DEFAULT_LOCALE;
+        response.end(file === "index.html" ? content.toString("utf8").replace('<html lang="zh-CN">', `<html lang="${LOCALE_TAGS[uiLanguage]}" data-ui-language="${uiLanguage}" data-user-language="${userLanguage}">`) : content); return;
+      }
+      throw new AppError(404, "页面或接口不存在。");
+    } catch (error) {
+      if (response.headersSent) { response.end(); return; }
+      json(response, error instanceof AppError ? error.status : 500, { error: translateSource(error instanceof AppError ? error.message : "服务暂时无法完成请求，请重试。", store.snapshot().settings?.uiLanguage ?? DEFAULT_LOCALE) });
+    }
+  }
+  return { server, store, tasks, auth, library, study, voice, voiceInterviews, async close() {
+    const closing = new Promise<void>((resolveClose, reject) => server.close(error => error ? reject(error) : resolveClose()));
+    await Promise.all([auth.stop(), tasks.stop(), voice.close()]);
+    server.closeAllConnections(); await closing; await store.flush();
+  } };
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  loadConfig();
+  const port = serverPort();
+  const app = await createApp();
+  app.server.listen(port, "127.0.0.1", () => {
+    console.log(`\n  Algo Practice → http://localhost:${port}\n  首次使用：点击网页右上角「连接 Codex」完成 OAuth。\n`);
+    if (process.env.OPEN_BROWSER === "1") openBrowser(`http://localhost:${port}`);
+  });
+  app.server.on("error", error => { console.error(error instanceof Error && "code" in error && error.code === "EADDRINUSE" ? `端口 ${port} 已被占用，可用 PORT=3001 npm start。` : "服务器启动失败。"); process.exitCode = 1; });
+  let closing = false;
+  for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => {
+    if (closing) return; closing = true;
+    void app.close().then(() => process.exit(0)).catch(() => process.exit(1));
+  });
+}

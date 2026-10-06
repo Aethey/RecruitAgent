@@ -72,6 +72,36 @@ test('arbitrary named Markdown career files work in the legacy directory without
   const loaded = await sources.load({ type: 'common', topic: 'all', count: 3 });
   assert.equal(loaded[0].kind, 'resume'); assert(loaded[0].content.includes('typed events'));
 });
+test('material validation localizes parameterized notices while preserving document titles', async t => {
+  const { store, library } = await workspace(t);
+  const own = (await library.importFile('career.md', Buffer.from(resume))).item;
+  const extra = (await library.importFile('notes.md', Buffer.from('# Notes\nSupporting material.'))).item;
+  const sources = new LibraryInterviewSources(store, library);
+  await sources.save({ resume:[own.id], personal:[extra.id], study:[] });
+  const title = '开始 · 中文资料 <code> {title}';
+  await store.update(state => {
+    state.settings = {model:'test',uiLanguage:'ja',userLanguage:'en'};
+    Object.assign(state.library!.find(item => item.id === extra.id)!, {title,extractedText:''});
+  });
+  await assert.rejects(() => sources.load({type:'common',topic:'all',count:3}), error => {
+    assert(error instanceof Error);
+    assert(error.message.includes(title));
+    assert.match(error.message, /読み取り可能/);
+    assert(!error.message.includes('尚无可读取的文字'));
+    return true;
+  });
+  await store.update(state => {
+    state.settings!.uiLanguage = 'en';
+    state.library!.find(item => item.id === extra.id)!.extractedText = 'a'.repeat(60001);
+  });
+  await assert.rejects(() => sources.load({type:'common',topic:'all',count:3}), error => {
+    assert(error instanceof Error);
+    assert(error.message.includes(title));
+    assert.match(error.message, /exceeds 60,000 characters/);
+    assert(!error.message.includes('请拆分后选择'));
+    return true;
+  });
+});
 test('backup restores history and original bytes, excludes credentials and logs, refuses overwrite and detects corruption', async t => {
   const { directory, store, library } = await workspace(t), dataDir = join(directory, 'data');
   const item = (await library.importFile('career.md', Buffer.from(resume))).item;

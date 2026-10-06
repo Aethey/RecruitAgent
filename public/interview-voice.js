@@ -1,3 +1,4 @@
+import { t, message } from './i18n.js';
 import { element, elements } from './dom.ts';
 import './voice.css';
 import { createVoiceSession } from './voice-session.js';
@@ -18,24 +19,24 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState,
     indicator.dataset.activity = activity.activity; indicator.dataset.recording = String(activity.recording); indicator.dataset.animate = String(activity.animate);
     indicator.style.setProperty('--voice-level',String(activity.level));
     $('interview-activity-label').textContent = activity.label; $('interview-activity-detail').textContent = activity.detail;
-    $('interview-voice-status').textContent = preparing ? activity.detail : state.error || (state.phase === 'connected' ? activity.detail : mode === 'preview' ? state.busy || state.id ? '正在试听所选音色…' : '试听已结束。' : state.phase === 'connecting' ? '正在连接 Codex…' : state.phase === 'ending' ? '正在结束并保存…' : state.phase === 'ended' ? '通话已结束，文字转写与点评已保存。' : '准备开始语音面试。');
-    $('interview-voice-error').hidden = !state.error; $('interview-voice-error').textContent = state.error;
-    if (mode === 'probe' && state.error) $('interview-probe-result').textContent = '检测未完成：'+state.error;
+    $('interview-voice-status').textContent = preparing ? activity.detail : t(state.error) || (state.phase === 'connected' ? activity.detail : mode === 'preview' ? state.busy || state.id ? t('正在试听所选音色…') : t('试听已结束。') : state.phase === 'connecting' ? t('正在连接 Codex…') : state.phase === 'ending' ? t('正在结束并保存…') : state.phase === 'ended' ? t('通话已结束，文字转写与点评已保存。') : t('准备开始语音面试。'));
+    $('interview-voice-error').hidden = !state.error; $('interview-voice-error').textContent = t(state.error);
+    if (mode === 'probe' && state.error) $('interview-probe-result').textContent = message('voice.probe.error',{error:t(state.error)});
     for (const id of ['interview-voice-start','interview-voice-test']) (/** @type {HTMLButtonElement} */ ($(id))).disabled = operation || preparing || state.busy || !!state.id || !account?.authenticated || !controls.ready();
-    (/** @type {HTMLButtonElement} */ ($('interview-voice-end'))).disabled = !state.id && !state.busy; $('interview-voice-end').textContent = mode === 'preview' ? '停止试听' : '结束面试';
+    (/** @type {HTMLButtonElement} */ ($('interview-voice-end'))).disabled = !state.id && !state.busy; $('interview-voice-end').textContent = mode === 'preview' ? t('停止试听') : t('结束面试');
     (/** @type {HTMLButtonElement} */ ($('interview-voice-mute'))).disabled = state.phase !== 'connected' || state.test || state.paused || state.controlBusy;
-    $('interview-voice-mute').textContent = state.muted ? '打开麦克风' : '麦克风静音'; $('interview-voice-mute').setAttribute('aria-pressed',String(state.muted));
+    $('interview-voice-mute').textContent = state.muted ? t('打开麦克风') : t('麦克风静音'); $('interview-voice-mute').setAttribute('aria-pressed',String(state.muted));
     $('interview-voice-play').hidden = !state.needsPlayback || state.paused;
     (/** @type {HTMLButtonElement} */ ($('interview-voice-stop'))).disabled = state.phase !== 'connected' || state.controlBusy || state.paused;
     (/** @type {HTMLButtonElement} */ ($('interview-voice-pause'))).disabled = state.phase !== 'connected' || (state.controlBusy && !state.resuming);
-    $('interview-voice-pause').textContent = state.paused && !state.resuming ? '继续对话' : '暂停对话';
+    $('interview-voice-pause').textContent = state.paused && !state.resuming ? t('继续对话') : t('暂停对话');
     $('interview-voice-pause').setAttribute('aria-pressed',String(state.paused && !state.resuming));
     const canMove = !operation && !state.controlBusy && !state.paused && !state.inputSpeaking && !state.processing && !state.backendThinking && !state.delegating && !state.outputSpeaking && mode === 'interview' && state.phase === 'connected' && progress?.stage === 'ready';
     (/** @type {HTMLButtonElement} */ ($('interview-voice-next'))).disabled = !canMove; (/** @type {HTMLButtonElement} */ ($('interview-voice-retry'))).disabled = !canMove;
-    $('interview-voice-next').textContent = progress && progress.questionIndex+1 === progress.questionCount ? '完成本次面试' : '下一题 →';
+    $('interview-voice-next').textContent = progress && progress.questionIndex+1 === progress.questionCount ? t('完成本次面试') : t('下一题 →');
     $('interview-voice-sample').hidden = !state.test || mode !== 'interview';
     (/** @type {HTMLButtonElement} */ ($('interview-voice-sample'))).disabled = operation || state.paused || state.controlBusy || !['answering','ready'].includes(progress?.stage) || state.phase !== 'connected';
-    $('interview-voice-stats').textContent = state.elapsed+' 秒 · 发送 '+(state.sent/1024).toFixed(1)+' KB · 接收 '+(state.received/1024).toFixed(1)+' KB';
+    $('interview-voice-stats').textContent = message('voice.stats',{seconds:state.elapsed,sent:(state.sent/1024).toFixed(1),received:(state.received/1024).toFixed(1)});
     controls.lock(state.busy || !!state.id || operation || preparing);
     if (mode === 'preview' && state.phase === 'connected') {
       if (state.outputSpeaking) { previewHeard = true; previewQuietAt = 0; }
@@ -48,7 +49,7 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState,
   function draw() {
     if (!mounted) return;
     const index = progress?.questionIndex ?? 0, question = content?.language === controls?.read().language ? content.questions[index] : record.questions[index], round = progress?.round;
-    $('interview-question-number').textContent = 'QUESTION '+String(index+1).padStart(2,'0')+' / '+record.questions.length;
+    $('interview-question-number').textContent = message('interview.voice.question',{number:String(index+1).padStart(2,'0'),total:record.questions.length});
     $('interview-question-text').lang = progress?.settings.language ?? (content?.language === controls?.read().language ? content.language : record.language ?? '');
     $('interview-question-text').textContent = progress?.question.text ?? question.question;
     const show = controls?.read().showTips ?? record.voiceSettings?.showTips ?? true;
@@ -58,18 +59,18 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState,
     const userText = partialText('user'), assistantText = partialText('assistant');
     const answer = (round?.answer ?? '')+(userText ? (round?.answer ? '\n' : '')+userText : ''), feedback = (round?.feedback ?? '')+(progress?.responseKind === 'answer' ? assistantText : '');
     const assisting = ['sample','clarification'].includes(progress?.responseKind), reply = (progress?.reply ?? '')+(assisting ? assistantText : '');
-    $('interview-answer-live').textContent = answer || '你的语音回答会转写到这里。';
-    $('interview-feedback-live').textContent = feedback || 'Codex 听完回答后，会指出具体的表达问题与改进重点。';
+    $('interview-answer-live').textContent = answer || t('你的语音回答会转写到这里。');
+    $('interview-feedback-live').textContent = feedback || t('Codex 听完回答后，会指出具体的表达问题与改进重点。');
     $('interview-reply-section').hidden = !assisting && !reply;
-    $('interview-reply-title').textContent = progress?.responseKind === 'sample' ? '示范回答' : '本轮交流';
-    $('interview-reply-live').textContent = reply || '正在回应你的请求…';
-    $('interview-answer-length').textContent = answer ? answer.length+' 字符 · '+(round?.tipsShown ? '本题使用过 tips' : '本题未使用 tips') : '';
+    $('interview-reply-title').textContent = progress?.responseKind === 'sample' ? t('示范回答') : t('本轮交流');
+    $('interview-reply-live').textContent = reply || t('正在回应你的请求…');
+    $('interview-answer-length').textContent = answer ? message('interview.voice.answerLength',{count:answer.length,tips:round?.tipsShown ? t('本题使用过 tips') : t('本题未使用 tips')}) : '';
     if (conversation) stateChanged(conversation.state());
   }
   function handleEvent(name, value) {
     if (!mounted) return;
     if (name === 'model-verified') { void controls.load().then(() => { if (mounted) stateChanged(conversation.state()); }); return; }
-    if (name === 'interview-notice') { toast(value.message); return; }
+    if (name === 'interview-notice') { toast(t(value.message)); return; }
     if (['input-started','response-started','response-ended'].includes(name)) {
       if (mode !== 'interview' || !progress?.round || !Number.isSafeInteger(value.inputRevision)) return;
       const owner = conversation, token = generation, id = owner.state().id, revision = value.inputRevision;
@@ -96,8 +97,8 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState,
   }
   function transcript(line) {
     if (!mounted) return;
-    if (mode === 'preview') { if (line.role === 'assistant' && line.done) { previewDone = true; previewCaption = line.text; controls.setPreview(true,'试听：'+line.text); } return; }
-    if (mode === 'probe') { if (line.done) $('interview-probe-result').textContent = (line.role === 'assistant' ? 'Codex：' : '合成语音：')+line.text; return; }
+    if (mode === 'preview') { if (line.role === 'assistant' && line.done) { previewDone = true; previewCaption = line.text; controls.setPreview(true,message('voice.preview.caption',{caption:line.text})); } return; }
+    if (mode === 'probe') { if (line.done) $('interview-probe-result').textContent = (line.role === 'assistant' ? 'Codex：' : t('合成语音：'))+line.text; return; }
     const key = line.role+':'+(line.itemId ?? 'current');
     if (!line.done && (line.role === 'user' || progress?.responseKind === 'answer' || ['sample','clarification'].includes(progress?.responseKind))) partial.set(key,{role:line.role,text:(partial.get(key)?.text ?? '')+line.text});
     if (line.done) partial.delete(key);
@@ -136,21 +137,21 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState,
     if (mode === 'preview' && (owner.state().id || owner.state().busy)) { await owner.end(); return; }
     if (owner.state().busy || owner.state().id || preparing || operation) return;
     mode = 'preview'; previewHeard = false; previewDone = false; previewQuietAt = 0; previewStopping = false; previewCaption = '';
-    controls.setPreview(true,'正在连接 '+settings.voice+' 的试听…');
+    controls.setPreview(true,message('voice.preview.connecting',{voice:settings.voice}));
     await owner.start({...settings,preview:true},true);
   }
   async function connected() {
     const owner = conversation;
     if (mode === 'preview') {
       const id = owner.state().id;
-      previewTimer = setTimeout(() => { if (mounted && owner === conversation && owner.state().id === id) void owner.end(previewHeard ? '' : '没有收到试听声音，请重试。'); },22000);
+      previewTimer = setTimeout(() => { if (mounted && owner === conversation && owner.state().id === id) void owner.end(previewHeard ? '' : t('没有收到试听声音，请重试。')); },22000);
       await api(`/api/voice/sessions/${id}/preview`,'POST',{}); return;
     }
     if (mode === 'probe') {
       const id = owner.state().id;
       await owner.playClip('/voice-test-2.wav'); await new Promise(resolve => setTimeout(resolve,6000));
       if (!mounted || owner !== conversation || owner.state().id !== id) return;
-      $('interview-probe-result').textContent += owner.state().energy > 0 ? ' · 已收到真实语音。' : ' · 尚未收到有声回复。';
+      $('interview-probe-result').textContent += owner.state().energy > 0 ? t(' · 已收到真实语音。') : t(' · 尚未收到有声回复。');
       await owner.end(); return;
     }
     const result = await api(`/api/voice/sessions/${owner.state().id}/action`,'POST',{action:'begin'});
@@ -174,9 +175,9 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState,
   }
   function renderHistory() {
     if (!mounted) return;
-    $('interview-voice-history').innerHTML = (record.voiceAttempts ?? []).slice().reverse().map((attempt,index) => '<details class="card flat voice-attempt"><summary>'+escape(date(attempt.at))+' · '+(attempt.synthetic ? '合成语音测试' : '语音面试')+' · '+attempt.rounds.length+' 次回答 · '+escape({active:'进行中',completed:'已完成',stopped:'已结束',failed:'连接失败',interrupted:'连接中断'}[attempt.status])+'</summary>'+attempt.rounds.map(round => '<section class="voice-history-round"><h3>'+escape(round.question)+'</h3><span class="tag">'+(round.tipsShown ? '使用过 tips' : '未使用 tips')+'</span><h4>我的回答</h4><p>'+escape(round.answer || '未留下完整回答。')+'</p><h4>Codex 点评</h4><p>'+escape(round.feedback || '未完成点评。')+'</p></section>').join('')+'</details>').join('') || '<p class="voice-empty-history">完成语音回答后，这里保存转写和点评。</p>';
+    $('interview-voice-history').innerHTML = (record.voiceAttempts ?? []).slice().reverse().map((attempt,index) => '<details class="card flat voice-attempt"><summary>'+escape(date(attempt.at))+' · '+(attempt.synthetic ? t('合成语音测试') : t('语音面试'))+' · '+message('interview.voice.rounds',{count:attempt.rounds.length})+' · '+escape({active:t('进行中'),completed:t('已完成'),stopped:t('已结束'),failed:t('连接失败'),interrupted:t('连接中断')}[attempt.status])+'</summary>'+attempt.rounds.map(round => '<section class="voice-history-round"><h3>'+escape(round.question)+'</h3><span class="tag">'+(round.tipsShown ? t('使用过 tips') : t('未使用 tips'))+t('</span><h4>我的回答</h4><p>')+escape(round.answer || t('未留下完整回答。'))+t('</p><h4>Codex 点评</h4><p>')+escape(round.feedback || t('未完成点评。'))+'</p></section>').join('')+'</details>').join('') || t('<p class="voice-empty-history">完成语音回答后，这里保存转写和点评。</p>');
     const old = Object.entries(record.answers).filter(([,answer]) => answer.trim());
-    $('interview-written-history').innerHTML = old.length || record.reviews.length ? '<details class="card flat voice-attempt"><summary>此前的文字回答与评价</summary>'+old.map(([id,answer]) => '<h3>'+escape(record.questions.find(q => q.id === id)?.question ?? id)+'</h3><p class="problem-copy">'+escape(answer)+'</p>').join('')+record.reviews.map(review => '<details><summary>'+escape(date(review.at))+' · '+escape(review.summary)+'</summary>'+review.items.map(item => '<h4>'+escape(record.questions.find(q => q.id === item.questionId)?.question ?? item.questionId)+'</h4><p>'+escape(item.summary)+'</p><dl class="interview-dimensions">'+Object.entries(item.dimensions).map(([label,value]) => '<div><dt>'+escape({relevance:'切题',conciseness:'简洁',structure:'结论与结构',evidence:'事实依据'}[label])+'</dt><dd>'+escape(value)+'</dd></div>').join('')+'</dl>').join('')+'</details>').join('')+'</details>' : '';
+    $('interview-written-history').innerHTML = old.length || record.reviews.length ? t('<details class="card flat voice-attempt"><summary>此前的文字回答与评价</summary>')+old.map(([id,answer]) => '<h3>'+escape(record.questions.find(q => q.id === id)?.question ?? id)+'</h3><p class="problem-copy">'+escape(answer)+'</p>').join('')+record.reviews.map(review => '<details><summary>'+escape(date(review.at))+' · '+escape(review.summary)+'</summary>'+review.items.map(item => '<h4>'+escape(record.questions.find(q => q.id === item.questionId)?.question ?? item.questionId)+'</h4><p>'+escape(item.summary)+'</p><dl class="interview-dimensions">'+Object.entries(item.dimensions).map(([label,value]) => '<div><dt>'+escape({relevance:t('切题'),conciseness:t('简洁'),structure:t('结论与结构'),evidence:t('事实依据')}[label])+'</dt><dd>'+escape(value)+'</dd></div>').join('')+'</dl>').join('')+'</details>').join('')+'</details>' : '';
   }
   function render(set) {
     dispose(); const token = ++generation; mounted = true; record = set; progress = null; account = null; operation = false; mode = 'interview'; partial.clear(); inputRounds.clear(); bridge = Promise.resolve(); roundStamp = ''; preparing = false;
@@ -194,18 +195,18 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState,
       }
       return result;
     },onTest:async settings => {
-      mode = 'probe'; $('interview-probe-result').textContent = '正在验证所选模型…'; await conversation.start(settings,true);
+      mode = 'probe'; $('interview-probe-result').textContent = t('正在验证所选模型…'); await conversation.start(settings,true);
     },onPreview:settings => preview(settings)});
-    element('#page').innerHTML = pageHeading('VOICE INTERVIEW',escape(set.title),'Codex 语音提问，你用语音回答。听完点评后，可以重答或继续下一题。','<a class="button flat" href="#interview">选择下一组 ＋</a>')+controls.render()+
-      '<section id="interview-voice-session" class="interview-voice-layout"><article class="card flat interview-voice-question"><div class="section-heading"><span class="eyebrow" id="interview-question-number"></span><span class="tag">逐题语音面试</span></div><h2 id="interview-question-text"></h2><section id="interview-answer-tips" class="interview-answer-tips pressed"><h3>回答重点 · tips</h3><ul id="interview-tips-list"></ul></section><div id="interview-voice-activity" class="voice-activity pressed" data-activity="idle" data-recording="false" data-animate="false"><div class="voice-activity-visual" aria-hidden="true"><div class="voice-activity-halo"></div><svg class="voice-activity-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg></div><div class="voice-activity-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong id="interview-activity-label"></strong><p id="interview-activity-detail" role="status"></p></div><p id="interview-voice-status" class="voice-interview-status" role="status"></p><p id="interview-voice-account" class="voice-account"></p><div class="voice-actions"><button id="interview-voice-start" class="button primary" type="button" disabled>开始语音面试</button><button id="interview-voice-stop" class="button flat" type="button" disabled>停止本轮回复</button><button id="interview-voice-pause" class="button flat" type="button" disabled aria-pressed="false">暂停对话</button><button id="interview-voice-end" class="button flat" type="button" disabled>结束面试</button><button id="interview-voice-mute" class="button flat" type="button" disabled>麦克风静音</button></div><audio id="interview-voice-output" autoplay></audio><button id="interview-voice-play" class="button mint" type="button" hidden>允许播放声音</button><p id="interview-voice-error" class="voice-error" role="alert" hidden></p><p class="voice-note">麦克风音频会发送给 OpenAI。本机保存回答转写与点评，不保存录音；离开此模块会结束通话。字幕可能有识别误差。</p><div class="voice-actions"><button id="interview-voice-retry" class="button flat" type="button" disabled>重答这题</button><button id="interview-voice-next" class="button mint" type="button" disabled>下一题 →</button></div><p id="interview-voice-stats" class="voice-stats"></p><details class="voice-interview-test"><summary>无需麦克风测试语音面试</summary><p class="voice-note">用一段没有明确结论、带重复背景的合成回答，检查提问与点评。测试记录会单独标注。</p><button id="interview-voice-test" class="button flat small" type="button" disabled>用合成语音连接面试</button><button id="interview-voice-sample" class="button flat small" type="button" hidden disabled>播放合成回答</button></details><p id="interview-probe-result" class="voice-note" role="status"></p></article><article class="card flat interview-voice-feedback"><span class="eyebrow">YOUR ANSWER</span><h2>我的语音回答</h2><p id="interview-answer-live" class="voice-answer-text" aria-live="polite"></p><p id="interview-answer-length" class="voice-note"></p><hr><span class="eyebrow">CODEX FEEDBACK</span><h2>这次的点评</h2><p id="interview-feedback-live" class="voice-answer-text" aria-live="polite"></p><section id="interview-reply-section" hidden><hr><h2 id="interview-reply-title">本轮交流</h2><p id="interview-reply-live" class="voice-answer-text" aria-live="polite"></p></section></article></section><section class="language-history"><div class="section-heading"><div><h2>语音面试记录</h2><p class="card-subtitle">保存每次回答与具体点评；使用 tips 的练习单独标记。</p></div></div><div id="interview-voice-history"></div><div id="interview-written-history"></div></section>';
+    element('#page').innerHTML = pageHeading('VOICE INTERVIEW',escape(set.title),t('Codex 语音提问，你用语音回答。听完点评后，可以重答或继续下一题。'),t('<a class="button flat" href="#interview">选择下一组 ＋</a>'))+controls.render()+
+      t('<section id="interview-voice-session" class="interview-voice-layout"><article class="card flat interview-voice-question"><div class="section-heading"><span class="eyebrow" id="interview-question-number"></span><span class="tag">逐题语音面试</span></div><h2 id="interview-question-text"></h2><section id="interview-answer-tips" class="interview-answer-tips pressed"><h3>回答重点 · tips</h3><ul id="interview-tips-list"></ul></section><div id="interview-voice-activity" class="voice-activity pressed" data-activity="idle" data-recording="false" data-animate="false"><div class="voice-activity-visual" aria-hidden="true"><div class="voice-activity-halo"></div><svg class="voice-activity-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg></div><div class="voice-activity-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong id="interview-activity-label"></strong><p id="interview-activity-detail" role="status"></p></div><p id="interview-voice-status" class="voice-interview-status" role="status"></p><p id="interview-voice-account" class="voice-account"></p><div class="voice-actions"><button id="interview-voice-start" class="button primary" type="button" disabled>开始语音面试</button><button id="interview-voice-stop" class="button flat" type="button" disabled>停止本轮回复</button><button id="interview-voice-pause" class="button flat" type="button" disabled aria-pressed="false">暂停对话</button><button id="interview-voice-end" class="button flat" type="button" disabled>结束面试</button><button id="interview-voice-mute" class="button flat" type="button" disabled>麦克风静音</button></div><audio id="interview-voice-output" autoplay></audio><button id="interview-voice-play" class="button mint" type="button" hidden>允许播放声音</button><p id="interview-voice-error" class="voice-error" role="alert" hidden></p><p class="voice-note">麦克风音频会发送给 OpenAI。本机保存回答转写与点评，不保存录音；离开此模块会结束通话。字幕可能有识别误差。</p><div class="voice-actions"><button id="interview-voice-retry" class="button flat" type="button" disabled>重答这题</button><button id="interview-voice-next" class="button mint" type="button" disabled>下一题 →</button></div><p id="interview-voice-stats" class="voice-stats"></p><details class="voice-interview-test"><summary>无需麦克风测试语音面试</summary><p class="voice-note">用一段没有明确结论、带重复背景的合成回答，检查提问与点评。测试记录会单独标注。</p><button id="interview-voice-test" class="button flat small" type="button" disabled>用合成语音连接面试</button><button id="interview-voice-sample" class="button flat small" type="button" hidden disabled>播放合成回答</button></details><p id="interview-probe-result" class="voice-note" role="status"></p></article><article class="card flat interview-voice-feedback"><span class="eyebrow">YOUR ANSWER</span><h2>我的语音回答</h2><p id="interview-answer-live" class="voice-answer-text" aria-live="polite"></p><p id="interview-answer-length" class="voice-note"></p><hr><span class="eyebrow">CODEX FEEDBACK</span><h2>这次的点评</h2><p id="interview-feedback-live" class="voice-answer-text" aria-live="polite"></p><section id="interview-reply-section" hidden><hr><h2 id="interview-reply-title">本轮交流</h2><p id="interview-reply-live" class="voice-answer-text" aria-live="polite"></p></section></article></section><section class="language-history"><div class="section-heading"><div><h2>语音面试记录</h2><p class="card-subtitle">保存每次回答与具体点评；使用 tips 的练习单独标记。</p></div></div><div id="interview-voice-history"></div><div id="interview-written-history"></div></section>');
     conversation = createVoiceSession({api,audio:() => token === generation ? $('interview-voice-output') : null,onState:value => { if (token === generation) stateChanged(value); },onTranscript:line => { if (token === generation) transcript(line); },onEvent:(name,value) => { if (token === generation) handleEvent(name,value); },onConnected:() => token === generation ? connected() : undefined,onEnded:async () => {
       if (token !== generation) return;
       clearTimeout(previewTimer); previewTimer = null;
-      if (mode === 'preview') controls.setPreview(false,conversation.state().error ? '试听未完成：'+conversation.state().error : previewHeard ? '试听完成 · '+controls.read().voice+'：'+previewCaption : '试听已停止。');
+      if (mode === 'preview') controls.setPreview(false,conversation.state().error ? message('voice.preview.error',{error:t(conversation.state().error)}) : previewHeard ? message('voice.preview.completed',{voice:controls.read().voice,caption:previewCaption}) : t('试听已停止。'));
       await Promise.all([reload(),controls.load()]); if (mounted && token === generation) stateChanged(conversation.state());
     }});
     void controls.bind().then(() => { if (mounted && token === generation) { draw(); stateChanged(conversation.state()); } }); draw(); renderHistory();
-    void api('/api/voice/status').then(result => { if (!mounted || token !== generation) return; account = result; $('interview-voice-account').textContent = result.authenticated ? 'Codex CLI 已登录，可以开始面试。' : '请先在终端运行 codex login。'; stateChanged(conversation.state()); }).catch(error => { if (mounted && token === generation) $('interview-voice-account').textContent = error.message; });
+    void api('/api/voice/status').then(result => { if (!mounted || token !== generation) return; account = result; $('interview-voice-account').textContent = result.authenticated ? t('Codex CLI 已登录，可以开始面试。') : t('请先在终端运行 codex login。'); stateChanged(conversation.state()); }).catch(error => { if (mounted && token === generation) $('interview-voice-account').textContent = error.message; });
     $('interview-voice-start').onclick = () => { void start(); }; $('interview-voice-test').onclick = () => { void start(true); };
     $('interview-voice-end').onclick = async () => { await conversation.end(); await reload(); };
     $('interview-voice-mute').onclick = () => conversation.mute(); $('interview-voice-play').onclick = () => { void conversation.allowPlayback().catch(error => toast(error.message)); };

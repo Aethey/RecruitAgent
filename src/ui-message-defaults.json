@@ -1,0 +1,23 @@
+{
+  "voice.stats": "{seconds} 秒 · 发送 {sent} KB · 接收 {received} KB",
+  "voice.bytes": "发送 {sent} KB · 接收 {received} KB",
+  "voice.seconds": "{seconds} 秒",
+  "voice.processing": "语音已收到，正在等待回复 · {seconds} 秒。{action}",
+  "voice.thinking": "后台任务正在处理 · {seconds} 秒。{action}",
+  "voice.account": "Codex CLI 已登录 · {method}",
+  "voice.preview.connecting": "正在连接 {voice} 的试听…",
+  "voice.preview.caption": "试听：{caption}",
+  "voice.preview.completed": "试听完成 · {voice}：{caption}",
+  "voice.preview.error": "试听未完成：{error}",
+  "voice.probe.error": "检测未完成：{error}",
+  "voice.resume.error": "恢复倾听未确认，录音和播放保持关闭：{error}",
+  "voice.cancel.error": "已停止本机录音和播放，但后台取消未确认：{error}",
+  "interview.material.unreadable": "资料「{title}」尚无可读取的文字，请先整理或换用文字文件。",
+  "interview.material.tooLong": "资料「{title}」超过 60,000 字符，请拆分后选择相关部分。",
+  "interview.voice.answerLength": "{count} 字符 · {tips}",
+  "interview.voice.rounds": "{count} 次回答",
+  "interview.voice.question": "第 {number} 题 / {total}",
+  "task.generating": "Codex 正在生成内容 · {count} 字符",
+  "library.organizing": "整理 {current}/{total} · {title}",
+  "library.readingPages": "视觉读取 · {title} · 第 {pages} 页"
+}

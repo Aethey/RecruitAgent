@@ -1,3 +1,4 @@
+import { t, message } from './i18n.js';
 import { eventData, readApiResponse } from './api.ts';
 // Shared microphone/WebRTC lifecycle for the demo and the interview module.
 /** @param {{api: import('../src/generated/api-client.js').ApiClient, [option: string]: any}} options */
@@ -24,7 +25,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     else if (value.activity === 'waiting') pending();
     else if (value.activity === 'processing') { state = {...state,backendThinking:false,delegating:false,processingSince:0}; pending(false); }
     else if (['failed','timeout'].includes(value.activity)) {
-      state = {...state,backendThinking:false,delegating:false,processing:false,processingSince:0,notice:value.message || '本轮处理失败，可以停止本轮后继续。'}; notify();
+      state = {...state,backendThinking:false,delegating:false,processing:false,processingSince:0,notice:t(value.message) || t('本轮处理失败，可以停止本轮后继续。')}; notify();
       if (value.activity === 'timeout' && !state.paused) void stopCurrent(value.message);
     } else if (value.activity === 'listening') { state = {...state,backendThinking:false}; notify(); }
   }
@@ -40,7 +41,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       const error = message.error ?? {};
       // Canceling a response that has just completed is an expected race.
       if (cancelEvents.has(error.event_id ?? error.client_event_id) && error.code === 'response_cancel_not_active') return;
-      void end(error.message ?? '语音服务返回错误。'); return;
+      void end(error.message ?? t('语音服务返回错误。')); return;
     }
     if (state.paused) return;
     const type = message.type, role = message.turn?.role;
@@ -95,11 +96,11 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     ending = (async () => {
       epoch++; const id = state.id; release();
       resumeAt = 0;
-      state = { ...state, id:null, busy:true, recording:false, inputLevel:0, outputLevel:0, outputSpeaking:false, inputSpeaking:false,processing:false,backendThinking:false,delegating:false,paused:false,stopped:false,resuming:false,controlBusy:false,phase:error ? 'error' : 'ending', error, needsPlayback:false }; notify();
+      state = { ...state, id:null, busy:true, recording:false, inputLevel:0, outputLevel:0, outputSpeaking:false, inputSpeaking:false,processing:false,backendThinking:false,delegating:false,paused:false,stopped:false,resuming:false,controlBusy:false,phase:error ? 'error' : 'ending', error:t(error), needsPlayback:false }; notify();
       if (id) {
         try {
           const response = await fetch('/api/voice/sessions/'+id,{method:'DELETE',keepalive:true});
-          await readApiResponse('DELETE /api/voice/sessions/{id}',response);
+          await readApiResponse('DELETE /api/voice/sessions/{id}',response,t);
         } catch (failure) { state = {...state,phase:'error',error:failure.message}; }
       }
       try { await onEnded(); }
@@ -134,7 +135,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     const output = audio(); if (output) output.muted = false;
     window.addEventListener('pagehide',leave);
     try {
-      if (!window.isSecureContext || !window.RTCPeerConnection || !window.AudioContext) throw new Error('请在支持语音的浏览器中，通过 localhost 或 HTTPS 打开。');
+      if (!window.isSecureContext || !window.RTCPeerConnection || !window.AudioContext) throw new Error(t('请在支持语音的浏览器中，通过 localhost 或 HTTPS 打开。'));
       context = new AudioContext(); await context.resume(); if (token !== epoch) return;
       if (test) {
         destination = context.createMediaStreamDestination(); stream = destination.stream;
@@ -146,7 +147,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
         if (token !== epoch) { microphone.getTracks().forEach(track => track.stop()); return; }
         stream = microphone;
         inputMeter = meter(stream); inputNode = inputMeter.node;
-        stream.getAudioTracks().forEach(track => { track.onended = () => { if (token === epoch) void end('麦克风已断开，请重新开始。'); }; });
+        stream.getAudioTracks().forEach(track => { track.onended = () => { if (token === epoch) void end(t('麦克风已断开，请重新开始。')); }; });
       }
       meterTimer = setInterval(() => {
         if (token !== epoch) return;
@@ -157,7 +158,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
           stream?.getAudioTracks().forEach(track => { track.enabled = !state.muted; });
           const output = audio(), revision = state.revision; if (output) { output.muted = false; void output.play().catch(() => { if (token === epoch && revision === state.revision) { state = {...state,needsPlayback:true}; notify(); } }); }
         } else if (resumeAt && now-resumeAt > 5000) {
-          resumeAt = 0; state = {...state,resuming:false,controlBusy:false,notice:'旧回复仍未停止，录音和播放保持关闭。请结束通话后重新连接。'};
+          resumeAt = 0; state = {...state,resuming:false,controlBusy:false,notice:t('旧回复仍未停止，录音和播放保持关闭。请结束通话后重新连接。')};
         }
         const recording = state.phase === 'connected' && !state.paused && !state.test && !state.muted && stream?.getAudioTracks().some(track => track.readyState === 'live' && track.enabled);
         const inputLevel = recording ? level(inputMeter) : 0, outputLevel = state.playbackBlocked ? 0 : rawOutput;
@@ -184,7 +185,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       channel.onopen = connected;
       peer.onconnectionstatechange = () => {
         if (token !== epoch) return;
-        if (peer.connectionState === 'failed') void end('语音网络连接失败，请重试。'); else connected();
+        if (peer.connectionState === 'failed') void end(t('语音网络连接失败，请重试。')); else connected();
       };
       peer.ontrack = event => {
         if (token !== epoch) return;
@@ -219,27 +220,27 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       events.addEventListener('interview-progress',event => { if (token === epoch) onEvent('interview-progress',eventData('interview-progress', event)); });
       events.addEventListener('voice-error',event => { if (token === epoch) void end(eventData('voice-error', event).message); });
       events.addEventListener('ended',() => { if (token === epoch) void end(); });
-      events.onerror = () => { if (token === epoch && events?.readyState === EventSource.CLOSED) void end('字幕连接已断开，请重新开始。'); };
+      events.onerror = () => { if (token === epoch && events?.readyState === EventSource.CLOSED) void end(t('字幕连接已断开，请重新开始。')); };
       await peer.setRemoteDescription({type:'answer',sdp:result.sdp}); negotiatedAt = Date.now();
       timer = setInterval(() => {
         if (token !== epoch) return;
         state = {...state,elapsed:connectedAt ? Math.floor((Date.now()-connectedAt)/1000) : 0,processingElapsed:state.processingSince ? Math.floor((Date.now()-state.processingSince)/1000) : 0};
-        if ((state.processing || state.backendThinking || state.delegating) && state.processingElapsed >= 45 && !state.paused && !state.controlBusy) void stopCurrent('本轮处理超时，正在停止旧回复并恢复倾听。');
+        if ((state.processing || state.backendThinking || state.delegating) && state.processingElapsed >= 45 && !state.paused && !state.controlBusy) void stopCurrent(t('本轮处理超时，正在停止旧回复并恢复倾听。'));
         void stats(token,options);
-        if (!connectedOnce && Date.now()-negotiatedAt > 20000) void end('语音网络协商超时，请重试。');
+        if (!connectedOnce && Date.now()-negotiatedAt > 20000) void end(t('语音网络协商超时，请重试。'));
       },1000);
       connected();
     } catch (error) {
       if (token !== epoch) return;
-      const message = error.name === 'NotAllowedError' ? '请允许页面使用麦克风，或先用合成语音测试。' : error.name === 'NotFoundError' ? '没有找到麦克风，可以先用合成语音测试。' : error.message;
+      const message = error.name === 'NotAllowedError' ? t('请允许页面使用麦克风，或先用合成语音测试。') : error.name === 'NotFoundError' ? t('没有找到麦克风，可以先用合成语音测试。') : error.message;
       await end(message);
     }
   }
   async function playClip(url) {
-    if (state.phase !== 'connected' || !state.test || !context || !destination) throw new Error('请先连接合成语音测试。');
-    if (state.paused || state.controlBusy) throw new Error('请先继续对话。');
+    if (state.phase !== 'connected' || !state.test || !context || !destination) throw new Error(t('请先连接合成语音测试。'));
+    if (state.paused || state.controlBusy) throw new Error(t('请先继续对话。'));
     const token = epoch, revision = state.revision, ctx = context, target = destination;
-    const response = await fetch(url); if (!response.ok) throw new Error('测试音频加载失败。');
+    const response = await fetch(url); if (!response.ok) throw new Error(t('测试音频加载失败。'));
     const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
     if (token !== epoch || revision !== state.revision) return;
     const clip = ctx.createBufferSource(); source = clip; clip.buffer = buffer; clip.connect(target); clip.start();
@@ -287,7 +288,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       } else { state = {...state,controlBusy:false}; notify(); }
     } catch (error) {
       if (currentControl(token,revision)) {
-        state = {...state,resuming:false,controlBusy:false,notice:(cancelled ? '恢复倾听未确认，录音和播放保持关闭：' : '已停止本机录音和播放，但后台取消未确认：')+error.message}; notify();
+        state = {...state,resuming:false,controlBusy:false,notice:message(cancelled ? 'voice.resume.error' : 'voice.cancel.error',{error:t(error.message)})}; notify();
       }
     }
   }
@@ -298,7 +299,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     const token = epoch, id = state.id, revision = state.revision+1; state = {...state,resuming:true,controlBusy:true,revision}; notify();
     try {
       await resumeControl(token,id,revision);
-    } catch (error) { if (currentControl(token,revision)) { state = {...state,resuming:false,controlBusy:false,notice:'恢复倾听未确认，录音和播放保持关闭：'+error.message}; notify(); } }
+    } catch (error) { if (currentControl(token,revision)) { state = {...state,resuming:false,controlBusy:false,notice:message('voice.resume.error',{error:t(error.message)})}; notify(); } }
   }
   async function allowPlayback() { if (state.paused) return; await audio()?.play(); state = {...state,needsPlayback:false}; notify(); }
   return {start,end,playClip,mute,pause,resume,stopCurrent,allowPlayback,state:() => ({...state})};

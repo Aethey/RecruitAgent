@@ -1,5 +1,5 @@
 import { element, elements } from './dom.ts';
-import { t, ui } from "./i18n.js";
+import { t, ui, userLanguage } from "./i18n.js";
 import { CARD_CATEGORIES, KNOWLEDGE_CARDS, shuffledCards } from './knowledge-cards.js';
 import './entertainment.css';
 
@@ -96,12 +96,18 @@ export function createEntertainment({ escape, pageHeading }) {
     if (find('#ent-travel')) find('#ent-travel').removeAttribute('data-motion');
     if (find('#ent-previous')) find('#ent-previous').disabled = find('#ent-next').disabled = false;
   }
+  // Only this bundled, authored catalog is translated; imported/user cards are never passed here.
+  const localizedCard = card => ({
+    ...card,
+    ...Object.fromEntries(['topic','question','answer','takeaway'].map(field => [field,t(card[field],userLanguage())])),
+    ...(card.source ? {source:[t(card.source[0],userLanguage()),card.source[1]]} : {}),
+  });
   function announce() {
-    const card = deck[index];
+    const card = localizedCard(deck[index]);
     find('#ent-announcement').textContent = ui`${t(CARD_CATEGORIES[card.category].label)}，第 ${index + 1} 张，共 ${deck.length} 张。${flipped ? t('已显示答案。') : t('当前是问题。')}`;
   }
   function renderCard() {
-    const card = deck[index], meta = CARD_CATEGORIES[card.category], button = find('#ent-card');
+    const card = localizedCard(deck[index]), meta = CARD_CATEGORIES[card.category], button = find('#ent-card');
     flipped = false;
     root.style.setProperty('--ent-accent', meta.color);
     button.dataset.cardId = card.id; button.dataset.flipped = 'false';
@@ -129,7 +135,7 @@ export function createEntertainment({ escape, pageHeading }) {
   }
   function flip() {
     if (phase !== 'playing' || moving) return;
-    const card = deck[index], button = find('#ent-card');
+    const card = localizedCard(deck[index]), button = find('#ent-card');
     flipped = !flipped;
     button.dataset.flipped = String(flipped);
     button.setAttribute('aria-pressed', String(flipped));

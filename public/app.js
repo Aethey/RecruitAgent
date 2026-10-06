@@ -367,7 +367,7 @@ async function startTask(path, body, kind, options = {}) {
   try {
     if (activeJob?.kind === 'teacher') await stopTeacher();
     if (kind !== "chat" && kind !== "teacher") await flushCode();
-    const { jobId } = await requestTask(api, path, body);
+    const { jobId } = await requestTask(api, path, body, t);
     watchTask(jobId, kind, options);
     return { jobId };
   } catch (error) { if (!options.quiet) toast(error.message); }

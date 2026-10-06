@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { AppError, object, type InterviewMaterials } from "./domain.ts";
 import { Library } from "./library.ts";
 import { Store } from "./store.ts";
+import { DEFAULT_LOCALE } from "./locales.ts";
+import { translateMessage } from "./ui-messages.ts";
 import type { InterviewSelection, Source } from "./interview.ts";
 
 export interface InterviewSources {
@@ -94,15 +96,16 @@ export class LibraryInterviewSources implements InterviewSources {
     return this.status();
   }
   async load(selection: InterviewSelection, jobText = "") {
-    const materials = this.store.snapshot().interviewMaterials;
+    const state = this.store.snapshot(), materials = state.interviewMaterials;
+    const locale = state.settings?.uiLanguage ?? DEFAULT_LOCALE;
     if (!materials && this.legacy) return this.legacy.load(selection, jobText);
     if (!(await this.status()).available) throw new AppError(400, "请在资料库上传可读取的简历，再到面试练习选择出题资料。扫描 PDF 或图片需先整理取得文字。");
     const sources: Source[] = [];
     for (const kind of ["resume", "personal", "study"] as const) {
       for (const id of materials?.[kind] ?? []) {
         const item = this.library.get(id);
-        if (!item.extractedText.trim()) throw new AppError(400, `资料「${item.title}」尚无可读取的文字，请先整理或换用文字文件。`);
-        if (item.extractedText.length + item.notes.length > 60000) throw new AppError(400, `资料「${item.title}」超过 60,000 字符，请拆分后选择相关部分。`);
+        if (!item.extractedText.trim()) throw new AppError(400, translateMessage('interview.material.unreadable', locale, {title:item.title}));
+        if (item.extractedText.length + item.notes.length > 60000) throw new AppError(400, translateMessage('interview.material.tooLong', locale, {title:item.title}));
         sources.push({ id: `library-${id}`, title: item.title, kind, content: item.extractedText + (item.notes ? `\n\n本人添加的备注：\n${item.notes}` : "") });
       }
     }

@@ -1,5 +1,6 @@
 import { LOCALES, LOCALE_TAGS, isLocale } from '../src/locales.ts';
-import { translateSource } from '../src/ui-messages.ts';
+import { translateSource, translateMessage } from '../src/ui-messages.ts';
+import { mapTemplate } from '../src/ui-source.ts';
 
 export { LOCALES };
 const initialInterface = globalThis.document?.documentElement.dataset.uiLanguage;
@@ -14,9 +15,13 @@ export const languageTag = () => LOCALE_TAGS[interfaceLanguage];
 export function t(source, locale = interfaceLanguage) {
   return translateSource(String(source ?? ''), locale, String(source ?? '').includes('<'));
 }
+/** @param {Parameters<typeof translateMessage>[0]} key */
+export function message(key, params = {}, locale = interfaceLanguage) {
+  return translateMessage(key, locale, params);
+}
 /** Translate authored template fragments; interpolation values are preserved byte for byte. */
 export function ui(parts, ...values) {
-  return parts.reduce((result, part, index) => result + translateSource(part, interfaceLanguage, part.includes('<') || part.includes('>')) + (index < values.length ? values[index] : ''), '');
+  return mapTemplate(parts, values, source => translateSource(source, interfaceLanguage));
 }
 export function setLanguages(settings) {
   if (isLocale(settings.uiLanguage)) interfaceLanguage = settings.uiLanguage;

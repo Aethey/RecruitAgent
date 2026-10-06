@@ -1,9 +1,11 @@
+import { t, message } from './i18n.js';
+
 const stages = {waiting:'准备开始',asking:'Codex 正在提问',answering:'正在听你回答',feedback:'Codex 正在点评',assisting:'Codex 正在回应你的请求',ready:'可以重答或进入下一题',ended:'本次面试已结束'};
 
 export function voiceActivity(state, mode = 'interview', stage = 'waiting', preparing = false) {
   const level = Math.max(state.inputLevel ?? 0,state.outputLevel ?? 0);
   const capturing = !!state.recording && !state.test && mode !== 'preview' && mode !== 'probe';
-  const result = (activity,label,detail,recording = false,animate = false) => ({activity,label,detail,recording,animate,level});
+  const result = (activity,label,detail,recording = false,animate = false) => ({activity,label:t(label),detail:t(detail),recording,animate,level});
   if (preparing) return result('preparing','准备题目中','正在准备所选语言的提问和 tips…',false,true);
   if (state.error) return result('error','连接未完成',state.error);
   if (state.phase === 'connecting') return result('connecting','正在连接',mode === 'preview' ? '连接所选音色，无需麦克风。' : '连接后，Codex 会先提问。',false,true);
@@ -16,7 +18,7 @@ export function voiceActivity(state, mode = 'interview', stage = 'waiting', prep
   if (state.processing || state.backendThinking || state.delegating) {
     const elapsed = state.processingElapsed ?? 0, waiting = elapsed >= 15;
     return result(waiting ? 'slow' : state.backendThinking ? 'thinking' : 'processing',waiting ? '等待较久' : state.backendThinking ? 'Codex 后台思考中' : state.delegating ? '等待后台结果' : '语音处理中',
-      (state.backendThinking ? '后台任务正在处理' : '语音已收到，正在等待回复')+' · '+elapsed+' 秒。'+(waiting ? '可以停止本轮回复；超时会停止旧回复并恢复倾听。' : '可以随时停止或暂停。'),capturing,true);
+      message(state.backendThinking ? 'voice.thinking' : 'voice.processing', {seconds:elapsed,action:t(waiting ? '可以停止本轮回复；超时会停止旧回复并恢复倾听。' : '可以随时停止或暂停。')}),capturing,true);
   }
   if (mode === 'probe' || state.test) return result('test','合成语音测试','没有使用麦克风。',false,state.outputSpeaking);
   if (state.muted || !state.recording) return {...result('muted','麦克风已静音',state.outputSpeaking ? 'Codex 正在说话。' : '打开麦克风后继续回答。'),level:0};

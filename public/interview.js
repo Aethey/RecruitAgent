@@ -50,13 +50,20 @@ export function createInterviewPractice({ $, escape, date, options, pageHeading,
   function materialsContent() {
     const sources = getConfig().interviewSources, selected = sources.selection ?? { resume: [], personal: [], study: [] };
     const records = getState().library ?? [];
-    return ui`<div class="section-heading"><div><h2>出题资料</h2><p class="card-subtitle">上传自己的资料后，为每份资料选择用途。至少选择一份简历。</p></div><a class="button flat" href="#library">上传资料 ↗</a></div>
-      <p class="interview-help">${escape(sources.available ? t("简历已就绪，可以生成问题。") : t("尚未选择可读取的简历；图片或扫描 PDF 请先在资料库整理。"))}</p>
+    return ui`<div class="section-heading interview-materials-heading"><div><h2>出题资料</h2><p class="card-subtitle">上传自己的资料后，为每份资料选择用途。至少选择一份简历。</p></div><a class="button flat" href="#library">上传资料 ↗</a></div>
+      <p class="interview-materials-readiness" data-ready="${sources.available}"><span aria-hidden="true">${sources.available ? "✓" : "!"}</span>${escape(sources.available ? t("简历已就绪，可以生成问题。") : t("尚未选择可读取的简历；图片或扫描 PDF 请先在资料库整理。"))}</p>
       ${sources.legacy && sources.available ? t('<p class="interview-help">正在兼容读取本机原有资料目录；保存下方选择后，以所选资料为准。</p>') : ""}
-      <form id="interview-materials-form"><div class="model-settings-list">${records.map(item => ui`<label class="model-setting-row"><span>${escape(item.title)}</span><select data-material-id="${escape(item.id)}" aria-label="${escape(item.title)}的用途">${options({ none: t("不用于面试"), resume: t("简历 / 项目经历"), personal: t("本人案例"), study: t("技术学习材料") }, Object.keys(selected).find(role => selected[role].includes(item.id)) ?? "none")}</select></label>`).join("") || t('<p class="interview-help">资料库还是空的，请先上传 PDF 或 Markdown。</p>')}</div><div class="settings-actions"><span id="interview-materials-status" role="status"></span><button class="button primary" type="submit">保存出题资料</button></div></form>`;
+      <form id="interview-materials-form"><div class="interview-materials-list">${records.map(item => {
+        const role = Object.keys(selected).find(role => selected[role].includes(item.id)) ?? "none";
+        return ui`<label class="interview-material-row" data-material-role="${role}"><span class="interview-material-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span><span class="interview-material-title">${escape(item.title)}</span><select data-material-id="${escape(item.id)}" aria-label="${escape(item.title + t("的用途"))}">${options({ none: t("不用于面试"), resume: t("简历 / 项目经历"), personal: t("本人案例"), study: t("技术学习材料") }, role)}</select></label>`;
+      }).join("") || t('<p class="interview-materials-empty">资料库还是空的，请先上传 PDF 或 Markdown。</p>')}</div><div class="settings-actions interview-materials-actions"><span id="interview-materials-status" role="status"></span><button class="button primary" type="submit">保存出题资料</button></div></form>`;
   }
   function bindMaterialsForm() {
     if (!$("#interview-materials-form")) return;
+    elements('[data-material-id]').forEach(select => select.onchange = () => {
+      const row = select.parentElement;
+      if (row) row.dataset.materialRole = (/** @type {HTMLSelectElement} */ (select)).value;
+    });
     $("#interview-materials-form").onsubmit = async event => {
       event.preventDefault(); const selected = { resume: [], personal: [], study: [] }, button = event.submitter;
       elements('[data-material-id]').forEach(input => { if ((/** @type {HTMLInputElement} */ (input)).value !== "none") selected[(/** @type {HTMLInputElement} */ (input)).value].push(input.dataset.materialId); });

@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node --import tsx src/server.ts",
     "dev": "node --watch --import tsx src/server.ts",
-    "check": "npm run generated:check && npm run check:server && npm run check:web",
+    "check": "npm run generated:check && npm run i18n:check && npm run check:server && npm run check:web",
     "test": "node --import tsx --test \"test/*.test.ts\"",
     "build": "node scripts/build-web.mjs",
     "prestart": "npm run build",
@@ -27,7 +27,10 @@
     "generated:check": "node scripts/generate-codex.mjs --check && node scripts/generate-contracts.mjs --check",
     "check:server": "tsc --noEmit",
     "check:web": "tsc --noEmit -p tsconfig.web.json",
-    "prebuild": "node scripts/generate-contracts.mjs --check"
+    "prebuild": "node scripts/generate-contracts.mjs --check",
+    "i18n:extract": "node --import tsx scripts/i18n.mjs extract",
+    "i18n:translate": "node --import tsx scripts/i18n.mjs translate",
+    "i18n:check": "node --import tsx scripts/i18n.mjs check"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.99.2",

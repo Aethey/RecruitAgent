@@ -30,9 +30,9 @@ export function createApiClient(translateError: (message: string) => string = va
 }
 
 /** Dynamic task dispatch still verifies the selected endpoint and its body at runtime. */
-export async function requestTask(api: ApiClient, path: TaskPath, body: unknown): Promise<TaskStarted> {
+export async function requestTask(api: ApiClient, path: TaskPath, body: unknown, translateError: (message: string) => string = value => value): Promise<TaskStarted> {
   const contract = apiContract('POST', path);
-  if (!contract?.request || !validateApiValue(contract.request, body)) throw new Error('请求的数据结构不正确。');
+  if (!contract?.request || !validateApiValue(contract.request, body)) throw new Error(translateError('请求的数据结构不正确。'));
   // Every TaskPath is generated from an endpoint whose response contains jobId.
   const send = api as (path: TaskPath, method: 'POST', body: unknown) => Promise<TaskStarted>;
   return send(path, 'POST', body);

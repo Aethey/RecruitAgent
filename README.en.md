@@ -76,7 +76,7 @@ The initial interface language is Chinese. In `设置 → 语言设置` (Setting
 2. Authenticate with your own account on the official OpenAI page. Model access and usage limits depend on actual request results.
 3. Algorithms, programming language practice, study and chat are ready to use. For interview practice, first upload your own PDF or Markdown to the local document library.
 4. In Interview practice → Question sources, select each document's role and save. Select at least one résumé or project experience document. Give personal cases and technical study material separate roles.
-5. For scanned PDFs or images, organize them in the library first to extract text. A [starter template in Chinese](examples/resume-template.md) is also available.
+5. For scanned PDFs or images, organize them in the library first to extract text.
 
 Browsing documents and uploading text documents do not call a model. Automatic organization, AI practice and chat do. Code assessments are static; user code is not executed.
 
@@ -111,69 +111,6 @@ Restart after changing configuration. If the port is busy, change `PORT`. The mo
 
 Existing `data/state.json` and document folders remain compatible. Once you save a new question source selection, interview preparation uses those selected documents. Personal document folders are excluded from public releases.
 
-## Backup and restore
+## Data backup
 
-Download a `.json.gz` backup from Settings → Data backup, or stop the application and run:
-
-```sh
-npm run backup
-```
-
-Backups are written to `backups/` by default. To specify a filename:
-
-```sh
-npm run backup -- backups/my-study.json.gz
-```
-
-A backup includes learning records and original library documents, **excluding login credentials, Pi sessions and voice logs**. It contains personal documents and must not be committed to GitHub. The built-in limit is 512 MB. For a larger library, stop the application and copy the entire data folder; that folder also contains credentials.
-
-Restore into a new folder that does not already exist:
-
-```sh
-npm run restore -- backups/my-study.json.gz --data-dir ./data-restored
-```
-
-Restore validates the format, checksums and file paths, preserving existing folders. Stop the application, set `DATA_DIR` to `./data-restored` in `.env`, then restart and authenticate again. See the [release checklist in Chinese](docs/release-checklist.md) for upgrade steps.
-
-## Communication logs
-
-Each Codex text request, voice RPC and significant call state change is recorded in `data/logs/codex.jsonl` (under `logs/` in a custom `DATA_DIR`). Records include UTC timestamps, instance/request/session/thread IDs, model, duration, outcome and redacted errors. The HTTP `X-Request-ID` response header links requests to their logs. Browser records cover connection, recording, response and audio verification transitions.
-
-Logs exclude prompts, answers, résumés, audio, images, SDP and credentials. Each file rotates at about 5 MB, keeping the current file and three archives. Logs are excluded from Git, releases and backups. View them with `tail -f data/logs/codex.jsonl`. Interview answer text remains in the existing interview history.
-
-Failed model checks describe the last check. The current connection and verified audio take precedence in the call display. A failed background turn does not mean the whole voice connection failed; recovered responses clear stale notices.
-
-## Development and release
-
-```sh
-npm ci --ignore-scripts
-npm run check
-npm test
-npm run release:check
-npm run release:prepare
-```
-
-`release:prepare` creates a public project folder and checksum manifest under `release/`. It copies only code, public documentation, reviewed demo screenshots, synthetic test material and templates. Personal documents, credentials, installed dependencies, unreviewed screenshots and existing Git history are excluded. You can create a GitHub repository from this folder.
-
-`.gitignore` does not remove sensitive files that were already committed or clean existing history. Before publishing the original working folder, check the files and history using the [release checklist in Chinese](docs/release-checklist.md).
-
-CI is configured for Linux, macOS and Windows; actual results must be checked in GitHub Actions. Synthetic model tests validate program logic. They do not verify real accounts, usage limits, microphones or experimental voice connections.
-
-The server listens only on the local loopback address. Each person runs it on their own computer; GitHub hosts the source and downloads. This version does not provide a public server for multiple users.
-
-[CLI generation and type safety](docs/code-generation.md)
-
-## Localization resources and code generation
-
-Maintain UI text in `public/locales/zh.json`, `public/locales/ja.json` and `public/locales/en.json`. All three resources use the same stable keys. Add all three translations for new text; keep the key when changing wording and update the corresponding translations.
-
-```sh
-npm run i18n:generate
-npm run i18n:check
-```
-
-`i18n:generate` reads the local resources and generates message keys, parameter types and accessors in `src/generated/localizations.ts`. **It generates code, not translations, and does not call a model or translation service.** Regenerate this file with the CLI rather than editing it directly.
-
-Pages use `t('ui.startVoiceInterview')`; messages with variables use named parameters, such as `t('voice.stats', {seconds, sent, received})`. Resource checks reject mismatched keys, empty translations, inconsistent placeholders, stale generated output and Chinese text written directly in UI code. `npm run check` includes these checks and frontend/backend type checks.
-
-User documents, answers, code and stored AI content retain their original text.
+Download a `.json.gz` file from Settings → Data backup to save your learning records and documents. Login credentials are excluded.

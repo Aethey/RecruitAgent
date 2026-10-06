@@ -76,7 +76,7 @@ node scripts/launch.mjs
 2. 在 OpenAI 官方页面用自己的账号完成授权。实际模型权限和额度以请求结果为准。
 3. 算法、语言、学习、聊天可以直接使用。面试练习先在资料库上传自己的 PDF 或 Markdown，再在「面试练习 → 出题资料」选择用途并保存。
 4. 至少选择一份「简历 / 项目经历」；本人案例与技术学习材料分别选择，避免把学习材料当成真实经历。
-5. 扫描 PDF 或图片先在资料库整理以取得文字。也可参考 `examples/resume-template.md` 填写真实项目经历。
+5. 扫描 PDF 或图片先在资料库整理以取得文字。
 
 浏览和上传文字资料不调用模型；自动整理、AI 练习和聊天会调用模型。生成代码的评价是静态评估，不会执行用户代码。
 
@@ -111,69 +111,6 @@ codex login
 
 旧版本的 `data/state.json` 与原有资料目录继续兼容；保存新的出题资料选择后，面试以选择的资料为准。资料目录不会随公开代码发布。
 
-## 备份与恢复
+## 数据备份
 
-在「设置 → 数据备份」下载 `.json.gz` 备份。也可停止应用后运行：
-
-```sh
-npm run backup
-```
-
-默认写入 `backups/`；指定文件名：
-
-```sh
-npm run backup -- backups/my-study.json.gz
-```
-
-备份含学习记录与资料库原文件，**不包含登录凭据、Pi 会话和语音日志**。备份含个人资料，不应提交到 GitHub。内置备份上限为 512 MB；更大的资料库请停止应用后直接复制整个数据目录，注意该目录同时包含凭据。
-
-恢复必须指定一个尚不存在的新目录：
-
-```sh
-npm run restore -- backups/my-study.json.gz --data-dir ./data-restored
-```
-
-恢复会检查格式、校验和与文件路径，保留现有目录。停止应用后将 `.env` 的 `DATA_DIR` 改成 `./data-restored`，再启动并重新授权。升级步骤见 `docs/release-checklist.md`。
-
-## 通信日志
-
-每次 Codex 文字请求、语音 RPC 和关键通话状态都会写入 `data/logs/codex.jsonl`（自定义 `DATA_DIR` 时位于该目录的 `logs/`）。日志包含 UTC 时间、实例与请求 ID、会话/线程 ID、模型、耗时、结果及脱敏错误；HTTP 响应的 `X-Request-ID` 可用于关联请求。浏览器会记录连接、录音、回复和音频验证状态变化。
-
-日志不保存问题/回答正文、简历、音频、图片、SDP 或登录凭据。每个文件最多约 5 MB，保留当前文件和三份轮转文件；日志不会进入 Git、发布包或数据备份。可用 `tail -f data/logs/codex.jsonl` 查看。面试回答正文仍保存在原有面试记录中。
-
-模型菜单中的失败结果表示上次检查结果；本次通话连接和收到音频后的状态优先显示。单轮后台失败不会等同于整个语音连接失效，后续回复恢复时会清除旧提示。
-
-## 开发与发布
-
-```sh
-npm ci --ignore-scripts
-npm run check
-npm test
-npm run release:check
-npm run release:prepare
-```
-
-`release:prepare` 在 `release/` 生成独立的公开项目目录和文件校验清单；只复制代码、公开文档、已审核的演示截图、合成测试资料与模板，不复制个人资料、凭据、依赖目录、未审核截图或现有 Git 历史。可从该目录创建 GitHub 仓库。
-
-已有 `.gitignore` 不会清理已经提交的敏感文件。上传原工作目录前，按 `docs/release-checklist.md` 检查待提交文件与历史。
-
-CI 配置覆盖 Linux、macOS、Windows；实际结果以 GitHub Actions 为准。合成模型测试验证程序逻辑，不代表真实账号、额度、麦克风或实验语音接口已验证。
-
-服务只监听本机回环地址，适合每个人在自己的电脑上运行；GitHub 提供下载与源码托管。此版本不提供公网多人访问。
-
-[CLI 生成与类型安全](docs/code-generation.md)
-
-## 多语言资源与代码生成
-
-界面文案统一维护在 `public/locales/zh.json`、`public/locales/ja.json` 和 `public/locales/en.json`。三份资源使用相同的固定 key，新增文案时填写全部三种译文；修改文案时保留 key，并同步更新对应译文。
-
-```sh
-npm run i18n:generate
-npm run i18n:check
-```
-
-`i18n:generate` 读取本地资源，生成 `src/generated/localizations.ts` 的文案 key、参数类型和访问接口。**它生成代码，不生成译文，也不调用模型或翻译服务。** 生成文件由 CLI 维护，不直接编辑。
-
-页面通过 `t('ui.startVoiceInterview')` 访问文案；动态文案使用命名参数，例如 `t('voice.stats', {seconds, sent, received})`。资源检查会拒绝三语 key 不一致、空译文、占位符不一致、过期生成代码，以及直接写入界面代码的中文。`npm run check` 同时执行这项检查和前后端类型检查。
-
-用户资料、回答、代码及保存的 AI 正文保留原文。
+在「设置 → 数据备份」下载 `.json.gz` 文件，保存学习记录和资料。备份不包含登录凭据。

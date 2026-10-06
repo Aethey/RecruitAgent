@@ -12,10 +12,11 @@ test('light and dark role pairs have readable text and visible input outlines',a
  for(const {theme,colors}of palettes)for(const [fg,bg]of pairs){const a=luminance(colors[fg]),b=luminance(colors[bg]),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);assert(ratio>=(fg==='outline'?3:4.5),`${theme}: ${fg}/${bg} = ${ratio}`);}
 });
 test('theme preference restores before paint, follows system only when selected, and survives blocked storage',async()=>{
- const script=await readFile(new URL('../public/theme.js',import.meta.url),'utf8');
+ const source=await readFile(new URL('../public/theme.js',import.meta.url),'utf8');
+ for(const script of [source.replace(/\r\n/g,'\n'),source.replace(/\r?\n/g,'\r\n')]){
  function setup(saved:string|null,blocked=false){
   const root={dataset:{} as Record<string,string>},handlers=new Map<string,Function>(),events:any[]=[],attributes=new Map<string,string>(),toggle={title:'',setAttribute:(name:string,value:string)=>attributes.set(name,value),addEventListener:(_name:string,fn:Function)=>handlers.set('click',fn)},system={matches:true,addEventListener:(_name:string,fn:Function)=>handlers.set('system',fn)};let stored=saved;
-  runInNewContext(script.replace(/^import .*;\n/m, ''),{formatMessage,window:{matchMedia:()=>system,addEventListener:(name:string,fn:Function)=>handlers.set(name,fn),dispatchEvent:(e:any)=>events.push(e)},document:{documentElement:root,querySelector:(q:string)=>q==='#theme-toggle'?toggle:{setAttribute(){}},addEventListener:(name:string,fn:Function)=>handlers.set(name,fn)},localStorage:{getItem:()=>{if(blocked)throw Error('unavailable');return stored;},setItem:(_key:string,value:string)=>{if(blocked)throw Error('unavailable');stored=value;}},CustomEvent:class{constructor(public type:string,public detail:any){}}});
+  runInNewContext(script.replace(/^import .*;\r?\n/m, ''),{formatMessage,window:{matchMedia:()=>system,addEventListener:(name:string,fn:Function)=>handlers.set(name,fn),dispatchEvent:(e:any)=>events.push(e)},document:{documentElement:root,querySelector:(q:string)=>q==='#theme-toggle'?toggle:{setAttribute(){}},addEventListener:(name:string,fn:Function)=>handlers.set(name,fn)},localStorage:{getItem:()=>{if(blocked)throw Error('unavailable');return stored;},setItem:(_key:string,value:string)=>{if(blocked)throw Error('unavailable');stored=value;}},CustomEvent:class{constructor(public type:string,public detail:any){}}});
   assert.equal(root.dataset.theme,saved==='light'?'light':'dark');
   handlers.get('DOMContentLoaded')!();return {root,handlers,events,toggle,attributes,system,stored:()=>stored};
  }
@@ -24,4 +25,5 @@ test('theme preference restores before paint, follows system only when selected,
  a.handlers.get('storage')!({key:'algo-practice:theme',newValue:'system'});assert.equal(a.root.dataset.theme,'light');a.system.matches=true;a.handlers.get('system')!();assert.equal(a.root.dataset.theme,'dark');
  a.handlers.get('storage')!({key:'algo-practice:theme',newValue:'light'});assert.equal(a.root.dataset.theme,'light');
  const b=setup('invalid',true);assert.equal(b.root.dataset.theme,'dark');b.handlers.get('click')!();assert.equal(b.root.dataset.theme,'light');b.system.matches=false;b.handlers.get('system')!();b.system.matches=true;b.handlers.get('system')!();assert.equal(b.root.dataset.theme,'light');b.handlers.get('click')!();assert.equal(b.root.dataset.theme,'dark');
+ }
 });

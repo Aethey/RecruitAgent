@@ -1,0 +1,2 @@
+# Generators emit LF; preserve it when Git checks out files on Windows.
+/src/generated/** text eol=lf

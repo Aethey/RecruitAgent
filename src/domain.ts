@@ -1,12 +1,13 @@
+import { formatMessage } from './generated/localizations.ts';
 import type { Locale } from "./locales.ts";
 import type { ModelOutputs } from './contracts.ts';
 import { modelValue } from './contract-validation.ts';
 export const TOPICS = {
-  array: "数组", string: "字符串", hash: "哈希表", "two-pointers": "双指针 / 滑动窗口",
-  stack: "栈与队列", "linked-list": "链表", tree: "树", graph: "图",
-  "binary-search": "二分查找", dp: "动态规划",
+  array: formatMessage('zh', "ui.arrays"), string: formatMessage('zh', "ui.strings"), hash: formatMessage('zh', "ui.hashTables"), "two-pointers": formatMessage('zh', "ui.twoPointersSlidingWindow"),
+  stack: formatMessage('zh', "ui.stacksAndQueues"), "linked-list": formatMessage('zh', "ui.linkedLists"), tree: formatMessage('zh', "ui.trees"), graph: formatMessage('zh', "ui.graphs"),
+  "binary-search": formatMessage('zh', "ui.binarySearch"), dp: formatMessage('zh', "ui.dynamicProgramming"),
 } as const;
-export const DIFFICULTIES = { easy: "简单", medium: "中等", hard: "困难" } as const;
+export const DIFFICULTIES = { easy: formatMessage('zh', "ui.easy"), medium: formatMessage('zh', "ui.medium"), hard: formatMessage('zh', "ui.hard") } as const;
 import type { LanguageDrill } from "./language.ts";
 import type { InterviewJob, InterviewSet } from "./interview.ts";
 import type { LibraryItem } from "./library.ts";
@@ -41,43 +42,43 @@ export type TeacherSettings = { trigger: "idle" | "manual"; idleSeconds: number 
 export const DEFAULT_TEACHER_SETTINGS: TeacherSettings = { trigger: "idle", idleSeconds: 20 };
 export function teacherSettings(value: unknown): TeacherSettings {
   const input = object(value);
-  if (input.trigger !== "idle" && input.trigger !== "manual") throw new AppError(400, "请选择有效的教师分析方式。");
-  if (!Number.isInteger(input.idleSeconds) || Number(input.idleSeconds) < 1 || Number(input.idleSeconds) > 3600) throw new AppError(400, "停止输入等待时长须为 1–3600 秒的整数。");
+  if (input.trigger !== "idle" && input.trigger !== "manual") throw new AppError(400, formatMessage('zh', "ui.chooseAValidTeacherAnalysisTrigger"));
+  if (!Number.isInteger(input.idleSeconds) || Number(input.idleSeconds) < 1 || Number(input.idleSeconds) > 3600) throw new AppError(400, formatMessage('zh', "ui.inactivityWaitMustBeAnIntegerFromTo"));
   return { trigger: input.trigger, idleSeconds: Number(input.idleSeconds) };
 }
 export type InterviewMaterials = { resume: string[]; personal: string[]; study: string[] };
 export type State = { interviewMaterials?: InterviewMaterials; version: 1; problems: Problem[]; languageDrills?: LanguageDrill[]; interviewJobs?: InterviewJob[]; interviews?: InterviewSet[]; library?: LibraryItem[]; trainings?: Training[]; studyPoints?: KnowledgePoint[]; studyCards?: Card[]; studyBatches?: StudyBatch[]; chats?: ChatThread[]; analysis?: Analysis; settings?: { model: string; visibleModels?: string[]; teacher?: TeacherSettings; uiLanguage?: Locale; userLanguage?: Locale } };
-export const REVIEW_LABEL = "AI 静态代码评估，未执行代码或测试；分数是学习参考。";
+export const REVIEW_LABEL = formatMessage('zh', "ui.aIStaticCodeReviewCodeAndTestsWere");
 
 export class AppError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 export function object(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new AppError(400, "数据格式不正确。");
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new AppError(400, formatMessage('zh', "ui.invalidDataFormat"));
   return value as Record<string, unknown>;
 }
 export function text(value: unknown, max = 20000): string {
-  if (typeof value !== "string" || !value.trim() || value.length > max) throw new AppError(400, "文本为空或过长。");
+  if (typeof value !== "string" || !value.trim() || value.length > max) throw new AppError(400, formatMessage('zh', "ui.textIsEmptyOrTooLong"));
   return value;
 }
 function texts(value: unknown): string[] {
-  if (!Array.isArray(value) || value.length > 30) throw new AppError(400, "列表格式不正确。");
+  if (!Array.isArray(value) || value.length > 30) throw new AppError(400, formatMessage('zh', "ui.invalidListFormat"));
   return value.map(v => text(v, 6000));
 }
 function score(value: unknown): number {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 100) throw new AppError(400, "评分格式不正确。");
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 100) throw new AppError(400, formatMessage('zh', "ui.invalidScoreFormat"));
   return Math.round(value);
 }
 export function selection(value: unknown): Selection {
   const v = object(value);
   if (typeof v.topic !== "string" || !Object.hasOwn(TOPICS, v.topic) ||
       typeof v.difficulty !== "string" || !Object.hasOwn(DIFFICULTIES, v.difficulty) ||
-      typeof v.language !== "string" || !Object.hasOwn(LANGUAGES, v.language)) throw new AppError(400, "请选择有效的题型、难度和语言。");
+      typeof v.language !== "string" || !Object.hasOwn(LANGUAGES, v.language)) throw new AppError(400, formatMessage('zh', "ui.chooseAValidTopicDifficultyAndProgrammingLanguage"));
   return { topic: v.topic as Topic, difficulty: v.difficulty as Difficulty, language: v.language as Language };
 }
 export function codeInput(value: unknown): string {
   const code = object(value).code;
-  if (typeof code !== "string" || code.length > 100000) throw new AppError(400, "代码不能超过 100,000 字符。");
+  if (typeof code !== "string" || code.length > 100000) throw new AppError(400, formatMessage('zh', "ui.codeCannotExceedCharacters"));
   return code;
 }
 export function parseModelJson<K extends keyof ModelOutputs, T>(raw: string, kind: K, validate: (value: ModelOutputs[K]) => T): T {
@@ -85,12 +86,12 @@ export function parseModelJson<K extends keyof ModelOutputs, T>(raw: string, kin
     const clean = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
     return validate(modelValue(kind, JSON.parse(clean)));
   } catch {
-    throw new AppError(502, "Codex 返回的结构不完整，请重试。本次未写入结果。");
+    throw new AppError(502, formatMessage('zh', "ui.codexReturnedIncompleteDataRetryNoResultWas"));
   }
 }
 export function problemContent(value: unknown): ProblemContent {
   const v = object(value);
-  if (!Array.isArray(v.examples) || v.examples.length < 1 || v.examples.length > 6) throw new AppError(400, "例子格式不正确。");
+  if (!Array.isArray(v.examples) || v.examples.length < 1 || v.examples.length > 6) throw new AppError(400, formatMessage('zh', "ui.invalidExampleFormat"));
   return {
     title: text(v.title, 150), description: text(v.description), starterCode: text(v.starterCode),
     constraints: texts(v.constraints),
@@ -106,7 +107,7 @@ export function hintContent(value: unknown): Pick<Hint, "observation" | "questio
 }
 export function reviewContent(value: unknown): ReviewContent {
   const v = object(value), d = object(v.dimensions);
-  if (v.verdict !== "needs-work" && v.verdict !== "promising" && v.verdict !== "solid") throw new AppError(400, "评估格式不正确。");
+  if (v.verdict !== "needs-work" && v.verdict !== "promising" && v.verdict !== "solid") throw new AppError(400, formatMessage('zh', "ui.invalidEvaluationFormat"));
   return {
     verdict: v.verdict, score: score(v.score), summary: text(v.summary, 6000),
     dimensions: { correctness: score(d.correctness), complexity: score(d.complexity), edgeCases: score(d.edgeCases), clarity: score(d.clarity) },

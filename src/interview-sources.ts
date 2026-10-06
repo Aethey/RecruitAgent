@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
@@ -30,7 +31,7 @@ export class FileInterviewSources implements InterviewSources {
   }
   async load(selection: InterviewSelection, jobText = "") {
     const status = await this.status();
-    if (!status.available) throw new AppError(400, "请在资料库上传简历，再到面试练习选择出题资料。");
+    if (!status.available) throw new AppError(400, formatMessage('zh', "ui.pleaseUploadAResumeInTheLibraryThen"));
     const files = await Promise.all(status.files.map(async name => ({ name, data: await readFile(resolve(this.directory, name)) })));
     const fingerprint = createHash("sha256").update(Buffer.concat(files.flatMap(f => [Buffer.from(f.name), f.data]))).digest("hex");
     if (this.cached?.fingerprint !== fingerprint) {
@@ -65,7 +66,7 @@ export class FileInterviewSources implements InterviewSources {
           });
         }
       }
-      if (!sources.some(s => s.kind === "resume" && s.content.trim())) throw new AppError(400, "简历没有可读取的文字。扫描 PDF 请上传到资料库并整理后选择。 ");
+      if (!sources.some(s => s.kind === "resume" && s.content.trim())) throw new AppError(400, formatMessage('zh', "ui.theResumeHasNoReadableTextForScanned") + ' ');
       this.cached = { fingerprint, sources };
     }
     return selectSources(this.cached.sources, selection, jobText);
@@ -85,9 +86,9 @@ export class LibraryInterviewSources implements InterviewSources {
     const input = object(value), selected: InterviewMaterials = { resume: [], personal: [], study: [] }, seen = new Set<string>();
     for (const role of ["resume", "personal", "study"] as const) {
       const ids = input[role];
-      if (!Array.isArray(ids) || ids.length > 20) throw new AppError(400, "每类最多选择 20 份资料。");
+      if (!Array.isArray(ids) || ids.length > 20) throw new AppError(400, formatMessage('zh', "ui.selectUpToMaterialsPerCategory"));
       for (const id of ids) {
-        if (typeof id !== "string" || seen.has(id)) throw new AppError(400, "同一份资料只选择一种用途。");
+        if (typeof id !== "string" || seen.has(id)) throw new AppError(400, formatMessage('zh', "ui.chooseOnlyOneUseForTheSameMaterial"));
         this.library.get(id);
         seen.add(id); selected[role].push(id);
       }
@@ -99,7 +100,7 @@ export class LibraryInterviewSources implements InterviewSources {
     const state = this.store.snapshot(), materials = state.interviewMaterials;
     const locale = state.settings?.uiLanguage ?? DEFAULT_LOCALE;
     if (!materials && this.legacy) return this.legacy.load(selection, jobText);
-    if (!(await this.status()).available) throw new AppError(400, "请在资料库上传可读取的简历，再到面试练习选择出题资料。扫描 PDF 或图片需先整理取得文字。");
+    if (!(await this.status()).available) throw new AppError(400, formatMessage('zh', "ui.pleaseUploadAReadableResumeInTheLibrary"));
     const sources: Source[] = [];
     for (const kind of ["resume", "personal", "study"] as const) {
       for (const id of materials?.[kind] ?? []) {
@@ -109,7 +110,7 @@ export class LibraryInterviewSources implements InterviewSources {
         sources.push({ id: `library-${id}`, title: item.title, kind, content: item.extractedText + (item.notes ? `\n\n本人添加的备注：\n${item.notes}` : "") });
       }
     }
-    if (sources.reduce((length, source) => length + source.content.length, 0) > 160000) throw new AppError(400, "面试资料合计过长，请减少所选资料。");
+    if (sources.reduce((length, source) => length + source.content.length, 0) > 160000) throw new AppError(400, formatMessage('zh', "ui.theSelectedInterviewMaterialsAreTooLongIn"));
     return selectSources(sources, selection, jobText);
   }
 }

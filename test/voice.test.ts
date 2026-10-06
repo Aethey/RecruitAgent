@@ -14,8 +14,9 @@ const offer = "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n";
 async function fixture(t: test.TestContext) {
   const dataDir = await mkdtemp(join(tmpdir(),"voice-demo-test-")), rpc = new FakeVoiceRpc();
   const voice = new CodexVoice(dataDir,async () => rpc,25);
-  t.after(async () => { await voice.close(); await rm(dataDir,{recursive:true,force:true}); });
-  return { dataDir, rpc, voice };
+  const apps: {close(): Promise<void>}[] = [];
+  t.after(async () => { for (const app of apps) await app.close(); await voice.close(); await rm(dataDir,{recursive:true,force:true}); });
+  return { dataDir, rpc, voice, apps };
 }
 test("voice uses native WebRTC and catches SDP sent before start acknowledgement; status never exposes credentials",async t => {
   const { rpc, voice } = await fixture(t);
@@ -58,10 +59,10 @@ test("canceling during thread creation prevents realtime start and closes the la
   assert(rpc.calls.some(c => c.method === "thread/unsubscribe"));
 });
 test("voice HTTP endpoints keep learning records and Pi calls unchanged; cross-origin requests are rejected",async t => {
-  const { dataDir, rpc } = await fixture(t), ai = new FakeAI();
+  const { dataDir, rpc, apps } = await fixture(t), ai = new FakeAI();
   const app = await createApp({dataDir,ai,sourceDir:null,interviewSources:fakeInterviewSources,voiceRpcFactory:async () => rpc});
   await new Promise<void>(resolveListen => app.server.listen(0,"127.0.0.1",resolveListen));
-  t.after(() => app.close());
+  apps.push(app);
   const address = app.server.address(); assert(address && typeof address !== "string");
   const base = `http://127.0.0.1:${address.port}`, before = JSON.stringify(app.store.snapshot());
   const status = await (await fetch(base+"/api/voice/status")).json(); assert.equal(status.authenticated,true); assert(!JSON.stringify(status).includes("PRIVATE_CREDENTIAL"));
@@ -119,9 +120,9 @@ test('a flat transcript committed before canonical events is displayed exactly o
 });
 
 test('voice audition uses the selected native voice, tone and language, starts speech once, and never writes an interview answer',async t => {
-  const {dataDir,rpc} = await fixture(t), ai = new FakeAI();
+  const {dataDir,rpc,apps} = await fixture(t), ai = new FakeAI();
   const app = await createApp({dataDir,ai,sourceDir:null,interviewSources:fakeInterviewSources,voiceRpcFactory:async () => rpc});
-  await new Promise<void>(resolveListen => app.server.listen(0,'127.0.0.1',resolveListen)); t.after(() => app.close());
+  await new Promise<void>(resolveListen => app.server.listen(0,'127.0.0.1',resolveListen)); apps.push(app);
   const address = app.server.address(); assert(address && typeof address !== 'string'); const base='http://127.0.0.1:'+address.port;
   const request = (path: string,method='GET',body?: unknown,origin?: string) => fetch(base+path,{method,headers:{'Content-Type':'application/json',...(origin ? {Origin:origin} : {})},...(body ? {body:JSON.stringify(body)} : {})});
   const before = JSON.stringify(app.store.snapshot());

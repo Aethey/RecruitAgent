@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { translateSource } from "./ui-messages.ts";
 import type { Locale } from "./locales.ts";
 import { createHash, randomUUID } from 'node:crypto';
@@ -6,8 +7,8 @@ import { LANGUAGE_SYLLABUS } from './language.ts';
 import { Store } from './store.ts';
 import { BREADTH_DOMAINS, BREADTH_GROUPS, BREADTH_POINTS, type BreadthScope } from './breadth.ts';
 
-export const STUDY_CATEGORIES = { algorithm: '算法知识', language: '语言写法', concept: '概念与方法', tools: '工程工具与 CLI', expression: '重点表达' } as const;
-export const STUDY_FACETS = { recall: '理解与记忆', write: '写法与命令', apply: '场景应用', explain: '简洁表达' } as const;
+export const STUDY_CATEGORIES = { algorithm: formatMessage('zh', "ui.algorithmKnowledge"), language: formatMessage('zh', "ui.languagePatterns"), concept: formatMessage('zh', "ui.conceptsAndMethods"), tools: formatMessage('zh', "ui.engineeringToolsAndCLI"), expression: formatMessage('zh', "ui.focusedExpression") } as const;
+export const STUDY_FACETS = { recall: formatMessage('zh', "ui.understandingAndRecall"), write: formatMessage('zh', "ui.syntaxAndCommands"), apply: formatMessage('zh', "ui.scenarioApplication"), explain: formatMessage('zh', "ui.conciseExpression") } as const;
 export type Category = keyof typeof STUDY_CATEGORIES;
 export type Facet = keyof typeof STUDY_FACETS;
 export type SourceRef = { kind: 'library' | 'problem' | 'language' | 'training'; id: string; title: string };
@@ -41,58 +42,58 @@ export function advanceSchedule(previous: Schedule, verdict: Feedback['verdict']
   return { rating, schedule: next };
 }
 function makePoint(category: Category, topic: string, title: string, facets: Facet[], language?: Language): KnowledgePoint {
-  return { id: `builtin-${idFor([category, topic, title, language ?? ''].join('|'))}`, title, category, topic, facets, ...(language ? { language } : {}), description: '以简短解释、写法或小场景检查这个知识点。' };
+  return { id: `builtin-${idFor([category, topic, title, language ?? ''].join('|'))}`, title, category, topic, facets, ...(language ? { language } : {}), description: formatMessage('zh', "study.defaultDescription") };
 }
 const algorithmConcepts: Record<string, string[]> = {
-  array: ['索引与空数组边界', '前缀和与区间计算', '局部状态与全局结果', '时间和空间复杂度'],
-  string: ['字符与编码边界', '字符串遍历与计数', '子串与子序列', '字符串拼接复杂度'],
-  hash: ['哈希表与键相等规则', '计数与查重', '碰撞与平均复杂度', 'Map 和 Set 的选用'],
-  'two-pointers': ['双指针的不变量', '快慢指针', '滑动窗口的扩张与收缩', '单调条件与窗口适用边界'],
-  stack: ['栈与队列的操作语义', '括号匹配', '单调栈', '队列与广度优先遍历'],
-  'linked-list': ['链表指针修改顺序', '虚拟头节点', '链表反转', '环与快慢指针'],
-  tree: ['递归的终止条件', '树的前中后序遍历', '二叉搜索树的不变量', '树的层序遍历'],
-  graph: ['邻接表与访问标记', 'DFS 与 BFS 的选用', '环检测与拓扑排序', '最短路径的权重条件'],
-  'binary-search': ['二分查找的区间定义', '终止条件与中点更新', 'lower_bound 与 upper_bound', '答案空间与单调判定'],
-  dp: ['状态定义', '状态转移与依赖顺序', '初始化和边界', '滚动数组的适用条件'],
+  array: [formatMessage('zh', "ui.indexingAndEmptyArrayBoundaries"), formatMessage('zh', "ui.prefixSumAndRangeCalculation"), formatMessage('zh', "ui.localStateAndGlobalResult"), formatMessage('zh', "ui.timeAndSpaceComplexity")],
+  string: [formatMessage('zh', "ui.characterAndEncodingBoundaries"), formatMessage('zh', "ui.stringTraversalAndCounting"), formatMessage('zh', "ui.substringsAndSubsequences"), formatMessage('zh', "ui.stringConcatenationComplexity")],
+  hash: [formatMessage('zh', "ui.hashTablesAndKeyEqualityRules"), formatMessage('zh', "ui.countingAndDuplicateChecks"), formatMessage('zh', "ui.collisionsAndAverageComplexity"), formatMessage('zh', "ui.choosingMapOrSet")],
+  'two-pointers': [formatMessage('zh', "ui.twoPointerInvariants"), formatMessage('zh', "ui.fastAndSlowPointers"), formatMessage('zh', "ui.expandingAndShrinkingASlidingWindow"), formatMessage('zh', "ui.monotonicConditionsAndWindowApplicabilityBoundaries")],
+  stack: [formatMessage('zh', "ui.operationSemanticsOfStacksAndQueues"), formatMessage('zh', "ui.parenthesesMatching"), formatMessage('zh', "ui.monotonicStack"), formatMessage('zh', "ui.queuesAndBreadthFirstTraversal")],
+  'linked-list': [formatMessage('zh', "ui.orderOfLinkedListPointerUpdates"), formatMessage('zh', "ui.dummyHeadNode"), formatMessage('zh', "ui.reverseALinkedList"), formatMessage('zh', "ui.cyclesAndFastSlowPointers")],
+  tree: [formatMessage('zh', "ui.recursionTerminationCondition"), formatMessage('zh', "ui.preorderInorderAndPostorderTreeTraversal"), formatMessage('zh', "ui.binarySearchTreeInvariants"), formatMessage('zh', "ui.levelOrderTreeTraversal")],
+  graph: [formatMessage('zh', "ui.adjacencyListAndVisitedMarkers"), formatMessage('zh', "ui.choosingBetweenDFSAndBFS"), formatMessage('zh', "ui.cycleDetectionAndTopologicalSorting"), formatMessage('zh', "ui.weightConditionsForShortestPaths")],
+  'binary-search': [formatMessage('zh', "ui.binarySearchIntervalDefinition"), formatMessage('zh', "ui.terminationConditionsAndMidpointUpdates"), formatMessage('zh', "ui.lowerBoundAndUpperBound"), formatMessage('zh', "ui.answerSpaceAndMonotonicPredicate")],
+  dp: [formatMessage('zh', "ui.stateDefinition"), formatMessage('zh', "ui.stateTransitionsAndDependencyOrder"), formatMessage('zh', "ui.initializationAndBoundaries"), formatMessage('zh', "ui.whenRollingArraysApply")],
 };
 export const BUILTIN_POINTS: KnowledgePoint[] = [
   ...Object.entries(algorithmConcepts).flatMap(([topic, titles]) => titles.map(title => makePoint('algorithm', TOPICS[topic as keyof typeof TOPICS], title, ['recall', 'apply', 'explain']))),
   ...Object.entries(LANGUAGE_SYLLABUS).flatMap(([language, topics]) => Object.values(topics).flatMap(topic => topic.concepts.map(title => makePoint('language', topic.label, title, ['write', 'recall', 'apply', 'explain'], language as Language)))),
-  ...['DI 与构造函数注入', 'IoC 与依赖倒置', 'DDD 与领域边界', '实体与值对象', '聚合与不变量', 'Repository 的责任边界', 'TDD 的反馈循环', '单元测试与集成测试', 'Mock、Stub 与 Fake', 'Kanban 与在制品限制', 'Scrum 与迭代', 'SOLID 的适用边界', '组合与继承', 'MVC、MVP 与 MVVM', '状态机与状态建模', 'BLoC 的事件和状态', '幂等与重试', '缓存与一致性', '并发、竞态与取消', 'CI/CD 与发布流程', '可观测性：日志、指标与追踪'].map(title => makePoint('concept', '概念与工程方法', title, ['recall', 'apply', 'explain'])),
-  ...['Git：status、diff 与 log', 'Git：分支、提交与合并', 'Git：revert 与 reset 的影响', 'ADB：设备、安装与日志', 'ADB 与 logcat 的筛选', 'Gradle：构建与测试任务', 'Flutter：analyze、test 与 build', 'Dart：format、analyze 与 test', 'Swift：build 与 test', 'Xcode：xcodebuild 与模拟器', 'Python：venv 与模块执行', 'Go：test、fmt 与 vet', 'Java：javac、java 与构建工具', 'CLI：管道、退出码与环境变量', 'Android Crash 堆栈与混淆 mapping', 'Android ANR 与线程阻塞', 'iOS Crash 与 dSYM 符号化', 'Flutter 异常与原生 Crash', 'Crashlytics 的用途与定位流程', 'Datadog 的移动端监控与诊断', 'Sentry 的错误跟踪与上下文', 'Android Studio Profiler 的排查方向', 'Instruments 的排查方向', '线上故障：版本、设备与复现上下文'].map(title => makePoint('tools', 'CLI 与移动端故障工具', title, ['recall', 'apply', 'explain', ...(title.includes('：') && !title.startsWith('线上') ? ['write' as Facet] : [])])),
-  ...['结论先行：说明一次技术决策', '三个要点：本人行动与结果', '简短解释一个技术名词', '解释两种方案的取舍', '清楚区分事实、推测与未知', '用简短日语说明验证方法', '将复杂项目背景压缩到重点'].map(title => makePoint('expression', '简洁的技术表达', title, ['explain', 'apply'])),
+  ...[formatMessage('zh', "ui.dIAndConstructorInjection"), formatMessage('zh', "ui.ioCAndDependencyInversion"), formatMessage('zh', "ui.dDDAndDomainBoundaries"), formatMessage('zh', "ui.entitiesAndValueObjects"), formatMessage('zh', "ui.aggregatesAndInvariants"), formatMessage('zh', "ui.repositoryResponsibilityBoundaries"), formatMessage('zh', "ui.theTDDFeedbackLoop"), formatMessage('zh', "ui.unitTestsAndIntegrationTests"), formatMessage('zh', "ui.mockStubAndFake"), formatMessage('zh', "ui.kanbanAndWorkInProgressLimits"), formatMessage('zh', "ui.scrumAndIterations"), formatMessage('zh', "ui.sOLIDApplicabilityBoundaries"), formatMessage('zh', "ui.compositionAndInheritance"), formatMessage('zh', "ui.mVCMVPAndMVVM"), formatMessage('zh', "ui.stateMachinesAndStateModeling"), formatMessage('zh', "ui.bLoCEventsAndStates"), formatMessage('zh', "ui.idempotencyAndRetry"), formatMessage('zh', "ui.cachingAndConsistency"), formatMessage('zh', "ui.concurrencyRacesAndCancellation"), formatMessage('zh', "ui.cICDAndReleaseFlow"), formatMessage('zh', "ui.observabilityLogsMetricsAndTraces")].map(title => makePoint('concept', formatMessage('zh', "ui.conceptsAndEngineeringMethods"), title, ['recall', 'apply', 'explain'])),
+  ...[formatMessage('zh', "ui.gitStatusDiffAndLog"), formatMessage('zh', "ui.gitBranchesCommitsAndMerges"), formatMessage('zh', "ui.gitEffectsOfRevertAndReset"), formatMessage('zh', "ui.aDBDevicesInstallationAndLogs"), formatMessage('zh', "ui.filteringADBAndLogcat"), formatMessage('zh', "ui.gradleBuildAndTestTasks"), formatMessage('zh', "ui.flutterAnalyzeTestAndBuild"), formatMessage('zh', "ui.dartFormatAnalyzeAndTest"), formatMessage('zh', "ui.swiftBuildAndTest"), formatMessage('zh', "ui.xcodeXcodebuildAndSimulator"), formatMessage('zh', "ui.pythonVenvAndModuleExecution"), formatMessage('zh', "ui.goTestFmtAndVet"), formatMessage('zh', "ui.javaJavacJavaAndBuildTools"), formatMessage('zh', "ui.cLIPipesExitCodesAndEnvironmentVariables"), formatMessage('zh', "ui.androidCrashStacksAndObfuscationMapping"), formatMessage('zh', "ui.androidANRsAndThreadBlocking"), formatMessage('zh', "ui.iOSCrashesAndDSYMSymbolication"), formatMessage('zh', "ui.flutterExceptionsAndNativeCrashes"), formatMessage('zh', "ui.crashlyticsUseCasesAndInvestigationFlow"), formatMessage('zh', "ui.datadogMobileMonitoringAndDiagnostics"), formatMessage('zh', "ui.sentryErrorTrackingAndContext"), formatMessage('zh', "ui.investigationDirectionsInAndroidStudioProfiler"), formatMessage('zh', "ui.investigationDirectionsInInstruments"), formatMessage('zh', "ui.productionIncidentsVersionDeviceAndReproductionContext")].map(title => makePoint('tools', formatMessage('zh', "ui.cLIAndMobileTroubleshootingTools"), title, ['recall', 'apply', 'explain', ...(title.includes('：') && !title.startsWith(formatMessage('zh', "ui.production")) ? ['write' as Facet] : [])])),
+  ...[formatMessage('zh', "ui.conclusionFirstExplainATechnicalDecision"), formatMessage('zh', "ui.threeKeyPointsYourOwnActionsAndResults"), formatMessage('zh', "ui.brieflyExplainATechnicalTerm"), formatMessage('zh', "ui.explainTheTradeOffsBetweenTwoOptions"), formatMessage('zh', "ui.clearlyDistinguishFactsAssumptionsAndUnknowns"), formatMessage('zh', "ui.explainTheValidationMethodInBriefJapanese"), formatMessage('zh', "ui.condenseComplexProjectBackgroundIntoKeyPoints")].map(title => makePoint('expression', formatMessage('zh', "ui.conciseTechnicalCommunication"), title, ['explain', 'apply'])),
   ...BREADTH_POINTS,
 ];
 const strings = (value: unknown, min: number, max: number, length: number): string[] => {
-  if (!Array.isArray(value) || value.length < min || value.length > max) throw new AppError(400, '要点数量不正确。');
+  if (!Array.isArray(value) || value.length < min || value.length > max) throw new AppError(400, formatMessage('zh', "ui.incorrectNumberOfKeyPoints"));
   return value.map(v => text(v, length).trim());
 };
-const optional = (value: unknown, max: number) => { if (value === undefined) return ''; if (typeof value !== 'string' || value.length > max) throw new AppError(400, '文本过长或无效。'); return value; };
+const optional = (value: unknown, max: number) => { if (value === undefined) return ''; if (typeof value !== 'string' || value.length > max) throw new AppError(400, formatMessage('zh', "ui.theTextIsTooLongOrInvalid")); return value; };
 export function studySelection(value: unknown): StudySelection {
   const v = object(value), category = v.category ?? 'all', language = v.language ?? 'dart', facet = v.facet ?? 'auto';
-  if (category !== 'all' && !Object.hasOwn(STUDY_CATEGORIES, category as string) || !Object.hasOwn(LANGUAGES, language as string) || facet !== 'auto' && !Object.hasOwn(STUDY_FACETS, facet as string) || ![3, 5, 8].includes(v.count as number)) throw new AppError(400, '请选择短测类别、语言、维度和3/5/8题。');
-  if (v.weakOnly !== undefined && typeof v.weakOnly !== 'boolean') throw new AppError(400, '薄弱点筛选无效。');
+  if (category !== 'all' && !Object.hasOwn(STUDY_CATEGORIES, category as string) || !Object.hasOwn(LANGUAGES, language as string) || facet !== 'auto' && !Object.hasOwn(STUDY_FACETS, facet as string) || ![3, 5, 8].includes(v.count as number)) throw new AppError(400, formatMessage('zh', "ui.pleaseChooseAQuizCategoryLanguageDimensionAnd"));
+  if (v.weakOnly !== undefined && typeof v.weakOnly !== 'boolean') throw new AppError(400, formatMessage('zh', "ui.invalidWeakPointFilter"));
   let breadth: BreadthScope | undefined;
   if (v.breadth !== undefined) {
     const scope = object(v.breadth), domain = scope.domain ?? 'all', group = scope.group ?? 'all';
-    if ((domain !== 'all' && !Object.hasOwn(BREADTH_DOMAINS, domain as string)) || (group !== 'all' && !Object.hasOwn(BREADTH_GROUPS, group as string))) throw new AppError(400, '请选择有效的技术领域与知识方向。');
+    if ((domain !== 'all' && !Object.hasOwn(BREADTH_DOMAINS, domain as string)) || (group !== 'all' && !Object.hasOwn(BREADTH_GROUPS, group as string))) throw new AppError(400, formatMessage('zh', "ui.pleaseChooseAValidTechnicalFieldAndKnowledge"));
     breadth = { domain: domain as BreadthScope['domain'], group: group as BreadthScope['group'] };
   }
   return { category: category as StudySelection['category'], language: language as Language, facet: facet as StudySelection['facet'], count: v.count as number, ...(v.pointId ? { pointId: text(v.pointId, 100) } : {}), weakOnly: v.weakOnly === true, ...(breadth ? { breadth } : {}) };
 }
 export function customPoint(value: unknown, source?: SourceRef): KnowledgePoint {
-  const v = object(value); if (!Object.hasOwn(STUDY_CATEGORIES, v.category as string)) throw new AppError(400, '知识点类别无效。');
+  const v = object(value); if (!Object.hasOwn(STUDY_CATEGORIES, v.category as string)) throw new AppError(400, formatMessage('zh', "ui.invalidKnowledgePointCategory"));
   const category = v.category as Category, facets = strings(v.facets, 1, 4, 20) as Facet[];
-  if (new Set(facets).size !== facets.length || facets.some(f => !Object.hasOwn(STUDY_FACETS, f))) throw new AppError(400, '请选择有效的测试维度。');
-  if (v.language !== undefined && !Object.hasOwn(LANGUAGES, v.language as string) || category === 'language' && !v.language) throw new AppError(400, '语言知识点需要指定语言。');
-  return { id: randomUUID(), title: text(v.title, 150).trim(), category, topic: text(v.topic ?? '自定义知识', 100).trim(), description: optional(v.description, 2000), facets, ...(v.language ? { language: v.language as Language } : {}), ...(source ? { source } : {}), createdAt: new Date().toISOString() };
+  if (new Set(facets).size !== facets.length || facets.some(f => !Object.hasOwn(STUDY_FACETS, f))) throw new AppError(400, formatMessage('zh', "ui.pleaseChooseAValidTestDimension"));
+  if (v.language !== undefined && !Object.hasOwn(LANGUAGES, v.language as string) || category === 'language' && !v.language) throw new AppError(400, formatMessage('zh', "ui.languageKnowledgePointsRequireASpecifiedLanguage"));
+  return { id: randomUUID(), title: text(v.title, 150).trim(), category, topic: text(v.topic ?? formatMessage('zh', "study.customTopic"), 100).trim(), description: optional(v.description, 2000), facets, ...(v.language ? { language: v.language as Language } : {}), ...(source ? { source } : {}), createdAt: new Date().toISOString() };
 }
 export function quizContent(value: unknown, slots: Slot[]): Omit<QuizItem, 'id' | 'cardId'>[] {
-  const v = object(value); if (!Array.isArray(v.items) || v.items.length !== slots.length) throw new AppError(400, '短测数量不正确。');
+  const v = object(value); if (!Array.isArray(v.items) || v.items.length !== slots.length) throw new AppError(400, formatMessage('zh', "ui.incorrectNumberOfQuizItems"));
   const seen = new Set<string>();
   const items = v.items.map(item => {
     const q = object(item), slot = slots.find(s => s.point.id === q.pointId && s.facet === q.facet), identity = `${q.pointId}:${q.facet}`;
-    if (!slot || seen.has(identity)) throw new AppError(400, '短测知识点或维度不正确。'); seen.add(identity);
+    if (!slot || seen.has(identity)) throw new AppError(400, formatMessage('zh', "ui.incorrectQuizKnowledgePointOrDimension")); seen.add(identity);
     const r = object(q.reference);
     return { pointId: slot.point.id, title: q.title === undefined ? slot.point.title : text(q.title, 150), category: slot.point.category, facet: slot.facet, ...(slot.point.language ? { language: slot.point.language } : {}), prompt: text(q.prompt, 2000), starterCode: optional(q.starterCode, 8000), reference: { keywords: strings(r.keywords, 2, 5, 100), explanation: text(r.explanation, 1800), code: optional(r.code, 8000), requirements: strings(r.requirements, 0, 5, 200) }, ...(slot.point.source ? { source: slot.point.source } : {}), ...(slot.point.references ? { references: slot.point.references } : {}) };
   });
@@ -101,17 +102,17 @@ export function quizContent(value: unknown, slots: Slot[]): Omit<QuizItem, 'id' 
 export function submittedAnswers(value: unknown, batch: StudyBatch, require = true) {
   const answers = object(object(value).answers), out: Record<string, string> = {};
   for (const [id, answer] of Object.entries(answers)) {
-    if (!batch.items.some(i => i.id === id) || typeof answer !== 'string' || answer.length > 20000) throw new AppError(400, '短测题号或回答无效。');
-    if (require && (batch.items.find(i => i.id === id)!.feedback || batch.items.find(i => i.id === id)!.skippedAt)) { if (answer.trim()) throw new AppError(409, '已评价或已结束的题目不能重复计入复习，请开启新一轮。'); continue; }
+    if (!batch.items.some(i => i.id === id) || typeof answer !== 'string' || answer.length > 20000) throw new AppError(400, formatMessage('zh', "ui.invalidQuizQuestionNumberOrAnswer"));
+    if (require && (batch.items.find(i => i.id === id)!.feedback || batch.items.find(i => i.id === id)!.skippedAt)) { if (answer.trim()) throw new AppError(409, formatMessage('zh', "ui.questionsThatHaveBeenEvaluatedOrEndedCannot")); continue; }
     if (!require || answer.trim()) out[id] = answer;
   }
-  if (require && !Object.keys(out).length) throw new AppError(400, '请先回答至少一道尚未评价的题目。');
+  if (require && !Object.keys(out).length) throw new AppError(400, formatMessage('zh', "ui.pleaseAnswerAtLeastOneUnevaluatedQuestionFirst"));
   return out;
 }
 export function quizFeedback(value: unknown, ids: string[]) {
-  const v = object(value); if (!Array.isArray(v.items) || v.items.length !== ids.length) throw new AppError(400, '短测评价范围不正确。');
+  const v = object(value); if (!Array.isArray(v.items) || v.items.length !== ids.length) throw new AppError(400, formatMessage('zh', "ui.invalidQuizEvaluationRange"));
   const seen = new Set<string>();
-  return v.items.map(item => { const f = object(item), id = text(f.itemId, 100); if (!ids.includes(id) || seen.has(id) || !['correct', 'partial', 'incorrect'].includes(f.verdict as string)) throw new AppError(400, '短测评价题号或结论无效。'); seen.add(id); return { itemId: id, verdict: f.verdict as Feedback['verdict'], summary: text(f.summary, 1000), gaps: strings(f.gaps, 0, 4, 300) }; });
+  return v.items.map(item => { const f = object(item), id = text(f.itemId, 100); if (!ids.includes(id) || seen.has(id) || !['correct', 'partial', 'incorrect'].includes(f.verdict as string)) throw new AppError(400, formatMessage('zh', "ui.invalidQuizEvaluationQuestionNumberOrConclusion")); seen.add(id); return { itemId: id, verdict: f.verdict as Feedback['verdict'], summary: text(f.summary, 1000), gaps: strings(f.gaps, 0, 4, 300) }; });
 }
 export function publicBatch(batch: StudyBatch) {
   return { ...batch, items: batch.items.map(({ reference, ...item }) => ({ ...item, ...(item.revealedAt || item.feedback ? { reference } : {}) })) };
@@ -134,28 +135,28 @@ export class Study {
     });
     return { domains: BREADTH_DOMAINS, groups: BREADTH_GROUPS, points, coverage };
   }
-  point(id: string) { const p = this.points().find(p => p.id === id); if (!p) throw new AppError(404, '知识点不存在。'); return p; }
-  batch(id: string) { const b = this.store.snapshot().studyBatches?.find(b => b.id === id); if (!b) throw new AppError(404, '短测记录不存在。'); return b; }
+  point(id: string) { const p = this.points().find(p => p.id === id); if (!p) throw new AppError(404, formatMessage('zh', "ui.knowledgePointNotFound")); return p; }
+  batch(id: string) { const b = this.store.snapshot().studyBatches?.find(b => b.id === id); if (!b) throw new AppError(404, formatMessage('zh', "ui.quizRecordNotFound")); return b; }
   async add(value: unknown) { const point = customPoint(value); await this.store.update(s => { (s.studyPoints ??= []).push(point); }); return point; }
   source(ref: { kind: string; id: string }): SourceRef & { content: string } {
     const s = this.store.snapshot();
-    if (ref.kind === 'library') { const i = s.library?.find(i => i.id === ref.id); if (i) { if (!i.extractedText.trim()) throw new AppError(400, '这份资料还没有可读取正文，请先进行资料整理。'); return { kind: 'library', id: i.id, title: i.title, content: [i.extractedText, i.notes].join('\n').slice(0, 30000) }; } }
+    if (ref.kind === 'library') { const i = s.library?.find(i => i.id === ref.id); if (i) { if (!i.extractedText.trim()) throw new AppError(400, formatMessage('zh', "ui.thisMaterialHasNoReadableContentYetPlease")); return { kind: 'library', id: i.id, title: i.title, content: [i.extractedText, i.notes].join('\n').slice(0, 30000) }; } }
     if (ref.kind === 'problem') { const p = s.problems.find(p => p.id === ref.id); if (p) return { kind: 'problem', id: p.id, title: p.title, content: JSON.stringify({ topic: p.topic, language: p.language, description: p.description, review: p.reviews.at(-1) }) }; }
     if (ref.kind === 'language') { const p = s.languageDrills?.find(p => p.id === ref.id); if (p) return { kind: 'language', id: p.id, title: p.title, content: JSON.stringify({ language: p.language, concepts: p.concepts, exercises: p.exercises, requirements: p.requirements }).slice(0, 30000) }; }
     if (ref.kind === 'training') { const p = s.trainings?.find(p => p.id === ref.id); if (p) return { kind: 'training', id: p.id, title: p.title, content: JSON.stringify({ kind: p.kind, language: p.language, question: p.question, scenario: p.scenario, reviews: p.reviews.slice(-2), turns: p.turns, notes: p.draft }).slice(0, 30000) }; }
-    throw new AppError(404, '学习来源不存在。');
+    throw new AppError(404, formatMessage('zh', "ui.theLearningSourceDoesNotExist"));
   }
   importContent(value: unknown, source: SourceRef) {
-    const v = object(value); if (!Array.isArray(v.points) || !v.points.length || v.points.length > 8) throw new AppError(400, '提取的知识点数量不正确。');
+    const v = object(value); if (!Array.isArray(v.points) || !v.points.length || v.points.length > 8) throw new AppError(400, formatMessage('zh', "ui.theNumberOfExtractedTopicsIsIncorrect"));
     const points = v.points.map(p => customPoint(p, source));
-    if (new Set(points.map(p => `${p.title.toLowerCase()}|${p.language ?? ''}`)).size !== points.length) throw new AppError(400, '提取了重复知识点。');
+    if (new Set(points.map(p => `${p.title.toLowerCase()}|${p.language ?? ''}`)).size !== points.length) throw new AppError(400, formatMessage('zh', "ui.duplicateTopicsWereExtracted"));
     return points;
   }
   latestFeedback(state: State, id: string) { return (state.studyBatches ?? []).flatMap(b => b.items).filter(i => i.cardId === id && i.feedback).map(i => i.feedback!).sort((a, b) => b.at.localeCompare(a.at))[0]; }
   plan(selection: StudySelection): Slot[] {
     const state = this.store.snapshot(), at = this.clock(), cards = state.studyCards ?? [], pending = new Set((state.studyBatches ?? []).flatMap(b => b.items.filter(i => !i.feedback && !i.skippedAt).map(i => i.cardId)));
     const points = this.points().filter(p => (!selection.pointId || p.id === selection.pointId) && (selection.category === 'all' || p.category === selection.category) && (!p.language || p.language === selection.language) && (!selection.breadth || p.breadth && (selection.breadth.domain === 'all' || p.breadth.domain === selection.breadth.domain) && (selection.breadth.group === 'all' || p.breadth.group === selection.breadth.group)));
-    if (selection.pointId && !points.length) throw new AppError(400, '所选知识点不匹配当前类别或语言。');
+    if (selection.pointId && !points.length) throw new AppError(400, formatMessage('zh', "ui.theSelectedTopicDoesNotMatchTheCurrent"));
     const due: Slot[] = [], weak: Slot[] = [], fresh: Slot[] = [];
     for (const point of points) for (const facet of selection.facet === 'auto' ? point.facets : point.facets.filter(f => f === selection.facet)) {
       const id = cardId(point.id, facet); if (pending.has(id)) continue;
@@ -180,14 +181,15 @@ export class Study {
         if (slot.reason === 'new') out[index] = fresh.find(candidate => candidate.point.id === slot.point.id && candidate.facet === facets[index % facets.length]) ?? slot;
       });
     }
-    if (!out.length) throw new AppError(400, '当前没有可开启的短测。请继续未完成的记录、切换知识点，或等待复习到期。');
+    if (!out.length) throw new AppError(400, formatMessage('zh', "ui.noQuickQuizIsAvailableRightNowContinue"));
     return out;
   }
   async create(items: Omit<QuizItem, 'id' | 'cardId'>[], selection: StudySelection, model: string, signal: AbortSignal, userLanguage: Locale = "zh") {
-    const words = { zh: { mixed: '综合', cross: '跨领域', quiz: '短测', breadth: '技术广度', unit: '题' }, en: { mixed: 'Mixed', cross: 'Across domains', quiz: ' quiz', breadth: 'Technical breadth', unit: ' questions' }, ja: { mixed: '総合', cross: '分野横断', quiz: '小テスト', breadth: '技術の幅', unit: '問' } }[userLanguage];
-    const scope = selection.breadth ? `${words.breadth} · ${selection.breadth.domain === 'all' ? words.cross : translateSource(BREADTH_DOMAINS[selection.breadth.domain], userLanguage)}` : `${selection.category === 'all' ? words.mixed : translateSource(STUDY_CATEGORIES[selection.category], userLanguage)}${words.quiz}`;
-    const at = this.clock().toISOString(), batch: StudyBatch = { id: randomUUID(), createdAt: at, title: `${scope} · ${items.length}${words.unit}`, model, selection, items: items.map(i => ({ ...i, id: randomUUID(), cardId: cardId(i.pointId, i.facet) })), drafts: {} };
-    await this.store.update(s => { signal.throwIfAborted(); const pending = new Set((s.studyBatches ?? []).flatMap(b => b.items.filter(i => !i.feedback && !i.skippedAt).map(i => i.cardId))); if (batch.items.some(i => pending.has(i.cardId))) throw new AppError(409, '同一知识点已有未完成短测，请先继续该记录。'); for (const item of batch.items) if (!(s.studyCards ??= []).some(c => c.id === item.cardId)) s.studyCards.push({ id: item.cardId, pointId: item.pointId, facet: item.facet, schedule: initialSchedule(this.clock()) }); (s.studyBatches ??= []).push(batch); }); return batch;
+    const scope = selection.breadth
+      ? selection.breadth.domain === 'all' ? formatMessage(userLanguage, 'study.scopeBreadthAll') : formatMessage(userLanguage, 'study.scopeBreadth', {domain:translateSource(BREADTH_DOMAINS[selection.breadth.domain], userLanguage)})
+      : selection.category === 'all' ? formatMessage(userLanguage, 'study.scopeAll') : formatMessage(userLanguage, 'study.scopeCategory', {category:translateSource(STUDY_CATEGORIES[selection.category], userLanguage)});
+    const at = this.clock().toISOString(), batch: StudyBatch = { id: randomUUID(), createdAt: at, title: formatMessage(userLanguage, 'study.batchTitle', {scope,count:items.length}), model, selection, items: items.map(i => ({ ...i, id: randomUUID(), cardId: cardId(i.pointId, i.facet) })), drafts: {} };
+    await this.store.update(s => { signal.throwIfAborted(); const pending = new Set((s.studyBatches ?? []).flatMap(b => b.items.filter(i => !i.feedback && !i.skippedAt).map(i => i.cardId))); if (batch.items.some(i => pending.has(i.cardId))) throw new AppError(409, formatMessage('zh', "ui.thereIsAlreadyAnUnfinishedQuizForThis")); for (const item of batch.items) if (!(s.studyCards ??= []).some(c => c.id === item.cardId)) s.studyCards.push({ id: item.cardId, pointId: item.pointId, facet: item.facet, schedule: initialSchedule(this.clock()) }); (s.studyBatches ??= []).push(batch); }); return batch;
   }
   async closeBatch(id: string) {
     this.batch(id);
@@ -196,7 +198,7 @@ export class Study {
   }
   async save(id: string, value: unknown) { const answers = submittedAnswers(value, this.batch(id), false); await this.store.update(s => Object.assign(s.studyBatches!.find(b => b.id === id)!.drafts, answers)); }
   async reveal(id: string, itemId: string) {
-    const batch = this.batch(id); if (!batch.items.some(i => i.id === itemId)) throw new AppError(404, '短测题目不存在。');
+    const batch = this.batch(id); if (!batch.items.some(i => i.id === itemId)) throw new AppError(404, formatMessage('zh', "ui.quizQuestionNotFound"));
     await this.store.update(s => { const item = s.studyBatches!.find(b => b.id === id)!.items.find(i => i.id === itemId)!; if (!item.feedback) item.revealedAt ??= this.clock().toISOString(); }); return publicBatch(this.batch(id));
   }
   async grade(id: string, answers: Record<string, string>, results: ReturnType<typeof quizFeedback>, model: string, signal: AbortSignal) {
@@ -204,7 +206,7 @@ export class Study {
     await this.store.update(s => {
       signal.throwIfAborted(); const batch = s.studyBatches!.find(b => b.id === id)!;
       for (const result of results) {
-        const item = batch.items.find(i => i.id === result.itemId)!; if (item.feedback || item.skippedAt) throw new AppError(409, '这道题已评价，不重复更新复习间隔。');
+        const item = batch.items.find(i => i.id === result.itemId)!; if (item.feedback || item.skippedAt) throw new AppError(409, formatMessage('zh', "ui.thisQuestionHasAlreadyBeenEvaluatedTheReview"));
         const card = s.studyCards!.find(c => c.id === item.cardId)!, assisted = !!item.revealedAt, { rating, schedule } = advanceSchedule(card.schedule, result.verdict, assisted, at);
         item.feedback = { at: at.toISOString(), model, answer: answers[item.id], verdict: result.verdict, summary: result.summary, gaps: result.gaps, assisted, rating, schedule }; card.schedule = schedule;
       }
@@ -215,6 +217,6 @@ export class Study {
     const pending = new Set(batches.flatMap(b => b.items.filter(i => !i.feedback && !i.skippedAt).map(i => i.cardId))), feedback = batches.flatMap(b => b.items.map(i => i.feedback).filter((f): f is Feedback => !!f)), todayReviews = feedback.filter(f => day(new Date(f.at)) === today);
     return { day: today, totalPoints: points.length, practicedPoints: new Set(cards.filter(c => c.schedule.reviews).map(c => c.pointId)).size, due: cards.filter(c => c.schedule.reviews && new Date(c.schedule.dueAt) <= at && !pending.has(c.id)).length, pending: pending.size, todayReviews: todayReviews.length, todayIndependent: todayReviews.filter(f => f.rating === 'good').length,
       facets: Object.entries(STUDY_FACETS).map(([id, label]) => ({ id, label, reviewed: cards.filter(c => c.facet === id && c.schedule.reviews).length, due: cards.filter(c => c.facet === id && c.schedule.reviews && new Date(c.schedule.dueAt) <= at && !pending.has(c.id)).length })),
-      cards: cards.map(c => ({ ...c, pending: pending.has(c.id), title: points.find(p => p.id === c.pointId)?.title ?? '知识点', category: points.find(p => p.id === c.pointId)?.category, language: points.find(p => p.id === c.pointId)?.language })), batches: batches.slice().reverse().map(b => ({ id: b.id, title: b.title, createdAt: b.createdAt, total: b.items.length, reviewed: b.items.filter(i => i.feedback).length, closed: b.items.every(i => i.feedback || i.skippedAt), ...(b.selection.breadth ? { breadth: b.selection.breadth } : {}) })), rule: '独立答对：1→3→7→14→30天后继续自适应延长；部分正确：近期复习；答错或看过答案：10分钟后重测。每个维度独立计算。' };
+      cards: cards.map(c => ({ ...c, pending: pending.has(c.id), title: points.find(p => p.id === c.pointId)?.title ?? formatMessage('zh', "study.knowledgePoint"), category: points.find(p => p.id === c.pointId)?.category, language: points.find(p => p.id === c.pointId)?.language })), batches: batches.slice().reverse().map(b => ({ id: b.id, title: b.title, createdAt: b.createdAt, total: b.items.length, reviewed: b.items.filter(i => i.feedback).length, closed: b.items.every(i => i.feedback || i.skippedAt), ...(b.selection.breadth ? { breadth: b.selection.breadth } : {}) })), rule: formatMessage('zh', "study.scheduleRule") };
   }
 }

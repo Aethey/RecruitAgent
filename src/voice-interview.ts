@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { createHash, randomUUID } from "node:crypto";
 import { AppError, object, parseModelJson, text } from "./domain.ts";
 import { CodexVoice, type VoiceTranscript } from "./codex-voice.ts";
@@ -57,7 +58,7 @@ class InterviewFlow {
     const snapshot = structuredClone(this.attempt);
     this.queue = this.queue.catch(() => {}).then(() => this.store.update(state => {
       const set = state.interviews?.find(s => s.id === this.set.id);
-      if (!set) throw new AppError(404,"面试记录不存在。");
+      if (!set) throw new AppError(404,formatMessage('zh', "ui.theInterviewRecordDoesNotExist"));
       const attempts = set.voiceAttempts ??= [], index = attempts.findIndex(a => a.id === snapshot.id);
       if (index === -1) attempts.push(snapshot); else attempts[index] = snapshot;
       set.updatedAt = new Date().toISOString();
@@ -80,7 +81,7 @@ class InterviewFlow {
   }
   private saveTranscript() {
     this.notify();
-    void this.persist().catch(() => { this.voice.emit(this.sessionId,"voice-error",{message:"这次语音转写未能保存，请结束通话并检查本地记录。"}); });
+    void this.persist().catch(() => { this.voice.emit(this.sessionId,"voice-error",{message:formatMessage('zh', "ui.thisVoiceTranscriptCouldNotBeSavedPlease")}); });
   }
   private guidance(value: string) {
     void this.voice.appendText(this.sessionId,"[面试控制] " + value,"developer").catch(() => {});
@@ -120,7 +121,7 @@ class InterviewFlow {
       this.voiceAction = this.voiceAction.catch(() => {}).then(async () => {
         if (this.closed || this.round?.at !== roundAt) return;
         try { await this.action(action); }
-        catch (error) { this.voice.emit(this.sessionId,"interview-notice",{message:error instanceof Error ? error.message : "本题尚未完成，请先回答并听完点评。"}); }
+        catch (error) { this.voice.emit(this.sessionId,"interview-notice",{message:error instanceof Error ? error.message : formatMessage('zh', "ui.thisQuestionIsNotCompleteYetPleaseAnswer")}); }
       });
     }
     this.saveTranscript(); return true;
@@ -179,7 +180,7 @@ class InterviewFlow {
     return this.persist();
   }
   async action(action: string, input: Record<string,unknown> = {}) {
-    if (this.closed) throw new AppError(409,"这次语音面试已结束。");
+    if (this.closed) throw new AppError(409,formatMessage('zh', "ui.thisVoiceInterviewHasEnded"));
     if (action === "answer-started" || action === "response-complete") {
       if (input.roundAt !== this.round?.at || typeof input.inputRevision !== "number" || !Number.isSafeInteger(input.inputRevision) || input.inputRevision < this.inputRevision) return this.snapshot();
       if (action === "answer-started") {
@@ -192,16 +193,16 @@ class InterviewFlow {
       if (this.stage !== "waiting") return this.snapshot();
       await this.ask();
     } else if (action === "next" || action === "retry") {
-      if (this.stage !== "ready") throw new AppError(409,"请先回答当前问题，并等待 Codex 点评。");
+      if (this.stage !== "ready") throw new AppError(409,formatMessage('zh', "ui.pleaseAnswerTheCurrentQuestionFirstAndWait"));
       if (action === "next") {
-        if (this.index + 1 >= this.set.questions.length) throw new AppError(400,"已经是最后一道题，请完成面试。");
+        if (this.index + 1 >= this.set.questions.length) throw new AppError(400,formatMessage('zh', "ui.thisIsTheLastQuestionFinishTheInterview"));
         this.index++;
       }
       await this.ask();
     } else if (action === "finish") {
-      if (this.stage !== "ready" || this.index + 1 !== this.set.questions.length) throw new AppError(409,"请先完成最后一道题的回答和点评。");
+      if (this.stage !== "ready" || this.index + 1 !== this.set.questions.length) throw new AppError(409,formatMessage('zh', "ui.pleaseFinishAnsweringTheFinalQuestionAndReceiving"));
       this.attempt.status = "completed"; await this.voice.end(this.sessionId);
-    } else throw new AppError(400,"未知的面试操作。");
+    } else throw new AppError(400,formatMessage('zh', "ui.unknownInterviewOperation"));
     return this.snapshot();
   }
   async stop() {
@@ -235,10 +236,10 @@ export class VoiceInterviews {
         AbortSignal.timeout(60000),() => {},"interview",undefined,language);
       const content = parseModelJson(raw, 'voiceTranslation', value => {
         const output = object(value);
-        if (!Array.isArray(output.questions) || output.questions.length !== questions.length) throw new AppError(502,"所选语言的题目数量不正确，请重试。");
+        if (!Array.isArray(output.questions) || output.questions.length !== questions.length) throw new AppError(502,formatMessage('zh', "ui.theNumberOfQuestionsForTheSelectedLanguage"));
         const translated = output.questions.map((value,index) => {
           const q = object(value);
-          if (q.id !== questions[index].id || !Array.isArray(q.tips) || q.tips.length !== questions[index].tips.length) throw new AppError(502,"翻译后的题号或重点数量不一致，请重试。");
+          if (q.id !== questions[index].id || !Array.isArray(q.tips) || q.tips.length !== questions[index].tips.length) throw new AppError(502,formatMessage('zh', "ui.theTranslatedQuestionNumbersOrNumberOfKey"));
           return {id:questions[index].id,question:text(q.question,400).trim(),tips:q.tips.map(tip => text(tip,200).trim())};
         });
         return {language,basis,questions:translated};
@@ -264,7 +265,7 @@ export class VoiceInterviews {
     const set = this.store.interview(id);
     const flow = [...this.flows.values()].find(f => f.set.id === id && f.stage !== "ended");
     const settings = voiceSettings(value,await this.voice.catalog(),flow?.settings ?? this.defaults(set));
-    if (flow && (settings.model !== flow.settings.model || settings.voice !== flow.settings.voice || settings.tone !== flow.settings.tone || settings.language !== flow.settings.language)) throw new AppError(409,"请先结束本次面试，再修改模型、音色、语气或语言。");
+    if (flow && (settings.model !== flow.settings.model || settings.voice !== flow.settings.voice || settings.tone !== flow.settings.tone || settings.language !== flow.settings.language)) throw new AppError(409,formatMessage('zh', "ui.pleaseEndThisInterviewBeforeChangingTheModel"));
     await this.store.update(state => { state.interviews!.find(s => s.id === id)!.voiceSettings = settings; });
     if (flow) await flow.tips(settings.showTips);
     return settings;
@@ -292,7 +293,7 @@ export class VoiceInterviews {
   }
   async action(id: string, value: unknown) {
     const flow = this.flows.get(id);
-    if (!flow) throw new AppError(404,"语音面试会话不存在，请重新开始。");
+    if (!flow) throw new AppError(404,formatMessage('zh', "ui.voiceInterviewSessionNotFoundPleaseStartAgain"));
     const input = object(value);
     return flow.action(text(input.action,30),input);
   }

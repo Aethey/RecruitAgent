@@ -1,17 +1,27 @@
-import { t, message } from './i18n.js';
+import { t, message, errorText } from './i18n.js';
 import { eventData, readApiResponse } from './api.ts';
 // Shared microphone/WebRTC lifecycle for the demo and the interview module.
 /** @param {{api: import('../src/generated/api-client.js').ApiClient, [option: string]: any}} options */
 export function createVoiceSession({ api, audio, onState = () => {}, onTranscript = () => {}, onEvent = () => {}, onConnected = () => {}, onEnded = () => {} }) {
   let epoch = 0, peer = null, channel = null, stream = null, context = null, destination = null, events = null, timer = null, source = null, silence = null, verified = false, ending = null;
+  let verifying = false, verifyAfter = 0, lastDiagnostic = '', diagnosticsReady = false;
   let inputNode = null, outputNode = null, inputMeter = null, outputMeter = null, meterTimer = null, lastOutput = 0, lastInput = 0, outputQuietAt = 0, resumeAt = 0, protocol = 'live', controlQueue = /** @type {Promise<unknown>} */ (Promise.resolve());
-  const initial = () => ({phase:'idle',id:null,busy:false,muted:false,test:false,recording:false,inputLevel:0,outputLevel:0,outputSpeaking:false,inputSpeaking:false,processing:false,backendThinking:false,delegating:false,processingSince:0,processingElapsed:0,paused:false,stopped:false,resuming:false,controlBusy:false,playbackBlocked:false,revision:0,notice:'',error:'',elapsed:0,sent:0,received:0,energy:0,needsPlayback:false});
+  const initial = () => ({phase:'idle',id:null,busy:false,muted:false,test:false,recording:false,audioVerified:false,inputLevel:0,outputLevel:0,outputSpeaking:false,inputSpeaking:false,processing:false,backendThinking:false,delegating:false,processingSince:0,processingElapsed:0,paused:false,stopped:false,resuming:false,controlBusy:false,playbackBlocked:false,revision:0,notice:'',error:'',elapsed:0,sent:0,received:0,energy:0,needsPlayback:false});
   let state = initial();
   let inputRevision = 0, activeResponseRevision = null, activeResponseId = null;
   const responseRevisions = new Map();
-  const notify = () => onState({ ...state });
+  /** @param {import('../src/contracts.ts').VoiceDiagnosticInput['event']} event */
+  function diagnostic(event, detail = {}, id = state.id) {
+    if (id && diagnosticsReady) void api(`/api/voice/sessions/${id}/diagnostics`,'POST',{event,...detail}).catch(() => {});
+  }
+  const notify = () => {
+    const detail = {phase:state.phase,recording:state.recording,processing:state.processing,backendThinking:state.backendThinking,paused:state.paused,outputSpeaking:state.outputSpeaking,audioVerified:state.audioVerified,revision:state.revision,message:state.error || state.notice};
+    const key = JSON.stringify(detail);
+    if (state.id && key !== lastDiagnostic) { lastDiagnostic = key; diagnostic('state',detail); }
+    onState({ ...state });
+  };
   const pending = (backendThinking = state.backendThinking) => {
-    state = {...state,inputSpeaking:false,processing:true,backendThinking,processingSince:state.processingSince || Date.now()}; notify();
+    state = {...state,inputSpeaking:false,processing:true,backendThinking,processingSince:state.processingSince || Date.now(),notice:''}; notify();
   };
   const cancelEvents = new Set();
   function send(type) {
@@ -25,23 +35,25 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     else if (value.activity === 'waiting') pending();
     else if (value.activity === 'processing') { state = {...state,backendThinking:false,delegating:false,processingSince:0}; pending(false); }
     else if (['failed','timeout'].includes(value.activity)) {
-      state = {...state,backendThinking:false,delegating:false,processing:false,processingSince:0,notice:t(value.message) || t('本轮处理失败，可以停止本轮后继续。')}; notify();
+      state = {...state,backendThinking:false,delegating:false,processing:false,processingSince:0,notice:errorText(value.message) || t("ui.thisTurnFailedYouCanStopThisTurn")}; notify();
       if (value.activity === 'timeout' && !state.paused) void stopCurrent(value.message);
-    } else if (value.activity === 'listening') { state = {...state,backendThinking:false}; notify(); }
+    } else if (value.activity === 'listening') { state = {...state,backendThinking:false,notice:''}; notify(); }
   }
   function receiveTranscript(line) {
     if (!state.paused) {
+      if (line.role === 'assistant' && state.notice) { state = {...state,notice:''}; notify(); }
       if (line.role === 'user' && line.done) pending();
       if (line.role === 'assistant' && line.done && line.source !== 'segment' && !state.backendThinking && !state.delegating) { state = {...state,processing:false,processingSince:0,processingElapsed:0}; notify(); }
     }
     onTranscript(line);
   }
   function receiveMessage(message) {
+    if (['error','response.created','response.done','turn.created','turn.done','delegation.created','session.delegation.created'].includes(message.type)) diagnostic(message.type === 'error' ? 'error' : 'response',{type:message.type,responseId:message.response?.id ?? message.turn?.id ?? message.response_id,inputRevision,code:message.error?.code,message:message.error?.message});
     if (message.type === 'error') {
       const error = message.error ?? {};
       // Canceling a response that has just completed is an expected race.
       if (cancelEvents.has(error.event_id ?? error.client_event_id) && error.code === 'response_cancel_not_active') return;
-      void end(error.message ?? t('语音服务返回错误。')); return;
+      void end(error.message ?? t("ui.theVoiceServiceReturnedAnError")); return;
     }
     if (state.paused) return;
     const type = message.type, role = message.turn?.role;
@@ -50,6 +62,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     }
     const responseId = message.response?.id ?? message.turn?.id ?? message.response_id;
     if (type === 'response.created' || type === 'turn.created' && role === 'assistant') {
+      state = {...state,notice:''};
       activeResponseRevision = inputRevision;
       activeResponseId = responseId ?? null;
       if (responseId) responseRevisions.set(responseId,inputRevision);
@@ -94,13 +107,15 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
   async function end(error = '') {
     if (ending) return ending;
     ending = (async () => {
+      diagnostic('transport',{type:'ending',message:error});
+      diagnosticsReady = false;
       epoch++; const id = state.id; release();
       resumeAt = 0;
-      state = { ...state, id:null, busy:true, recording:false, inputLevel:0, outputLevel:0, outputSpeaking:false, inputSpeaking:false,processing:false,backendThinking:false,delegating:false,paused:false,stopped:false,resuming:false,controlBusy:false,phase:error ? 'error' : 'ending', error:t(error), needsPlayback:false }; notify();
+      state = { ...state, id:null, busy:true, recording:false, inputLevel:0, outputLevel:0, outputSpeaking:false, inputSpeaking:false,processing:false,backendThinking:false,delegating:false,paused:false,stopped:false,resuming:false,controlBusy:false,phase:error ? 'error' : 'ending', error:errorText(error), needsPlayback:false }; notify();
       if (id) {
         try {
           const response = await fetch('/api/voice/sessions/'+id,{method:'DELETE',keepalive:true});
-          await readApiResponse('DELETE /api/voice/sessions/{id}',response,t);
+          await readApiResponse('DELETE /api/voice/sessions/{id}',response,errorText);
         } catch (failure) { state = {...state,phase:'error',error:failure.message}; }
       }
       try { await onEnded(); }
@@ -120,22 +135,28 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
         if (item.type === 'inbound-rtp') { received += item.bytesReceived ?? 0; energy += item.totalAudioEnergy ?? 0; }
       });
       state = { ...state, sent, received, energy }; notify();
-      if (!verified && options.model && energy > 0 && received > 0) {
-        verified = true;
-        void api(`/api/voice/sessions/${state.id}/verify`,'POST',{energy,received}).then(() => onEvent('model-verified',{})).catch(() => {});
+      if (!verified && !verifying && Date.now() >= verifyAfter && options.model && energy > 0 && received > 0) {
+        const id = state.id; verifying = true;
+        void api(`/api/voice/sessions/${id}/verify`,'POST',{energy,received}).then(() => {
+          if (token !== epoch || state.id !== id) return;
+          verified = true; state = {...state,audioVerified:true}; notify(); onEvent('model-verified',{});
+        }).catch(error => {
+          if (token !== epoch || state.id !== id) return;
+          verifyAfter = Date.now()+5000; diagnostic('verification',{type:'failed',message:error.message});
+        }).finally(() => { if (token === epoch) verifying = false; });
       }
     } catch { /* Closing a peer invalidates its statistics. */ }
   }
   async function start(options = {}, test = false) {
     if (ending || state.busy || state.id) return;
-    const token = ++epoch; verified = false;
+    const token = ++epoch; verified = false; verifying = false; verifyAfter = 0; lastDiagnostic = ''; diagnosticsReady = false;
     lastOutput = 0; lastInput = 0; outputQuietAt = 0; resumeAt = 0; cancelEvents.clear(); responseRevisions.clear(); inputRevision = 0; activeResponseRevision = null; activeResponseId = null; controlQueue = /** @type {Promise<unknown>} */ (Promise.resolve());
     protocol = options.model?.startsWith('gpt-realtime') ? 'realtime' : 'live';
     state = {...initial(),phase:'connecting',busy:true,test}; notify();
     const output = audio(); if (output) output.muted = false;
     window.addEventListener('pagehide',leave);
     try {
-      if (!window.isSecureContext || !window.RTCPeerConnection || !window.AudioContext) throw new Error(t('请在支持语音的浏览器中，通过 localhost 或 HTTPS 打开。'));
+      if (!window.isSecureContext || !window.RTCPeerConnection || !window.AudioContext) throw new Error(t("ui.pleaseOpenThisThroughLocalhostOrHTTPSIn"));
       context = new AudioContext(); await context.resume(); if (token !== epoch) return;
       if (test) {
         destination = context.createMediaStreamDestination(); stream = destination.stream;
@@ -147,7 +168,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
         if (token !== epoch) { microphone.getTracks().forEach(track => track.stop()); return; }
         stream = microphone;
         inputMeter = meter(stream); inputNode = inputMeter.node;
-        stream.getAudioTracks().forEach(track => { track.onended = () => { if (token === epoch) void end(t('麦克风已断开，请重新开始。')); }; });
+        stream.getAudioTracks().forEach(track => { track.onended = () => { if (token === epoch) void end(t("ui.microphoneDisconnectedPleaseStartAgain")); }; });
       }
       meterTimer = setInterval(() => {
         if (token !== epoch) return;
@@ -158,12 +179,13 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
           stream?.getAudioTracks().forEach(track => { track.enabled = !state.muted; });
           const output = audio(), revision = state.revision; if (output) { output.muted = false; void output.play().catch(() => { if (token === epoch && revision === state.revision) { state = {...state,needsPlayback:true}; notify(); } }); }
         } else if (resumeAt && now-resumeAt > 5000) {
-          resumeAt = 0; state = {...state,resuming:false,controlBusy:false,notice:t('旧回复仍未停止，录音和播放保持关闭。请结束通话后重新连接。')};
+          resumeAt = 0; state = {...state,resuming:false,controlBusy:false,notice:t("ui.thePreviousResponseStillHasNotStoppedSo")};
         }
         const recording = state.phase === 'connected' && !state.paused && !state.test && !state.muted && stream?.getAudioTracks().some(track => track.readyState === 'live' && track.enabled);
         const inputLevel = recording ? level(inputMeter) : 0, outputLevel = state.playbackBlocked ? 0 : rawOutput;
         if (outputLevel > .025) lastOutput = now;
         const outputSpeaking = !state.paused && !state.playbackBlocked && state.phase === 'connected' && now-lastOutput < 550;
+        if (outputSpeaking) state = {...state,notice:''};
         if (inputLevel > .04) { lastInput = now; state = {...state,inputSpeaking:true,processing:false,processingSince:state.delegating || state.backendThinking ? state.processingSince : 0,notice:''}; }
         else if (state.inputSpeaking && now-lastInput > 900 && !state.paused) pending();
         if ((outputSpeaking || state.outputSpeaking && !outputSpeaking) && !state.backendThinking && !state.delegating) state = {...state,processing:false,processingSince:0,processingElapsed:0};
@@ -185,7 +207,8 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       channel.onopen = connected;
       peer.onconnectionstatechange = () => {
         if (token !== epoch) return;
-        if (peer.connectionState === 'failed') void end(t('语音网络连接失败，请重试。')); else connected();
+        diagnostic('transport',{type:peer.connectionState});
+        if (peer.connectionState === 'failed') void end(t("ui.voiceNetworkConnectionFailedPleaseTryAgain")); else connected();
       };
       peer.ontrack = event => {
         if (token !== epoch) return;
@@ -205,6 +228,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       const id = crypto.randomUUID(); state = {...state,id}; notify();
       const result = await api('/api/voice/sessions','POST',{...options,id,sdp:peer.localDescription.sdp});
       if (token !== epoch) { await fetch('/api/voice/sessions/'+id,{method:'DELETE',keepalive:true}); return; }
+      diagnosticsReady = true;
       if (result.interview) onEvent('interview-progress',result.interview);
       events = new EventSource(`/api/voice/sessions/${id}/events`);
       events.addEventListener('transcript',event => { if (token === epoch) receiveTranscript(eventData('transcript', event)); });
@@ -220,27 +244,27 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       events.addEventListener('interview-progress',event => { if (token === epoch) onEvent('interview-progress',eventData('interview-progress', event)); });
       events.addEventListener('voice-error',event => { if (token === epoch) void end(eventData('voice-error', event).message); });
       events.addEventListener('ended',() => { if (token === epoch) void end(); });
-      events.onerror = () => { if (token === epoch && events?.readyState === EventSource.CLOSED) void end(t('字幕连接已断开，请重新开始。')); };
+      events.onerror = () => { if (token === epoch && events?.readyState === EventSource.CLOSED) void end(t("ui.theCaptionConnectionWasLostStartAgain")); };
       await peer.setRemoteDescription({type:'answer',sdp:result.sdp}); negotiatedAt = Date.now();
       timer = setInterval(() => {
         if (token !== epoch) return;
         state = {...state,elapsed:connectedAt ? Math.floor((Date.now()-connectedAt)/1000) : 0,processingElapsed:state.processingSince ? Math.floor((Date.now()-state.processingSince)/1000) : 0};
-        if ((state.processing || state.backendThinking || state.delegating) && state.processingElapsed >= 45 && !state.paused && !state.controlBusy) void stopCurrent(t('本轮处理超时，正在停止旧回复并恢复倾听。'));
+        if ((state.processing || state.backendThinking || state.delegating) && state.processingElapsed >= 45 && !state.paused && !state.controlBusy) void stopCurrent(t("ui.thisTurnTimedOutStoppingTheOldResponse"));
         void stats(token,options);
-        if (!connectedOnce && Date.now()-negotiatedAt > 20000) void end(t('语音网络协商超时，请重试。'));
+        if (!connectedOnce && Date.now()-negotiatedAt > 20000) void end(t("ui.voiceNetworkNegotiationTimedOutPleaseTryAgain"));
       },1000);
       connected();
     } catch (error) {
       if (token !== epoch) return;
-      const message = error.name === 'NotAllowedError' ? t('请允许页面使用麦克风，或先用合成语音测试。') : error.name === 'NotFoundError' ? t('没有找到麦克风，可以先用合成语音测试。') : error.message;
+      const message = error.name === 'NotAllowedError' ? t("ui.pleaseAllowMicrophoneAccessForThisPageOr") : error.name === 'NotFoundError' ? t("ui.noMicrophoneWasFoundYouCanTestWith") : error.message;
       await end(message);
     }
   }
   async function playClip(url) {
-    if (state.phase !== 'connected' || !state.test || !context || !destination) throw new Error(t('请先连接合成语音测试。'));
-    if (state.paused || state.controlBusy) throw new Error(t('请先继续对话。'));
+    if (state.phase !== 'connected' || !state.test || !context || !destination) throw new Error(t("ui.pleaseConnectTheSyntheticVoiceTestFirst"));
+    if (state.paused || state.controlBusy) throw new Error(t("ui.pleaseContinueTheConversationFirst"));
     const token = epoch, revision = state.revision, ctx = context, target = destination;
-    const response = await fetch(url); if (!response.ok) throw new Error(t('测试音频加载失败。'));
+    const response = await fetch(url); if (!response.ok) throw new Error(t("ui.testAudioFailedToLoad"));
     const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
     if (token !== epoch || revision !== state.revision) return;
     const clip = ctx.createBufferSource(); source = clip; clip.buffer = buffer; clip.connect(target); clip.start();
@@ -288,7 +312,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
       } else { state = {...state,controlBusy:false}; notify(); }
     } catch (error) {
       if (currentControl(token,revision)) {
-        state = {...state,resuming:false,controlBusy:false,notice:message(cancelled ? 'voice.resume.error' : 'voice.cancel.error',{error:t(error.message)})}; notify();
+        state = {...state,resuming:false,controlBusy:false,notice:message(cancelled ? 'voice.resume.error' : 'voice.cancel.error',{error:errorText(error.message)})}; notify();
       }
     }
   }
@@ -299,7 +323,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     const token = epoch, id = state.id, revision = state.revision+1; state = {...state,resuming:true,controlBusy:true,revision}; notify();
     try {
       await resumeControl(token,id,revision);
-    } catch (error) { if (currentControl(token,revision)) { state = {...state,resuming:false,controlBusy:false,notice:message('voice.resume.error',{error:t(error.message)})}; notify(); } }
+    } catch (error) { if (currentControl(token,revision)) { state = {...state,resuming:false,controlBusy:false,notice:message('voice.resume.error',{error:errorText(error.message)})}; notify(); } }
   }
   async function allowPlayback() { if (state.paused) return; await audio()?.play(); state = {...state,needsPlayback:false}; notify(); }
   return {start,end,playClip,mute,pause,resume,stopCurrent,allowPlayback,state:() => ({...state})};

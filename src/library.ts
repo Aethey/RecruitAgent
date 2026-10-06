@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, writeFile, rm } from "node:fs/promises";
 import { basename, dirname, extname, resolve } from "node:path";
@@ -22,17 +23,17 @@ export function librarySummary(item: LibraryItem) {
   return { ...summary, pageCount: pages?.length ?? 0, visionPages: pages?.filter(p => p.vision).length ?? 0, textLength: extractedText.length };
 }
 function tags(value: unknown) {
-  if (!Array.isArray(value) || value.length > 12) throw new AppError(400, "标签最多 12 个。");
+  if (!Array.isArray(value) || value.length > 12) throw new AppError(400, formatMessage('zh', "ui.upToTags"));
   return [...new Set(value.map(v => text(v, 35).trim()))];
 }
 export function libraryMetadata(value: unknown) {
   const v = object(value);
-  if (!Array.isArray(v.keyPoints) || v.keyPoints.length > 8) throw new AppError(400, "资料要点格式不正确。");
+  if (!Array.isArray(v.keyPoints) || v.keyPoints.length > 8) throw new AppError(400, formatMessage('zh', "ui.invalidMaterialSummaryFormat"));
   return { title: text(v.title, 180).trim(), category: text(v.category, 40).trim(), tags: tags(v.tags), summary: text(v.summary, 1400).trim(), keyPoints: v.keyPoints.map(x => text(x, 350).trim()) };
 }
 export function libraryEdit(value: unknown) {
   const v = object(value);
-  if (typeof v.notes !== "string" || v.notes.length > 20000) throw new AppError(400, "备注最多 20,000 字符。");
+  if (typeof v.notes !== "string" || v.notes.length > 20000) throw new AppError(400, formatMessage('zh', "ui.notesCanBeUpToCharacters"));
   return { title: text(v.title, 180).trim(), category: text(v.category, 40).trim(), tags: tags(v.tags), notes: v.notes };
 }
 export function fileType(filename: string, data: Buffer): { kind: LibraryKind; mime: string } {
@@ -44,19 +45,19 @@ export function fileType(filename: string, data: Buffer): { kind: LibraryKind; m
   if (ext === ".webp" && data.subarray(0,4).toString() === "RIFF" && data.subarray(8,12).toString() === "WEBP") return { kind: "image", mime: "image/webp" };
   if (ext === ".gif" && /^GIF8[79]a/.test(data.subarray(0,6).toString())) return { kind: "image", mime: "image/gif" };
   if (ext === ".avif" && data.subarray(4,8).toString() === "ftyp" && /avif|avis/.test(data.subarray(8,32).toString())) return { kind: "image", mime: "image/avif" };
-  throw new AppError(400, "支持 PDF、MD、PNG、JPEG、WebP、GIF、AVIF；文件内容必须与扩展名一致。");
+  throw new AppError(400, formatMessage('zh', "ui.supportsPDFMDPNGJPEGWebPGIFAnd"));
 }
 export function decodeMarkdown(data: Buffer) {
   try { return new TextDecoder("utf-8", { fatal: true }).decode(data); }
-  catch { throw new AppError(400, "Markdown 请使用 UTF-8 编码保存后重新导入。"); }
+  catch { throw new AppError(400, formatMessage('zh', "ui.saveTheMarkdownWithUTFEncodingAndImport")); }
 }
 export function extractPage(html: string) {
-  const $ = load(html), title = $("title").first().text().trim().slice(0,180) || $("h1").first().text().trim().slice(0,180) || "网页资料";
+  const $ = load(html), title = $("title").first().text().trim().slice(0,180) || $("h1").first().text().trim().slice(0,180) || formatMessage('zh', "library.webDocument");
   $("script,style,noscript,nav,header,footer,[hidden],[aria-hidden='true']").remove();
   $("br").replaceWith("\n"); $("p,li,h1,h2,h3,h4,section,div,tr,pre").append("\n");
   const main = $("main,article,[role='main']").first();
   const content = (main.length ? main.text() : $("body").text()).replace(/[ \t]+/g," ").replace(/\n\s*\n/g,"\n\n").trim();
-  if (content.length < 40 || /^(access denied|just a moment|sign in|ログイン)/i.test(content)) throw new AppError(422, "网页需要登录或没有可读取正文，请导入保存的 PDF 或 Markdown。");
+  if (content.length < 40 || /^(access denied|just a moment|sign in|ログイン)/i.test(content)) throw new AppError(422, formatMessage('zh', "ui.theWebPageRequiresLoginOrHasNo"));
   return { title, content };
 }
 async function pdfTask(data: Buffer) {
@@ -64,19 +65,19 @@ async function pdfTask(data: Buffer) {
   const root = dirname(fileURLToPath(import.meta.resolve("pdfjs-dist/package.json")));
   return getDocument({ data: new Uint8Array(data), cMapUrl: `${root}/cmaps/`, cMapPacked: true, standardFontDataUrl: `${root}/standard_fonts/`, wasmUrl: `${root}/wasm/`, verbosity: 0 });
 }
-function safeError(error: unknown) { return error instanceof AppError ? error.message : "资料读取失败。加密 PDF 请先解密；损坏文件请重新导出后导入。原文件已保留。"; }
+function safeError(error: unknown) { return error instanceof AppError ? error.message : formatMessage('zh', "library.readFailed"); }
 export class Library {
   constructor(private store: Store, private directory: string, private reader: PublicResourceReader = readPublicResource) {}
   all() { return this.store.snapshot().library ?? []; }
-  get(id: string) { const item = this.all().find(i => i.id === id); if (!item) throw new AppError(404, "资料不存在。"); return item; }
+  get(id: string) { const item = this.all().find(i => i.id === id); if (!item) throw new AppError(404, formatMessage('zh', "ui.materialNotFound")); return item; }
   async original(id: string) { const item = this.get(id); return { item, data: await readFile(resolve(this.directory, item.blob)) }; }
   async importFile(filename: string, data: Buffer, origin: LibraryItem["origin"] = "upload", sourcePath?: string) {
-    if (!data.length || data.length > LIBRARY_LIMIT) throw new AppError(400, "单个文件必须介于 1 字节与 20 MB 之间。");
+    if (!data.length || data.length > LIBRARY_LIMIT) throw new AppError(400, formatMessage('zh', "ui.eachFileMustBeBetweenByteAndMB"));
     filename = basename(filename.replaceAll("\\", "/")).slice(0,200);
     const type = fileType(filename, data), hash = createHash("sha256").update(data).digest("hex");
     const duplicate = this.all().find(i => i.hash === hash && i.kind === type.kind); if (duplicate) return { item: duplicate, duplicate: true };
     const at = new Date().toISOString(), id = randomUUID();
-    const item: LibraryItem = { ...type, id, filename, title: filename.replace(/\.[^.]+$/, ""), category: origin === "existing" ? /履歴書|職務経歴/.test(filename) ? "简历" : "面试资料" : "待分类", tags: [], summary: "", keyPoints: [], notes: "", hash, blob: `${id}${extname(filename).toLowerCase()}`, size: data.length, origin, ...(sourcePath ? { sourcePath } : {}), createdAt: at, updatedAt: at, status: "pending", extractedText: "", revision: 0 };
+    const item: LibraryItem = { ...type, id, filename, title: filename.replace(/\.[^.]+$/, ""), category: origin === "existing" ? /履歴書|職務経歴/.test(filename) ? formatMessage('zh', "library.resumeCategory") : formatMessage('zh', "library.interviewCategory") : formatMessage('zh', "library.uncategorized"), tags: [], summary: "", keyPoints: [], notes: "", hash, blob: `${id}${extname(filename).toLowerCase()}`, size: data.length, origin, ...(sourcePath ? { sourcePath } : {}), createdAt: at, updatedAt: at, status: "pending", extractedText: "", revision: 0 };
     await mkdir(this.directory, { recursive: true, mode: 0o700 });
     await writeFile(resolve(this.directory,item.blob), data, { mode: 0o600 });
     try {
@@ -86,7 +87,7 @@ export class Library {
         const task = await pdfTask(data);
         try {
           const pdf = await task.promise;
-          if (pdf.numPages > 200) throw new AppError(400, "单个 PDF 最多 200 页，请分拆后导入。");
+          if (pdf.numPages > 200) throw new AppError(400, formatMessage('zh', "ui.aSinglePDFCanHaveUpToPages"));
           item.pages = [];
           for (let number = 1; number <= pdf.numPages; number++) {
             const page = await pdf.getPage(number), content = await page.getTextContent();
@@ -100,7 +101,7 @@ export class Library {
           item.extractedText = item.pages.map(p => `## 第 ${p.number} 页\n${p.text}`).join("\n\n");
         } finally { await task.destroy(); }
       }
-      if (item.extractedText.length > 2000000) throw new AppError(400, "资料正文超过 2,000,000 字符，请分拆导入。");
+      if (item.extractedText.length > 2000000) throw new AppError(400, formatMessage('zh', "ui.materialContentExceedsCharactersPleaseSplitItBefore"));
     } catch (error) { item.status = "error"; item.error = safeError(error); }
     try { await this.store.update(s => { (s.library ??= []).push(item); }); }
     catch (error) { await rm(resolve(this.directory,item.blob),{force:true}); throw error; }
@@ -112,16 +113,16 @@ export class Library {
     const response = await this.reader(url, LIBRARY_LIMIT), extension = extname(new URL(response.url).pathname).toLowerCase();
     if (response.mime === "application/pdf" || response.mime.startsWith("image/") || [".md", ".markdown"].includes(extension)) {
       const ext = response.mime === "application/pdf" ? ".pdf" : response.mime.startsWith("image/") ? ({"image/png":".png","image/jpeg":".jpg","image/webp":".webp","image/gif":".gif","image/avif":".avif"} as Record<string,string>)[response.mime] : extension;
-      if (!ext) throw new AppError(400, "链接图片格式不受支持，请转为 PNG/JPEG 后上传。");
+      if (!ext) throw new AppError(400, formatMessage('zh', "ui.theLinkedImageFormatIsNotSupportedConvert"));
       const result = await this.importFile(`网页文件${ext}`,response.data,"url");
       if(result.duplicate)return result;
       await this.store.update(s => { const i = s.library!.find(i=>i.id===result.item.id)!; i.url=url; }); return { ...result, item: this.get(result.item.id) };
     }
-    if (!["text/html","application/xhtml+xml","text/plain","text/markdown"].includes(response.mime)) throw new AppError(400,"链接不是可读取的网页、PDF、Markdown 或图片。");
-    const page = /html/.test(response.mime) ? extractPage(response.data.toString("utf8")) : { title: "网页文本", content: decodeMarkdown(response.data).trim() };
-    if (!page.content || page.content.length > 2000000) throw new AppError(400,"网页正文为空或过长。");
+    if (!["text/html","application/xhtml+xml","text/plain","text/markdown"].includes(response.mime)) throw new AppError(400,formatMessage('zh', "ui.theLinkIsNotAReadableWebPage"));
+    const page = /html/.test(response.mime) ? extractPage(response.data.toString("utf8")) : { title: formatMessage('zh', "library.webText"), content: decodeMarkdown(response.data).trim() };
+    if (!page.content || page.content.length > 2000000) throw new AppError(400,formatMessage('zh', "ui.theWebPageBodyIsEmptyOrToo"));
     const id=randomUUID(), at=new Date().toISOString(), blob=`${id}.txt`;
-    const item: LibraryItem={id,title:page.title,category:"网页资料",tags:[],summary:"",keyPoints:[],notes:"",kind:"url",filename:page.title,mime:"text/plain",blob,hash:createHash("sha256").update(response.data).digest("hex"),size:response.data.length,origin:"url",url,createdAt:at,updatedAt:at,status:"pending",extractedText:page.content,revision:0};
+    const item: LibraryItem={id,title:page.title,category:formatMessage('zh', "library.webDocument"),tags:[],summary:"",keyPoints:[],notes:"",kind:"url",filename:page.title,mime:"text/plain",blob,hash:createHash("sha256").update(response.data).digest("hex"),size:response.data.length,origin:"url",url,createdAt:at,updatedAt:at,status:"pending",extractedText:page.content,revision:0};
     await mkdir(this.directory,{recursive:true,mode:0o700}); await writeFile(resolve(this.directory,blob),page.content,{mode:0o600});
     try { await this.store.update(s=>{(s.library??=[]).push(item);}); } catch(error){await rm(resolve(this.directory,blob),{force:true});throw error;}
     return {item,duplicate:false};
@@ -135,8 +136,8 @@ export class Library {
   }
   async edit(id:string,value:unknown){const patch=libraryEdit(value);this.get(id);await this.store.update(s=>{const i=s.library!.find(i=>i.id===id)!;Object.assign(i,patch,{updatedAt:new Date().toISOString(),revision:i.revision+1});});return this.get(id);}
   async image(_id:string,data:Buffer):Promise<AIImage>{
-    let image;try{image=await loadImage(data);}catch{throw new AppError(400,"图片无法解码，请重新导出为 PNG/JPEG。");}
-    if(image.width*image.height>50000000)throw new AppError(400,"图片超过 5,000 万像素，请先缩小。");
+    let image;try{image=await loadImage(data);}catch{throw new AppError(400,formatMessage('zh', "ui.theImageCouldNotBeDecodedExportIt"));}
+    if(image.width*image.height>50000000)throw new AppError(400,formatMessage('zh', "ui.theImageExceedsMillionPixelsReduceItsSize"));
     const ratio=Math.min(1,2000/Math.max(image.width,image.height)),canvas=createCanvas(Math.max(1,Math.round(image.width*ratio)),Math.max(1,Math.round(image.height*ratio)));
     const context=canvas.getContext("2d");context.fillStyle="#ffffff";context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
     return {type:"image",mimeType:"image/png",data:canvas.toBuffer("image/png").toString("base64")};

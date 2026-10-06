@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -12,6 +13,8 @@ import { classifyVoiceIntent } from "./voice-intent.ts";
 import type { EventPayloads } from './contracts.ts';
 import type { Notification, RpcMethod, RpcParams, RpcResult } from './codex-protocol.ts';
 import { nativeParams, nativeResult, nativeNotification } from './contract-validation.ts';
+import { Diagnostics } from './diagnostics.ts';
+import type { VoiceDiagnosticInput } from './contracts.ts';
 
 export type VoiceTranscript = { role: "user" | "assistant"; text: string; done: boolean; itemId?: string; source?: "segment" | "turn" };
 export type VoiceContext = { prompt: string; instructions?: string; previewText?: string; onTranscript?: (line: VoiceTranscript) => void; onEnd?: () => Promise<void> };
@@ -28,18 +31,50 @@ export function voiceError(error: unknown): string {
   return message.replace(/Bearer\s+\S+/gi, "Bearer [redacted]").replace(/\b(?:sk-|ek[-_])[A-Za-z0-9_-]+/g, "[redacted]").slice(0,1800);
 }
 
+function rpcSummary(value: unknown): Record<string, unknown> {
+  const data = value && typeof value === 'object' ? value as Record<string, any> : {};
+  const item = data.item ?? {}, turn = data.turn ?? {}, error = data.error ?? {};
+  return {
+    threadId:data.threadId ?? data.thread?.id,turnId:data.turnId ?? turn.id,
+    model:data.model,voice:data.voice,version:data.version,willRetry:data.willRetry,
+    status:turn.status,itemId:data.itemId ?? item.id,itemType:item.type,role:data.role ?? item.role,
+    characters:typeof (data.text ?? data.delta ?? item.text) === 'string' ? (data.text ?? data.delta ?? item.text).length : undefined,
+    ...(data.account !== undefined ? {authenticated:!!data.account,authType:data.account?.type ?? null} : {}),
+    ...((data.message ?? error.message ?? turn.error?.message) ? {error:data.message ?? error.message ?? turn.error?.message} : {}),
+  };
+}
+function loggedRpc(rpc: VoiceRpc, log: Diagnostics): VoiceRpc {
+  rpc.subscribe(event => {
+    if (!event.method.endsWith('/delta')) log.record('voice-rpc','notification',{method:event.method,...rpcSummary(event.params)});
+  });
+  return {
+    async request<M extends RpcMethod>(method: M, params: RpcParams<M>): Promise<RpcResult<M>> {
+      const requestId = crypto.randomUUID(), started = Date.now();
+      log.record('voice-rpc','request',{requestId,method,...rpcSummary(params)});
+      try {
+        const result = await rpc.request(method,params);
+        log.record('voice-rpc','completed',{requestId,method,durationMs:Date.now()-started,...rpcSummary(result)});
+        return result;
+      } catch (error) {
+        log.record('voice-rpc','failed',{requestId,method,durationMs:Date.now()-started,error}); throw error;
+      }
+    },
+    subscribe:listener => rpc.subscribe(listener), close:() => rpc.close(),
+  };
+}
+
 export class CodexVoiceRpc implements VoiceRpc {
   private sequence = 0;
   private pending = new Map<number, { resolve(value: unknown): void; reject(error: Error): void }>();
   private listeners = new Set<(event: Notification) => void>();
   private ended = false;
-  private constructor(private process: ChildProcessWithoutNullStreams) {
-    // Credentials and native diagnostic logs stay in the backend.
-    process.stderr.on("data", () => {});
+  private constructor(private process: ChildProcessWithoutNullStreams, log: Diagnostics) {
+    const diagnostics = createInterface({input:process.stderr});
+    diagnostics.on('line',line => log.record('voice-rpc','stderr',{message:line}));
     const lines = createInterface({ input: process.stdout });
     lines.on("line", line => {
       let message: { id?: number; method?: string; params?: Record<string, unknown>; result?: unknown; error?: { message: string } };
-      try { message = JSON.parse(line); } catch { return; }
+      try { message = JSON.parse(line); } catch { log.record('voice-rpc','invalid-json',{characters:line.length}); return; }
       if (message.id !== undefined && !message.method) {
         const pending = this.pending.get(message.id);
         if (!pending) return;
@@ -51,13 +86,14 @@ export class CodexVoiceRpc implements VoiceRpc {
       } else if (message.method) {
         const event = nativeNotification({ method: message.method, params: message.params ?? {} });
         if (event) for (const listener of this.listeners) listener(event);
+        else log.record('voice-rpc','invalid-notification',{method:message.method});
       }
     });
     process.stdin.on("error", () => {});
-    process.on("error", error => this.fail(new AppError(503, "code" in error && error.code === "ENOENT" ? "未找到 Codex CLI，请先安装并登录 Codex。" : "无法启动 Codex App Server。")));
-    process.on("exit", () => { lines.close(); this.fail(new AppError(503, "Codex App Server 已退出，请重试连接。")); });
+    process.on("error", error => this.fail(new AppError(503, "code" in error && error.code === "ENOENT" ? formatMessage('zh', "ui.codexCLIWasNotFoundPleaseInstallAnd") : formatMessage('zh', "ui.unableToStartCodexAppServer"))));
+    process.on("exit", (code,signal) => { diagnostics.close(); lines.close(); log.record('voice-rpc','process-exited',{code,signal}); this.fail(new AppError(503, formatMessage('zh', "ui.codexAppServerHasExitedTryReconnecting"))); });
   }
-  static async create(dataDir: string): Promise<CodexVoiceRpc> {
+  static async create(dataDir: string, log = new Diagnostics(dataDir)): Promise<VoiceRpc> {
     const nativeDir = resolve(dataDir, "voice-demo");
     await mkdir(nativeDir, { recursive: true, mode: 0o700 });
     const rpc = new CodexVoiceRpc(spawn(process.env.CODEX_BIN ?? process.execPath, [
@@ -65,20 +101,22 @@ export class CodexVoiceRpc implements VoiceRpc {
       "app-server", "--stdio", "-c", `sqlite_home=${JSON.stringify(resolve(nativeDir,"state"))}`,
       "-c", `log_dir=${JSON.stringify(resolve(nativeDir,"logs"))}`,
       "-c", "features.apps=false", "-c", "features.plugins=false",
-    ], { stdio: ["pipe", "pipe", "pipe"], env: { ...process.env, CODEX_SQLITE_HOME: resolve(nativeDir,"state") } }));
+    ], { stdio: ["pipe", "pipe", "pipe"], env: { ...process.env, CODEX_SQLITE_HOME: resolve(nativeDir,"state") } }),log);
+    const traced = loggedRpc(rpc,log);
     try {
-      await rpc.request("initialize", { clientInfo: { name: "recruitagent_voice_demo", title: "RecruitAgent Voice Demo", version: "0.1.0" }, capabilities: { experimentalApi: true, requestAttestation: false } });
+      await traced.request("initialize", { clientInfo: { name: "recruitagent_voice_demo", title: "RecruitAgent Voice Demo", version: "0.1.0" }, capabilities: { experimentalApi: true, requestAttestation: false } });
       rpc.process.stdin.write(JSON.stringify({ method: "initialized", params: {} }) + "\n");
-      return rpc;
+      log.record('voice-rpc','initialized',{processId:rpc.process.pid});
+      return traced;
     } catch (error) { await rpc.close(); throw error; }
   }
   request<M extends RpcMethod>(method: M, params: RpcParams<M>): Promise<RpcResult<M>> {
-    if (!nativeParams(method, params)) return Promise.reject(new AppError(502, 'Codex 请求参数与 CLI 协议不一致。'));
-    if (this.ended) return Promise.reject(new AppError(503, "Codex App Server 已退出，请重试连接。"));
+    if (!nativeParams(method, params)) return Promise.reject(new AppError(502, formatMessage('zh', "ui.codexRequestParametersDoNotMatchTheCLI")));
+    if (this.ended) return Promise.reject(new AppError(503, formatMessage('zh', "ui.codexAppServerHasExitedTryReconnecting")));
     const id = ++this.sequence;
     return new Promise<RpcResult<M>>((resolveRequest, rejectRequest) => {
-      const timer = setTimeout(() => { this.pending.delete(id); rejectRequest(new AppError(504,"Codex 接口响应超时，请重试。")); }, 35000);
-      this.pending.set(id, { resolve: value => { clearTimeout(timer); if (nativeResult(method, value)) resolveRequest(value); else rejectRequest(new AppError(502, 'Codex 返回的数据与 CLI 协议不一致。')); }, reject: error => { clearTimeout(timer); rejectRequest(error); } });
+      const timer = setTimeout(() => { this.pending.delete(id); rejectRequest(new AppError(504,formatMessage('zh', "ui.codexAPIResponseTimedOutPleaseTryAgain"))); }, 35000);
+      this.pending.set(id, { resolve: value => { clearTimeout(timer); if (nativeResult(method, value)) resolveRequest(value); else rejectRequest(new AppError(502, formatMessage('zh', "ui.theDataReturnedByCodexDoesNotMatch"))); }, reject: error => { clearTimeout(timer); rejectRequest(error); } });
       this.process.stdin.write(JSON.stringify({ id, method, params }) + "\n");
     });
   }
@@ -91,7 +129,7 @@ export class CodexVoiceRpc implements VoiceRpc {
     for (const listener of this.listeners) listener({ method: "voice/processExited", params: { message: error.message } });
   }
   async close() {
-    this.fail(new AppError(503, "语音连接已关闭。"));
+    this.fail(new AppError(503, formatMessage('zh', "ui.voiceConnectionClosed")));
     this.listeners.clear();
     if (this.process.exitCode !== null || this.process.signalCode !== null) return;
     await new Promise<void>(resolveClose => {
@@ -108,9 +146,9 @@ export class CodexVoice {
   private session?: Session;
   private sessions = new Map<string, Session>();
   private checks: Record<string, ModelCheck> | undefined;
-  constructor(private dataDir: string, private factory: () => Promise<VoiceRpc> = () => CodexVoiceRpc.create(dataDir), private timeout = 40000) {}
+  constructor(private dataDir: string, private factory?: () => Promise<VoiceRpc>, private timeout = 40000, private log = new Diagnostics(dataDir)) {}
   private native() {
-    if (!this.rpc) this.rpc = this.factory().then(rpc => {
+    if (!this.rpc) this.rpc = (this.factory ? this.factory().then(rpc => loggedRpc(rpc,this.log)) : CodexVoiceRpc.create(this.dataDir,this.log)).then(rpc => {
       rpc.subscribe(event => { if (event.method === "voice/processExited") this.rpc = undefined; });
       return rpc;
     }).catch(error => { this.rpc = undefined; throw error; });
@@ -124,7 +162,7 @@ export class CodexVoice {
   async catalog(): Promise<VoiceCatalog> {
     const rpc = await this.native();
     const result = await rpc.request("thread/realtime/listVoices", {});
-    if (!result.voices?.v1?.length || !result.voices?.v2?.length) throw new AppError(502, "Codex 未返回可用音色列表，请检查 CLI 版本。");
+    if (!result.voices?.v1?.length || !result.voices?.v2?.length) throw new AppError(502, formatMessage('zh', "ui.codexDidNotReturnAnAvailableVoiceList"));
     return result.voices;
   }
   async options() {
@@ -145,16 +183,28 @@ export class CodexVoice {
   }
   async verifyAudio(id: string, value: unknown) {
     const session = this.sessions.get(id), input = object(value);
-    if (!session || session.ended || !session.settings) throw new AppError(404,"语音会话已结束。");
-    if (typeof input.energy !== "number" || !Number.isFinite(input.energy) || input.energy <= 0 || typeof input.received !== "number" || !Number.isFinite(input.received) || input.received <= 0) throw new AppError(400,"尚未收到有声回复。");
+    if (!session || session.ended || !session.settings) throw new AppError(404,formatMessage('zh', "ui.voiceSessionEnded"));
+    if (typeof input.energy !== "number" || !Number.isFinite(input.energy) || input.energy <= 0 || typeof input.received !== "number" || !Number.isFinite(input.received) || input.received <= 0) throw new AppError(400,formatMessage('zh', "ui.noAudibleResponseHasBeenReceivedYet"));
     await this.checkModel(session.settings.model,"available",session.authType ?? null);
+    this.log.record('voice','audio-verified',{sessionId:id,threadId:session.threadId,model:session.settings.model,energy:input.energy,received:input.received});
     return { verified: true };
   }
-  emit<K extends keyof EventPayloads>(id: string, event: K, data: EventPayloads[K]) { this.sessions.get(id)?.events.emit(event,data); }
+  diagnostic(id: string, input: VoiceDiagnosticInput) {
+    const session = this.sessions.get(id);
+    if (!session) throw new AppError(404,formatMessage('zh', "ui.voiceSessionEnded"));
+    this.log.record('voice-browser',input.event,{...input,sessionId:id,threadId:session.threadId,model:session.settings?.model});
+    return {logged:true};
+  }
+  emit<K extends keyof EventPayloads>(id: string, event: K, data: EventPayloads[K]) {
+    const session = this.sessions.get(id);
+    const detail = data as Record<string,unknown>;
+    if (event !== 'transcript') this.log.record('voice',event,{sessionId:id,threadId:session?.threadId,...rpcSummary(data),activity:detail.activity,action:detail.action,stage:detail.stage,questionIndex:detail.questionIndex,inputRevision:detail.inputRevision,responseKind:detail.responseKind});
+    session?.events.emit(event,data);
+  }
   async control(id: string, value: unknown) {
     const session = this.sessions.get(id), action = text(object(value).action,30);
-    if (!session || session.ended || !session.threadId) throw new AppError(409,"语音尚未连接，请重新开始。");
-    if (!["stop","pause","resume"].includes(action)) throw new AppError(400,"未知的语音操作。");
+    if (!session || session.ended || !session.threadId) throw new AppError(409,formatMessage('zh', "ui.voiceIsNotConnectedPleaseStartAgain"));
+    if (!["stop","pause","resume"].includes(action)) throw new AppError(400,formatMessage('zh', "ui.unknownVoiceOperation"));
     const rpc = await this.native(), turnId = session.activeTurnId;
     session.suspended = action !== "resume";
     clearTimeout(session.turnTimer);
@@ -168,13 +218,13 @@ export class CodexVoice {
   }
   async appendText(id: string, value: string, role: "user" | "developer" = "developer") {
     const session = this.sessions.get(id);
-    if (!session || session.ended || !session.threadId) throw new AppError(409,"语音尚未连接，请重新开始。");
+    if (!session || session.ended || !session.threadId) throw new AppError(409,formatMessage('zh', "ui.voiceIsNotConnectedPleaseStartAgain"));
     const rpc = await this.native();
     await rpc.request("thread/realtime/appendText",{threadId:session.threadId,text:value,role});
   }
   async appendSpeech(id: string, value: string) {
     const session = this.sessions.get(id);
-    if (!session || session.ended || !session.threadId) throw new AppError(409,"语音尚未连接，请重新开始。");
+    if (!session || session.ended || !session.threadId) throw new AppError(409,formatMessage('zh', "ui.voiceIsNotConnectedPleaseStartAgain"));
     const rpc = await this.native();
     await rpc.request("thread/realtime/appendSpeech",{threadId:session.threadId,text:value});
   }
@@ -187,7 +237,7 @@ export class CodexVoice {
   }
   async preview(id: string) {
     const session = this.sessions.get(id);
-    if (!session || session.ended || !session.context?.previewText) throw new AppError(409,"这不是音色试听会话，请重新试听。");
+    if (!session || session.ended || !session.context?.previewText) throw new AppError(409,formatMessage('zh', "ui.thisIsNotAVoicePreviewSessionPlease"));
     if (!session.previewStarted) {
       session.previewStarted = true;
       session.previewTimer = setTimeout(() => { void this.end(id); },30000);
@@ -210,22 +260,23 @@ export class CodexVoice {
   }
   async start(value: unknown, language: Locale = "zh", context?: VoiceContext) {
     const input = object(value), id = text(input.id,100), sdp = text(input.sdp,64000);
-    if (!/^[\w-]{8,100}$/.test(id) || !sdp.startsWith("v=0") || !/m=audio\s/.test(sdp)) throw new AppError(400, "语音连接参数无效。");
-    if (this.session && !this.session.ended) throw new AppError(409, "已有语音通话，请先结束当前通话。");
-    if (this.sessions.has(id)) throw new AppError(409, "这次语音连接已发送，请重新连接。");
+    if (!/^[\w-]{8,100}$/.test(id) || !sdp.startsWith("v=0") || !/m=audio\s/.test(sdp)) throw new AppError(400, formatMessage('zh', "ui.invalidVoiceConnectionParameters"));
+    if (this.session && !this.session.ended) throw new AppError(409, formatMessage('zh', "ui.aVoiceCallIsAlreadyInProgressEnd"));
+    if (this.sessions.has(id)) throw new AppError(409, formatMessage('zh', "ui.thisVoiceConnectionHasAlreadyBeenSentPlease"));
     for (const [oldId, session] of this.sessions) if (session.ended) { session.events.close(); this.sessions.delete(oldId); }
     const session: Session = { id, events: new Events(), ended: false, context };
+    this.log.record('voice','session-start',{sessionId:id,model:input.model,voice:input.voice,language});
     this.session = session; this.sessions.set(id,session);
     let rpc: VoiceRpc | undefined;
     try {
       rpc = await this.native();
       const status = await this.status();
-      if (!status.authenticated) throw new AppError(401, "请先在终端运行 codex login，登录 Codex CLI；页面顶部的 Pi 登录与此 Demo 独立。");
+      if (!status.authenticated) throw new AppError(401, formatMessage('zh', "ui.pleaseRunCodexLoginInTheTerminalTo"));
       session.authType = status.authType;
       if (input.model !== undefined || input.voice !== undefined || input.tone !== undefined || input.language !== undefined) session.settings = voiceSettings(input, await this.catalog(),{...DEFAULT_VOICE_SETTINGS,language});
       language = session.settings?.language ?? language;
       const model = session.settings ? voiceModel(session.settings.model) : undefined;
-      if (session.ended) throw new AppError(409, "语音连接已取消。");
+      if (session.ended) throw new AppError(409, formatMessage('zh', "ui.voiceConnectionCanceled"));
       const workspace = resolve(this.dataDir, "voice-demo", "workspace");
       await mkdir(workspace, { recursive: true });
       const thread = await rpc.request("thread/start", {
@@ -234,12 +285,12 @@ export class CodexVoice {
         config: { model_reasoning_effort: "low", "features.apps": false, "features.plugins": false },
       });
       session.threadId = thread.thread.id;
-      if (session.ended) throw new AppError(409, "语音连接已取消。");
+      if (session.ended) throw new AppError(409, formatMessage('zh', "ui.voiceConnectionCanceled"));
       // Register before starting: SDP/error notifications can precede the RPC acknowledgement.
       const answer = new Promise<string>((resolveAnswer,rejectAnswer) => {
-        const timer = setTimeout(() => rejectAnswer(new AppError(504,"语音协商超时，请检查网络后重试。")), this.timeout);
+        const timer = setTimeout(() => rejectAnswer(new AppError(504,formatMessage('zh', "ui.voiceNegotiationTimedOutCheckYourNetworkAnd"))), this.timeout);
         const fail = (message: string) => { clearTimeout(timer); rejectAnswer(new AppError(502,voiceError(message))); };
-        session.cancel = () => fail("语音连接已取消。");
+        session.cancel = () => fail(formatMessage('zh', "voice.connectionCancelled"));
         session.unsubscribe = rpc!.subscribe(event => {
           if (event.method !== "voice/processExited" && (!('threadId' in event.params) || event.params.threadId !== session.threadId)) return;
           if (session.ended) return;
@@ -250,23 +301,23 @@ export class CodexVoice {
             session.activeTurnId = turn.id; clearTimeout(session.turnTimer);
             this.emit(id,"voice-activity",{activity:"thinking",turnId:turn.id});
             session.turnTimer = setTimeout(() => {
-              void this.control(id,{action:"stop"}).then(() => this.emit(id,"voice-activity",{activity:"timeout",message:"本轮处理超时，已停止。点击继续对话后重新开口。"})).catch(error => this.emit(id,"voice-activity",{activity:"failed",message:voiceError(error)}));
+              void this.control(id,{action:"stop"}).then(() => this.emit(id,"voice-activity",{activity:"timeout",message:formatMessage('zh', "ui.thisTurnTimedOutAndHasBeenStopped")})).catch(error => this.emit(id,"voice-activity",{activity:"failed",message:voiceError(error)}));
             },45000);
           } else if (event.method === "turn/completed") {
             const turn = event.params.turn as {id?:string;status?:string;error?:{message?:string}} | undefined;
             if (!turn?.id || turn.id !== session.activeTurnId) return;
             clearTimeout(session.turnTimer); session.activeTurnId = undefined;
-            this.emit(id,"voice-activity",{activity:turn.status === "failed" || turn.error ? "failed" : turn.status === "interrupted" ? "stopped" : "processing",message:turn.error?.message ? voiceError(turn.error.message) : turn.status === "failed" ? "后台处理失败，请停止本轮后重新开口。" : ""});
+            this.emit(id,"voice-activity",{activity:turn.status === "failed" || turn.error ? "failed" : turn.status === "interrupted" ? "stopped" : "processing",message:turn.error?.message ? voiceError(turn.error.message) : turn.status === "failed" ? formatMessage('zh', "ui.backgroundProcessingFailedStopThisRoundThenSpeak") : ""});
           } else if (event.method === "error" && session.activeTurnId && event.params.willRetry !== true) {
             clearTimeout(session.turnTimer); session.activeTurnId = undefined;
             const error = event.params.error as {message?:string} | undefined;
-            this.emit(id,"voice-activity",{activity:"failed",message:voiceError(error?.message ?? "后台处理失败，请停止本轮后重新开口。")});
+            this.emit(id,"voice-activity",{activity:"failed",message:voiceError(error?.message ?? formatMessage('zh', "ui.backgroundProcessingFailedStopThisRoundThenSpeak"))});
           } else if (event.method === "thread/realtime/sdp" && typeof event.params.sdp === "string") { clearTimeout(timer); resolveAnswer(event.params.sdp); }
           else if (event.method === "thread/realtime/error" || event.method === "voice/processExited") {
-            const message = voiceError(event.params.message ?? "语音连接失败。");
+            const message = voiceError(event.params.message ?? formatMessage('zh', "voice.connectionFailed"));
             session.failure = message;
             session.events.emit("voice-error", { message }); fail(message); void this.end(id);
-          } else if (event.method === "thread/realtime/closed") { fail("语音会话已关闭。"); void this.end(id); }
+          } else if (event.method === "thread/realtime/closed") { fail(formatMessage('zh', "voice.sessionClosed")); void this.end(id); }
           else if (event.method === "thread/realtime/transcript/delta" || event.method === "thread/realtime/transcript/done") {
             if (!session.canonicalTranscripts) { session.flatTranscripts = true; this.transcript(session,event.params.role,event.method === 'thread/realtime/transcript/done' ? event.params.text : event.params.delta,event.method.endsWith("done")); }
           } else if (event.method === "thread/realtime/item/started" || event.method === "thread/realtime/item/completed") {
@@ -300,10 +351,12 @@ export class CodexVoice {
       });
       const remoteSdp = await answer;
       session.cancel = undefined;
-      if (session.ended) throw new AppError(409,"语音连接已取消。");
+      if (session.ended) throw new AppError(409,formatMessage('zh', "ui.voiceConnectionCanceled"));
       session.disconnectTimer = setTimeout(() => { void this.end(id); }, 20000);
+      this.log.record('voice','negotiated',{sessionId:id,threadId:session.threadId,model:session.settings?.model});
       return { id, sdp: remoteSdp };
     } catch (error) {
+      this.log.record('voice','start-failed',{sessionId:id,threadId:session.threadId,model:session.settings?.model,error});
       if (session.settings && session.threadId && (session.failure || !session.ended)) await this.checkModel(session.settings.model,"failed",session.authType ?? null,session.failure ?? voiceError(error)).catch(() => {});
       await this.end(id);
       // A canceled start can finish creating its native thread after end().
@@ -316,7 +369,7 @@ export class CodexVoice {
   }
   connect(id: string, response: ServerResponse, after: number) {
     const session = this.sessions.get(id);
-    if (!session || session.ended) throw new AppError(404,"语音会话已结束，请重新连接。");
+    if (!session || session.ended) throw new AppError(404,formatMessage('zh', "ui.voiceSessionEndedPleaseReconnect"));
     clearTimeout(session.disconnectTimer);
     session.events.connect(response,after);
     response.on("close", () => { if (!session.ended) session.disconnectTimer = setTimeout(() => { void this.end(id); },10000); });
@@ -325,12 +378,13 @@ export class CodexVoice {
     const session = this.sessions.get(id);
     if (session?.ending) return session.ending;
     if (!session || session.ended) return;
+    this.log.record('voice','session-end',{sessionId:id,threadId:session.threadId,error:session.failure});
     session.ended = true; session.cancel?.(); session.cancel = undefined;
     clearTimeout(session.disconnectTimer); clearTimeout(session.previewTimer); clearTimeout(session.turnTimer); session.unsubscribe?.();
     if (this.session === session) this.session = undefined;
     session.ending = (async () => {
       try { await session.context?.onEnd?.(); }
-      catch { session.events.emit("voice-error",{message:"语音转写保存失败，请检查本地记录。"}); }
+      catch (error) { this.log.record('voice','save-failed',{sessionId:id,error}); session.events.emit("voice-error",{message:formatMessage('zh', "ui.failedToSaveTheVoiceTranscriptPleaseCheck")}); }
       session.events.emit("ended", {}); session.events.close();
       const rpc = await this.rpc?.catch(() => undefined);
       if (rpc && session.threadId) {
@@ -347,5 +401,6 @@ export class CodexVoice {
     const rpc = await this.rpc?.catch(() => undefined);
     this.rpc = undefined;
     await rpc?.close();
+    await this.log.flush();
   }
 }

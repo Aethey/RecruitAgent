@@ -1,4 +1,5 @@
 // Load before styles and the main bundle so a saved dark theme never flashes light.
+import { formatMessage } from '../src/generated/localizations.ts';
 const key = 'algo-practice:theme';
 const system = window.matchMedia('(prefers-color-scheme: dark)');
 const valid = value => ['system', 'light', 'dark'].includes(value);
@@ -12,8 +13,8 @@ function apply() {
   const toggle = (/** @type {HTMLButtonElement} */ (document.querySelector('#theme-toggle')));
   if (toggle) {
     toggle.setAttribute('aria-checked', String(theme === 'dark'));
-    const titles = { zh: ['切换至浅色主题', '切换至深色主题'], en: ['Switch to light theme', 'Switch to dark theme'], ja: ['ライトテーマに切り替え', 'ダークテーマに切り替え'] };
-    toggle.title = (titles[document.documentElement.dataset.uiLanguage] ?? titles.zh)[theme === 'dark' ? 0 : 1];
+    const locale = /** @type {import('../src/locales.ts').Locale} */ (document.documentElement.dataset.uiLanguage || 'zh');
+    toggle.title = formatMessage(locale, theme === 'dark' ? 'theme.switchToLight' : 'ui.switchToDarkTheme');
   }
   window.dispatchEvent(new CustomEvent('app-theme-change', { detail: { theme } }));
 }

@@ -248,177 +248,183 @@ export const routes = {
     "response": "response_43",
     "request": "request_43"
   },
+  "POST /api/voice/sessions/{id}/diagnostics": {
+    "method": "POST",
+    "path": "/api/voice/sessions/{id}/diagnostics",
+    "response": "response_44",
+    "request": "request_44"
+  },
   "POST /api/voice/sessions/{id}/preview": {
     "method": "POST",
     "path": "/api/voice/sessions/{id}/preview",
-    "response": "response_44",
-    "request": "request_44"
+    "response": "response_45",
+    "request": "request_45"
   },
   "GET /api/breadth": {
     "method": "GET",
     "path": "/api/breadth",
-    "response": "response_45"
+    "response": "response_46"
   },
   "GET /api/study/catalog": {
     "method": "GET",
     "path": "/api/study/catalog",
-    "response": "response_46"
+    "response": "response_47"
   },
   "POST /api/study/points": {
     "method": "POST",
     "path": "/api/study/points",
-    "response": "response_47",
-    "request": "request_47"
+    "response": "response_48",
+    "request": "request_48"
   },
   "POST /api/study/import": {
     "method": "POST",
     "path": "/api/study/import",
-    "response": "response_48",
-    "request": "request_48"
+    "response": "response_49",
+    "request": "request_49"
   },
   "POST /api/study/batches": {
     "method": "POST",
     "path": "/api/study/batches",
-    "response": "response_49",
-    "request": "request_49"
+    "response": "response_50",
+    "request": "request_50"
   },
   "GET /api/study/batches/{id}": {
     "method": "GET",
     "path": "/api/study/batches/{id}",
-    "response": "response_50"
+    "response": "response_51"
   },
   "PUT /api/study/batches/{id}": {
     "method": "PUT",
     "path": "/api/study/batches/{id}",
-    "response": "response_51",
-    "request": "request_51"
+    "response": "response_52",
+    "request": "request_52"
   },
   "POST /api/study/batches/{id}/review": {
     "method": "POST",
     "path": "/api/study/batches/{id}/review",
-    "response": "response_52",
-    "request": "request_52"
+    "response": "response_53",
+    "request": "request_53"
   },
   "POST /api/study/batches/{id}/close": {
     "method": "POST",
     "path": "/api/study/batches/{id}/close",
-    "response": "response_53",
-    "request": "request_53"
+    "response": "response_54",
+    "request": "request_54"
   },
   "POST /api/study/batches/{id}/items/{itemId}/reveal": {
     "method": "POST",
     "path": "/api/study/batches/{id}/items/{itemId}/reveal",
-    "response": "response_54",
-    "request": "request_54"
+    "response": "response_55",
+    "request": "request_55"
   },
   "GET /api/library": {
     "method": "GET",
     "path": "/api/library",
-    "response": "response_55"
+    "response": "response_56"
   },
   "POST /api/library/files": {
     "method": "POST",
     "path": "/api/library/files",
-    "response": "response_56"
+    "response": "response_57"
   },
   "GET /api/library/{id}": {
     "method": "GET",
     "path": "/api/library/{id}",
-    "response": "response_57"
+    "response": "response_58"
   },
   "PUT /api/library/{id}": {
     "method": "PUT",
     "path": "/api/library/{id}",
-    "response": "response_58",
-    "request": "request_58"
+    "response": "response_59",
+    "request": "request_59"
   },
   "POST /api/library/urls": {
     "method": "POST",
     "path": "/api/library/urls",
-    "response": "response_59",
-    "request": "request_59"
+    "response": "response_60",
+    "request": "request_60"
   },
   "POST /api/library/import-existing": {
     "method": "POST",
     "path": "/api/library/import-existing",
-    "response": "response_60",
-    "request": "request_60"
+    "response": "response_61",
+    "request": "request_61"
   },
   "POST /api/library/organize": {
     "method": "POST",
     "path": "/api/library/organize",
-    "response": "response_61",
-    "request": "request_61"
+    "response": "response_62",
+    "request": "request_62"
   },
   "POST /api/trainings": {
     "method": "POST",
     "path": "/api/trainings",
-    "response": "response_62",
-    "request": "request_62"
+    "response": "response_63",
+    "request": "request_63"
   },
   "POST /api/trainings/diagnosis": {
     "method": "POST",
     "path": "/api/trainings/diagnosis",
-    "response": "response_63",
-    "request": "request_63"
+    "response": "response_64",
+    "request": "request_64"
   },
   "GET /api/trainings/{id}": {
     "method": "GET",
     "path": "/api/trainings/{id}",
-    "response": "response_64"
+    "response": "response_65"
   },
   "PUT /api/trainings/{id}": {
     "method": "PUT",
     "path": "/api/trainings/{id}",
-    "response": "response_65",
-    "request": "request_65"
+    "response": "response_66",
+    "request": "request_66"
   },
   "POST /api/trainings/{id}/analyze": {
     "method": "POST",
     "path": "/api/trainings/{id}/analyze",
-    "response": "response_66",
-    "request": "request_66"
+    "response": "response_67",
+    "request": "request_67"
   },
   "POST /api/trainings/{id}/rewrite": {
     "method": "POST",
     "path": "/api/trainings/{id}/rewrite",
-    "response": "response_67",
-    "request": "request_67"
+    "response": "response_68",
+    "request": "request_68"
   },
   "POST /api/trainings/{id}/next": {
     "method": "POST",
     "path": "/api/trainings/{id}/next",
-    "response": "response_68",
-    "request": "request_68"
+    "response": "response_69",
+    "request": "request_69"
   },
   "POST /api/trainings/{id}/review": {
     "method": "POST",
     "path": "/api/trainings/{id}/review",
-    "response": "response_69",
-    "request": "request_69"
+    "response": "response_70",
+    "request": "request_70"
   },
   "POST /api/trainings/{id}/reveal": {
     "method": "POST",
     "path": "/api/trainings/{id}/reveal",
-    "response": "response_70",
-    "request": "request_70"
+    "response": "response_71",
+    "request": "request_71"
   },
   "POST /api/analysis": {
     "method": "POST",
     "path": "/api/analysis",
-    "response": "response_71",
-    "request": "request_71"
+    "response": "response_72",
+    "request": "request_72"
   },
   "GET /api/jobs/{id}": {
     "method": "GET",
     "path": "/api/jobs/{id}",
-    "response": "response_72"
+    "response": "response_73"
   },
   "POST /api/jobs/{id}/abort": {
     "method": "POST",
     "path": "/api/jobs/{id}/abort",
-    "response": "response_73",
-    "request": "request_73"
+    "response": "response_74",
+    "request": "request_74"
   }
 };
 export const modelNames = ["problem","hint","review","analysis","language","interview","interviewReview","library","recognition","notes","scenario","followup","compression","diagnosis","debrief","quiz","quizFeedback","studyImport","voiceTranslation"];

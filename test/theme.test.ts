@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
+import { formatMessage } from '../src/generated/localizations.ts';
 
 test('light and dark role pairs have readable text and visible input outlines',async()=>{
  const css=await readFile(new URL('../public/style.css',import.meta.url),'utf8');
@@ -14,7 +15,7 @@ test('theme preference restores before paint, follows system only when selected,
  const script=await readFile(new URL('../public/theme.js',import.meta.url),'utf8');
  function setup(saved:string|null,blocked=false){
   const root={dataset:{} as Record<string,string>},handlers=new Map<string,Function>(),events:any[]=[],attributes=new Map<string,string>(),toggle={title:'',setAttribute:(name:string,value:string)=>attributes.set(name,value),addEventListener:(_name:string,fn:Function)=>handlers.set('click',fn)},system={matches:true,addEventListener:(_name:string,fn:Function)=>handlers.set('system',fn)};let stored=saved;
-  runInNewContext(script,{window:{matchMedia:()=>system,addEventListener:(name:string,fn:Function)=>handlers.set(name,fn),dispatchEvent:(e:any)=>events.push(e)},document:{documentElement:root,querySelector:(q:string)=>q==='#theme-toggle'?toggle:{setAttribute(){}},addEventListener:(name:string,fn:Function)=>handlers.set(name,fn)},localStorage:{getItem:()=>{if(blocked)throw Error('unavailable');return stored;},setItem:(_key:string,value:string)=>{if(blocked)throw Error('unavailable');stored=value;}},CustomEvent:class{constructor(public type:string,public detail:any){}}});
+  runInNewContext(script.replace(/^import .*;\n/m, ''),{formatMessage,window:{matchMedia:()=>system,addEventListener:(name:string,fn:Function)=>handlers.set(name,fn),dispatchEvent:(e:any)=>events.push(e)},document:{documentElement:root,querySelector:(q:string)=>q==='#theme-toggle'?toggle:{setAttribute(){}},addEventListener:(name:string,fn:Function)=>handlers.set(name,fn)},localStorage:{getItem:()=>{if(blocked)throw Error('unavailable');return stored;},setItem:(_key:string,value:string)=>{if(blocked)throw Error('unavailable');stored=value;}},CustomEvent:class{constructor(public type:string,public detail:any){}}});
   assert.equal(root.dataset.theme,saved==='light'?'light':'dark');
   handlers.get('DOMContentLoaded')!();return {root,handlers,events,toggle,attributes,system,stored:()=>stored};
  }

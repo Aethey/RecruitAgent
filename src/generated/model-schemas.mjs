@@ -290,6 +290,12 @@ export const schemas = {
           "question": {
             "type": "string"
           },
+          "tips": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "kind": {
             "enum": [
               "behavioral",
@@ -300,12 +306,6 @@ export const schemas = {
           },
           "focus": {
             "type": "string"
-          },
-          "tips": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           "keywords": {
             "type": "array",
@@ -693,6 +693,12 @@ export const schemas = {
           "question": {
             "type": "string"
           },
+          "tips": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "kind": {
             "enum": [
               "behavioral",
@@ -703,12 +709,6 @@ export const schemas = {
           },
           "focus": {
             "type": "string"
-          },
-          "tips": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           },
           "keywords": {
             "type": "array",
@@ -1079,7 +1079,7 @@ export const schemas = {
               "$ref": "#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"
             },
             {
-              "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02"
+              "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"
             }
           ]
         }
@@ -1127,9 +1127,12 @@ export const schemas = {
         ],
         "type": "string"
       },
-      "Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02": {
+      "Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925": {
         "type": "object",
         "properties": {
+          "topic": {
+            "type": "string"
+          },
           "language": {
             "enum": [
               "dart",
@@ -1141,9 +1144,6 @@ export const schemas = {
               "swift",
               "typescript"
             ],
-            "type": "string"
-          },
-          "topic": {
             "type": "string"
           },
           "description": {

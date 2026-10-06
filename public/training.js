@@ -1,5 +1,6 @@
 import { element, elements } from './dom.ts';
-import { t, ui } from "./i18n.js";
+import { t, catalogText, errorText } from "./i18n.js";
+import { interviewTitle } from './interview-title.js';
 import { editorValue, mountEditor, mountReference } from "./editor.js";
 /** @param {{api: import('../src/generated/api-client.js').ApiClient, [option: string]: any}} options */
 function createTrainingPractice({ $, escape, date, options, pageHeading, list, api, toast, startTask, updateButtons, getState, getConfig, flushBefore }) {
@@ -31,13 +32,13 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
         if (localStorage.getItem(key(id)) === JSON.stringify(snapshot)) localStorage.removeItem(key(id));
       } catch {
       }
-      if (id === mountedId && JSON.stringify(snapshot) === JSON.stringify(draft)) badge(t("已保存到本机 ✓"));
+      if (id === mountedId && JSON.stringify(snapshot) === JSON.stringify(draft)) badge(t("ui.savedLocally"));
     });
     queue = op;
     try {
       await op;
     } catch (e) {
-      if (id === mountedId) badge(t("保存失败 · 点击重试"), true);
+      if (id === mountedId) badge(t("ui.saveFailedClickToRetry"), true);
       throw e;
     }
   }
@@ -49,7 +50,7 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
   function change(field2, value) {
     draft[field2] = value;
     remember();
-    badge(t("正在保存…"));
+    badge(t("ui.saving"));
     clearTimeout(timer);
     timer = setTimeout(() => void save(mountedId, { ...draft }).catch(() => {
     }), 650);
@@ -75,11 +76,11 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
     }
   }
   function fieldLabel(name) {
-    const labels = { original: t("原回答"), points: t("压缩后的要点"), code: t("修复代码"), cause: t("根因判断"), checks: t("验证思路"), company: t("公司"), role: t("职位"), date: t("面试日期"), stage: t("轮次"), notes: t("整体反馈与观察") };
+    const labels = { original: t("ui.originalAnswer2"), points: t("ui.condensedKeyPoints"), code: t("ui.fixedCode"), cause: t("ui.rootCause"), checks: t("ui.validationPlan"), company: t("ui.company"), role: t("ui.role"), date: t("ui.interviewDate"), stage: t("ui.round"), notes: t("ui.overallFeedbackAndObservations") };
     if (labels[name]) return labels[name];
     const [kind, id] = name.split(":");
-    const entryLabels = { question: t("实际问题"), answer: t("我的回答"), feedback: t("面试官明确反馈") };
-    return entryLabels[kind] ? ui`问题 ${id} · ${entryLabels[kind]}` : name;
+    const entryLabels = { question: t("ui.actualQuestion"), answer: t("ui.myAnswer"), feedback: t("ui.explicitInterviewerFeedback") };
+    return entryLabels[kind] ? `${t("training.question3", { id: id, value2: entryLabels[kind] })}` : name;
   }
   const field = (name, label, value = "", placeholder = "", rows2 = 5) => `<div class="field"><label for="training-${escape(name)}">${escape(label)}</label><textarea id="training-${escape(name)}" data-training-field="${escape(name)}" rows="${rows2}" maxlength="10000" placeholder="${escape(placeholder)}">${escape(value)}</textarea></div>`;
   /** @param {ParentNode} root */
@@ -90,7 +91,7 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
     dispose();
     if (Object.hasOwn(getConfig().trainingKinds, preset)) hubKind = preset;
     const config = getConfig();
-    $("#page").innerHTML = pageHeading("PRACTICE WITH PURPOSE", t("把练习，变成下一次的进步。"), t("练重点、追理由、查故障，再用真实面试反馈调整练习。")) + ui`<div class="training-modes" role="group" aria-label="能力训练类型">${Object.entries(config.trainingKinds).map(([k, v]) => `<button class="button ${k === hubKind ? "pressed selected" : "flat"}" data-training-kind="${k}" aria-pressed="${k === hubKind}">${escape(v)}</button>`).join("")}</div><section class="card flat training-generator" id="training-generator"></section><section class="language-history training-history"><div class="section-heading"><h2>训练记录</h2><span class="tag">${records().filter((r) => r.kind === hubKind).length} 份</span></div>${records().filter((r) => r.kind === hubKind).slice().reverse().map((r) => `<a class="history-item flat" href="#training/${r.id}"><div><h3 class="history-title">${escape(r.title)}</h3><div class="history-meta">${date(r.updatedAt)} · ${r.kind === "followup" ? ui`${r.turns.length} 道递进问题` : ui`${r.reviews.length} 次提交`}</div></div><span>↗</span></a>`).join("") || t('<div class="card flat empty-small">还没有这类训练，开始一轮即可保存记录。</div>')}</section>`;
+    $("#page").innerHTML = pageHeading(t("chrome.practiceWithPurpose"), t("ui.turnPracticeIntoYourNextImprovement"), t("ui.focusAnswersExploreReasonsAndDiagnoseBugsThen")) + `<div class="training-modes" role="group" aria-label="${t("ui.trainingType")}">${Object.entries(config.trainingKinds).map(([k, v]) => `<button class="button ${k === hubKind ? "pressed selected" : "flat"}" data-training-kind="${k}" aria-pressed="${k === hubKind}">${escape(catalogText(v))}</button>`).join("")}</div><section class="card flat training-generator" id="training-generator"></section><section class="language-history training-history"><div class="section-heading"><h2>${t("ui.trainingHistory")}</h2><span class="tag">${t("training.records", { length: records().filter((r) => r.kind === hubKind).length })}</span></div>${records().filter((r) => r.kind === hubKind).slice().reverse().map((r) => `<a class="history-item flat" href="#training/${r.id}"><div><h3 class="history-title">${escape(errorText(r.title))}</h3><div class="history-meta">${date(r.updatedAt)} · ${r.kind === "followup" ? `${t("training.followUpQuestions", { length: r.turns.length })}` : `${t("training.submissions", { length: r.reviews.length })}`}</div></div><span>↗</span></a>`).join("") || `<div class="card flat empty-small">${t("ui.noTrainingOfThisTypeYetStartA")}</div>`}</section>`;
     elements("[data-training-kind]").forEach((b) => b.onclick = () => {
       hubKind = b.dataset.trainingKind;
       const nextHash = `#training/${hubKind}`;
@@ -99,17 +100,17 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
     });
     const host = $("#training-generator");
     if (hubKind === "diagnosis") {
-      host.innerHTML = ui`<h2>诊断一个工程故障</h2><p class="interview-help">读现象、定位根因、修改代码，并说明怎样验证。参考修复在提交后按需查看。</p><form id="diagnosis-form" class="generator-form"><div class="training-form-grid"><div class="field"><label for="diagnosis-language">语言</label><select id="diagnosis-language">${options(config.languages, "dart")}</select></div><div class="field"><label for="diagnosis-topic">故障方向</label><select id="diagnosis-topic">${options(config.diagnosisTopics, "state")}</select></div></div>${field("focus", t("希望补强的场景 · 可选"), pendingFocus, t("例如：多个异步请求完成顺序不同，旧结果覆盖新状态。"), 3)}<button class="button primary" data-ai type="submit">生成故障练习 →</button><p class="form-note">AI 教学情境与静态评估，不在后端执行代码。</p></form>`;
+      host.innerHTML = `<h2>${t("ui.diagnoseAnEngineeringBug")}</h2><p class="interview-help">${t("ui.readSymptomsLocateTheCauseFixTheCode")}</p><form id="diagnosis-form" class="generator-form"><div class="training-form-grid"><div class="field"><label for="diagnosis-language">${t("ui.language")}</label><select id="diagnosis-language">${options(config.languages, "dart")}</select></div><div class="field"><label for="diagnosis-topic">${t("ui.bugCategory")}</label><select id="diagnosis-topic">${options(config.diagnosisTopics, "state")}</select></div></div>${field("focus", t("ui.scenarioToStrengthenOptional"), pendingFocus, t("ui.forExampleAsynchronousRequestsFinishOutOfOrder"), 3)}<button class="button primary" data-ai type="submit">${t("ui.generateADebuggingExercise")}</button><p class="form-note">${t("ui.aITeachingScenarioAndStaticReviewCodeIs")}</p></form>`;
       $("#diagnosis-form").onsubmit = (e) => {
         e.preventDefault();
         void startTask("/api/trainings/diagnosis", { language: $("#diagnosis-language").value, topic: $("#diagnosis-topic").value, focus: $("#training-focus").value }, "training");
       };
     } else if (hubKind === "debrief") {
-      host.innerHTML = t('<h2>记录刚结束的一次面试</h2><p class="problem-copy">按题记录实际问题、自己的回答和收到的反馈。模型观察与面试官反馈分开显示；复盘后直接进入压缩或追问练习。</p><button class="button mint" id="new-debrief">新建面试复盘 ＋</button><p class="form-note">新建和保存不调用 AI，点击分析时才使用 Codex。</p>');
+      host.innerHTML = `<h2>${t("ui.recordARecentInterview")}</h2><p class="problem-copy">${t("ui.recordQuestionsYourAnswersAndReceivedFeedbackAI")}</p><button class="button mint" id="new-debrief">${t("ui.newInterviewDebrief")}</button><p class="form-note">${t("ui.creatingAndSavingDoesNotCallAIAnalysis")}</p>`;
       $("#new-debrief").onclick = () => void begin({ kind: "debrief" });
     } else {
-      const sets = getState().interviews ?? [], qs = sets.flatMap((s) => s.questions.map((q) => ({ value: `${s.id}/${q.id}`, label: `${s.title} · ${q.question}` })));
-      host.innerHTML = ui`<h2>${hubKind === "compression" ? t("把回答压缩到重点") : t("从一个回答继续深入")}</h2><p class="interview-help">${hubKind === "compression" ? t("先诊断原回答，再自己改成3–5条短要点，提交后比较改善与遗漏。") : t("每次回答后只追问一个关键问题，最多八题；不做聊天，保留逐题依据与评价。")}</p><form id="start-training-form" class="generator-form"><div class="field"><label for="training-source-question">选择已有面试题</label><select id="training-source-question">${options(Object.fromEntries(qs.map((q) => [q.value, q.label])), "", t("手动输入一个问题"))}</select></div><div id="manual-training">${field("question", t("面试问题"), "", t("例如：なぜこの設計を選びましたか？"), 2)}${field("original", t("自己的原回答 · 追问可稍后填写"), "", t("保留你实际会说的内容，不要先让模型代写。"), 6)}</div><button type="submit" class="button primary">开始这轮训练 →</button><p class="form-note">创建与保存不调用模型；已有题会带入当前回答和参考来源。</p></form>`;
+      const sets = getState().interviews ?? [], qs = sets.flatMap((s) => s.questions.map((q) => ({ value: `${s.id}/${q.id}`, label: `${interviewTitle(s)} · ${q.question}` })));
+      host.innerHTML = `<h2>${hubKind === "compression" ? t("ui.condenseAnswersToKeyPoints") : t("ui.goDeeperFromOneAnswer")}</h2><p class="interview-help">${hubKind === "compression" ? t("ui.reviewTheOriginalCondenseItYourselfIntoPoints") : t("ui.oneFocusedFollowUpPerAnswerUpTo")}</p><form id="start-training-form" class="generator-form"><div class="field"><label for="training-source-question">${t("ui.chooseAnExistingInterviewQuestion")}</label><select id="training-source-question">${options(Object.fromEntries(qs.map((q) => [q.value, q.label])), "", t("ui.enterAQuestionManually"))}</select></div><div id="manual-training">${field("question", t("ui.interviewQuestion"), "", t("ui.forExampleWhyDidYouChooseThisDesign"), 2)}${field("original", t("ui.yourOriginalAnswerOptionalForFollowUps"), "", t("ui.keepWhatYouWouldActuallySayWriteIt"), 6)}</div><button type="submit" class="button primary">${t("ui.startThisTraining")}</button><p class="form-note">${t("ui.creatingAndSavingDoesNotCallAIExisting")}</p></form>`;
       $("#training-source-question").onchange = (e) => {
         $("#manual-training").hidden = !!e.target.value;
       };
@@ -135,18 +136,18 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
       }
     } catch {
     }
-    $("#page").innerHTML = pageHeading("FOCUSED PRACTICE", escape(r.title), getConfig().trainingKinds[r.kind], t('<a class="button flat" href="#training">返回能力训练</a>')) + ui`<div class="interview-actions"><button id="training-save" class="save-state">已保存到本机 ✓</button><span class="interview-help">每次提交保留快照，评价期间可以继续编辑。</span></div><section id="training-workspace"></section><section id="training-feedback"></section>${r.kind === "diagnosis" ? '<section id="diagnosis-reference"></section>' : ""}`;
+    $("#page").innerHTML = pageHeading(t("chrome.focusedPractice"), escape(errorText(r.title)), catalogText(getConfig().trainingKinds[r.kind]), `<a class="button flat" href="#training">${t("ui.backToSkillsTraining")}</a>`) + `<div class="interview-actions"><button id="training-save" class="save-state">${t("ui.savedLocally")}</button><span class="interview-help">${t("ui.eachSubmissionKeepsASnapshotYouCanEdit")}</span></div><section id="training-workspace"></section><section id="training-feedback"></section>${r.kind === "diagnosis" ? `<section id="diagnosis-reference"></section>` : ""}`;
     const host = $("#training-workspace");
-    if (r.kind === "compression") host.innerHTML = ui`<article class="card flat"><h2>原回答与压缩稿</h2><div class="training-form-grid">${field("original", t("① 原回答"), draft.original, t("保留完整原回答。"), 10)}${field("points", t("② 自己压缩后的要点"), draft.points, t("一行一个，3–5行；每行不超过80字符。\n結論：…\n行動：…\n結果：…"), 10)}</div><div class="training-actions"><button class="button flat" data-ai id="compression-analyze">分析原回答</button><button class="button primary" data-ai id="compression-rewrite">评价我的压缩稿 →</button></div><p class="interview-help">保留事实与关键因果，删掉重复和不必要的铺垫。系统不会用长答案替代你的练习。</p></article>`;
-    if (r.kind === "followup") host.innerHTML = '<div id="training-turns" class="training-turns"></div><div id="training-followup-end"></div>';
-    if (r.kind === "diagnosis") host.innerHTML = ui`<div class="training-diagnosis-grid"><article class="card flat"><h2>故障情境</h2><p class="problem-copy">${escape(r.scenario.description)}</p><h3 class="subheading">现象 · 题目设定</h3>${list(r.scenario.symptoms)}<h3 class="subheading">应有行为</h3><p class="problem-copy">${escape(r.scenario.expected)}</p>${r.scenario.cases.map((c) => ui`<div class="example-box pressed"><p>${escape(c.input)}</p><p>预期：${escape(c.expected)}</p></div>`).join("")}<h3 class="subheading">版本与依赖</h3>${list(r.scenario.requirements)}</article><article class="card flat"><div class="editor-heading"><h2>定位并修复</h2><span class="tag">${escape(getConfig().languages[r.language])}</span></div><div id="training-code" class="monaco-host"></div>${field("cause", t("我判断的根因"), draft.cause, t("指出具体变量、执行顺序或状态变化。"), 4)}${field("checks", t("我会如何验证"), draft.checks, t("正常路径、失败路径，以及能暴露原故障的边界或并发场景。"), 4)}<button class="button primary" data-ai id="diagnosis-review">提交诊断与修复 →</button><p class="evaluation-note">AI 静态审查，未执行代码或测试。</p></article></div>`;
+    if (r.kind === "compression") host.innerHTML = `<article class="card flat"><h2>${t("ui.originalAndCondensedAnswers")}</h2><div class="training-form-grid">${field("original", t("ui.originalAnswer"), draft.original, t("ui.keepTheCompleteOriginalAnswer"), 10)}${field("points", t("ui.yourCondensedPoints"), draft.points, t("ui.onePointPerLineLinesUpToCharacters"), 10)}</div><div class="training-actions"><button class="button flat" data-ai id="compression-analyze">${t("ui.analyzeOriginalAnswer")}</button><button class="button primary" data-ai id="compression-rewrite">${t("ui.reviewMyCondensedAnswer")}</button></div><p class="interview-help">${t("ui.keepFactsAndKeyCausesRemoveRepetitionAnd")}</p></article>`;
+    if (r.kind === "followup") host.innerHTML = `<div id="training-turns" class="training-turns"></div><div id="training-followup-end"></div>`;
+    if (r.kind === "diagnosis") host.innerHTML = `<div class="training-diagnosis-grid"><article class="card flat"><h2>${t("ui.bugScenario")}</h2><p class="problem-copy">${escape(r.scenario.description)}</p><h3 class="subheading">${t("ui.symptomsScenarioAssumptions")}</h3>${list(r.scenario.symptoms)}<h3 class="subheading">${t("ui.expectedBehavior")}</h3><p class="problem-copy">${escape(r.scenario.expected)}</p>${r.scenario.cases.map((c) => `<div class="example-box pressed"><p>${escape(c.input)}</p><p>${t("training.expected", { value2: escape(c.expected) })}</p></div>`).join("")}<h3 class="subheading">${t("ui.versionsAndDependencies")}</h3>${list(r.scenario.requirements)}</article><article class="card flat"><div class="editor-heading"><h2>${t("ui.locateAndFix")}</h2><span class="tag">${escape(getConfig().languages[r.language])}</span></div><div id="training-code" class="monaco-host"></div>${field("cause", t("ui.myRootCauseAnalysis"), draft.cause, t("ui.identifyTheVariableExecutionOrderOrStateChange"), 4)}${field("checks", t("ui.howIWouldValidateIt"), draft.checks, t("ui.coverNormalAndFailurePathsPlusBoundariesOr"), 4)}<button class="button primary" data-ai id="diagnosis-review">${t("ui.submitDiagnosisAndFix")}</button><p class="evaluation-note">${t("ui.aIStaticReviewCodeAndTestsWereNot")}</p></article></div>`;
     if (r.kind === "debrief") {
       rows = Math.max(1, ...Object.keys(draft).filter((k) => k.startsWith("question:")).map((k) => Number(k.split(":")[1])));
-      host.innerHTML = ui`<article class="card flat"><div class="training-form-grid">${["company", "role", "date", "stage"].map((k, i) => `<div class="field"><label for="debrief-${k}">${[t("公司"), t("职位"), t("面试日期"), t("轮次 / 阶段")][i]}</label><input id="debrief-${k}" data-training-field="${k}" ${k === "date" ? 'type="date"' : ""} maxlength="150" value="${escape(draft[k] ?? "")}"></div>`).join("")}</div>${field("notes", t("整体反馈与自己的观察"), draft.notes, t("请区分面试官明确说的话，以及你自己的推测。"), 4)}<p class="interview-help">逐题记录；没记住的部分可留空，不需要补造当时的回答。</p><div id="debrief-entries"></div><div class="training-actions"><button class="button flat" id="debrief-add">再记录一道题 ＋</button><button class="button primary" data-ai id="debrief-review">提交复盘 · 分析重点 →</button></div></article>`;
+      host.innerHTML = `<article class="card flat"><div class="training-form-grid">${["company", "role", "date", "stage"].map((k, i) => `<div class="field"><label for="debrief-${k}">${[t("ui.company"), t("ui.role"), t("ui.interviewDate"), t("ui.roundStage")][i]}</label><input id="debrief-${k}" data-training-field="${k}" ${k === "date" ? 'type="date"' : ""} maxlength="150" value="${escape(draft[k] ?? "")}"></div>`).join("")}</div>${field("notes", t("ui.overallFeedbackAndMyObservations"), draft.notes, t("ui.separateWhatTheInterviewerActuallySaidFromYour"), 4)}<p class="interview-help">${t("ui.recordEachQuestionLeaveForgottenPartsBlankInstead")}</p><div id="debrief-entries"></div><div class="training-actions"><button class="button flat" id="debrief-add">${t("ui.addAnotherQuestion")}</button><button class="button primary" data-ai id="debrief-review">${t("ui.submitDebriefAnalyzeFocus")}</button></div></article>`;
       renderEntries();
       $("#debrief-add").onclick = () => {
         if (rows >= 8) {
-          toast(t("每次复盘最多8道题。"));
+          toast(t("ui.upToQuestionsPerDebrief"));
           return;
         }
         rows++;
@@ -180,7 +181,7 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
       const el = document.createElement("section");
       el.id = `debrief-entry-${n}`;
       el.className = "debrief-entry";
-      el.innerHTML = ui`<h3>问题 ${n}</h3>${field(`question:${n}`, t("实际面试问题"), draft[`question:${n}`] ?? "", t("记下原问题或你能确认的意思。"), 3)}<div class="training-form-grid">${field(`answer:${n}`, t("我当时的回答"), draft[`answer:${n}`] ?? "", t("不记得可以留空；不要事后代写成当时说过的话。"), 5)}${field(`feedback:${n}`, t("面试官明确给出的反馈 · 可空"), draft[`feedback:${n}`] ?? "", t("只记录收到的反馈，不猜测面试官想法。"), 5)}</div>`;
+      el.innerHTML = `<h3>${t("training.question2", { n: n })}</h3>${field(`question:${n}`, t("ui.actualInterviewQuestion"), draft[`question:${n}`] ?? "", t("ui.recordTheOriginalQuestionOrItsConfirmedMeaning"), 3)}<div class="training-form-grid">${field(`answer:${n}`, t("ui.myAnswerAtTheTime"), draft[`answer:${n}`] ?? "", t("ui.leaveBlankIfYouDonTRememberDon"), 5)}${field(`feedback:${n}`, t("ui.explicitInterviewerFeedbackOptional"), draft[`feedback:${n}`] ?? "", t("ui.onlyRecordFeedbackYouReceivedWithoutGuessingIntentions"), 5)}</div>`;
       host.append(el);
       bindFields(el);
     }
@@ -201,7 +202,7 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
         el = document.createElement("article");
         el.id = `training-turn-${turn.id}`;
         el.className = "card flat";
-        el.innerHTML = ui`<div class="section-heading"><span class="eyebrow">第 ${i + 1} / 8 题</span><span class="tag">${escape(turn.focus)}</span></div><h2 >${escape(turn.question)}</h2><details class="interview-reference pressed"><summary>参考关键词与依据</summary><div class="keyword-list" >${turn.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div><p class="evidence-note">${escape(turn.evidenceNote)}</p>${list(turn.sourceIds.map((id) => r.sources.find((s) => s.id === id)?.title ?? id))}</details>${field(`answer:${turn.id}`, t("我的回答"), draft[`answer:${turn.id}`] ?? "", t("先结论，再给理由、本人行动与可验证结果。"), 6)}<div id="turn-feedback-${turn.id}"></div><button class="button primary" data-ai data-next-turn="${turn.id}">提交回答 · 继续追问 →</button>`;
+        el.innerHTML = `<div class="section-heading"><span class="eyebrow">${t("training.attemptQuestions", { value1: i + 1 })}</span><span class="tag">${escape(turn.focus)}</span></div><h2 >${escape(turn.question)}</h2><details class="interview-reference pressed"><summary>${t("ui.referenceKeywordsAndEvidence")}</summary><div class="keyword-list" >${turn.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div><p class="evidence-note">${escape(turn.evidenceNote)}</p>${list(turn.sourceIds.map((id) => r.sources.find((s) => s.id === id)?.title ?? id))}</details>${field(`answer:${turn.id}`, t("ui.myAnswer"), draft[`answer:${turn.id}`] ?? "", t("ui.conclusionFirstThenReasonsYourActionsAndVerifiable"), 6)}<div id="turn-feedback-${turn.id}"></div><button class="button primary" data-ai data-next-turn="${turn.id}">${t("ui.submitAnswerContinueFollowUp")}</button>`;
         host.append(el);
         bindFields(el);
         (/** @type {HTMLElement} */ (el.querySelector("[data-next-turn]"))).onclick = async () => {
@@ -218,10 +219,10 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
       const fb = el.querySelector(`[id="turn-feedback-${turn.id}"]`);
       if (turn.feedback) {
         const f = turn.feedback;
-        fb.innerHTML = ui`<div class="answer-feedback"><p class="review-summary">${escape(f.summary)}</p>${dimensions({ technical: t("内容与机制"), evidence: t("事实依据"), expression: t("重点表达") }, f)}${list(f.gaps)}<div class="keyword-list" >${f.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div><details><summary>本次追问依据的回答快照</summary><p class="problem-copy">${escape(turn.submittedAnswer)}</p></details>${(draft[`answer:${turn.id}`] ?? "") !== turn.submittedAnswer ? t('<p class="stale-note">草稿已修改，后续追问仍基于这次提交的快照。</p>') : ""}</div>`;
+        fb.innerHTML = `<div class="answer-feedback"><p class="review-summary">${escape(f.summary)}</p>${dimensions({ technical: t("ui.contentAndMechanism"), evidence: t("ui.evidence"), expression: t("ui.focusedExpression") }, f)}${list(f.gaps)}<div class="keyword-list" >${f.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div><details><summary>${t("ui.answerSnapshotUsedForThisFollowUp")}</summary><p class="problem-copy">${escape(turn.submittedAnswer)}</p></details>${(draft[`answer:${turn.id}`] ?? "") !== turn.submittedAnswer ? `<p class="stale-note">${t("ui.draftChangedFollowUpsStillUseTheSubmitted")}</p>` : ""}</div>`;
       }
     });
-    $("#training-followup-end").innerHTML = r.finished ? ui`<article class="card flat"><h2>这一轮已完成</h2><p class="problem-copy">${escape(r.stopReason)}</p><a class="button mint" href="#training/followup">再开始一轮 →</a></article>` : "";
+    $("#training-followup-end").innerHTML = r.finished ? `<article class="card flat"><h2>${t("ui.thisRoundIsComplete")}</h2><p class="problem-copy">${escape(r.stopReason)}</p><a class="button mint" href="#training/followup">${t("ui.startAnotherRound")}</a></article>` : "";
     updateButtons();
   }
   const dimensions = (labels, result) => `<dl class="interview-dimensions">${Object.entries(labels).map(([k, label]) => `<div><dt>${label}</dt><dd>${escape(result[k])}</dd></div>`).join("")}</dl>`;
@@ -244,24 +245,23 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
     }
     reviewId = review.id;
     const result = review.result;
-    host.innerHTML = ui`<article class="card flat training-feedback-card"><div class="review-versions"><label for="training-review-version">提交记录</label><select id="training-review-version">${r.reviews.slice().reverse().map((v, i) => ui`<option value="${v.id}" ${v.id === reviewId ? "selected" : ""}>第 ${r.reviews.length - i} 次 · ${v.action === "analyze" ? t("原回答分析") : v.action === "rewrite" ? t("压缩稿评价") : t("提交评价")} · ${date(v.at)}</option>`).join("")}</select></div><p class="stale-note" id="training-stale" hidden>草稿已修改。以下结果对应所选提交，保留的新内容可再次提交。</p><p class="review-summary">${escape(result.summary)}</p><div id="training-result-body"></div><details class="training-snapshot"><summary>本次提交快照 · ${escape(review.model)}</summary>${Object.entries(review.input).map(([k, v]) => `<p class="interview-help">${escape(fieldLabel(k))}</p><pre class="library-original-text">${escape(v)}</pre>`).join("")}</details></article>`;
+    host.innerHTML = `<article class="card flat training-feedback-card"><div class="review-versions"><label for="training-review-version">${t("ui.submissions")}</label><select id="training-review-version">${r.reviews.slice().reverse().map((v, i) => `<option value="${v.id}" ${v.id === reviewId ? "selected" : ""}>${t("training.attempt", { value3: r.reviews.length - i, value4: v.action === "analyze" ? t("ui.originalAnswerAnalysis") : v.action === "rewrite" ? t("ui.condensedAnswerReview") : t("ui.submissionReview"), value5: date(v.at) })}</option>`).join("")}</select></div><p class="stale-note" id="training-stale" hidden>${t("ui.draftChangedResultsReflectTheSelectedSubmissionYou")}</p><p class="review-summary">${escape(result.summary)}</p><div id="training-result-body"></div><details class="training-snapshot"><summary>${t("training.submittedSnapshot", { value3: escape(review.model) })}</summary>${Object.entries(review.input).map(([k, v]) => `<p class="interview-help">${escape(fieldLabel(k))}</p><pre class="library-original-text">${escape(v)}</pre>`).join("")}</details></article>`;
     $("#training-review-version").onchange = (e) => {
       reviewId = e.target.value;
       renderFeedback(record());
     };
     const body = $("#training-result-body");
-    if (r.kind === "compression") body.innerHTML = ui`${dimensions({ relevance: t("切题"), conciseness: t("简洁"), fidelity: t("事实与含义保留") }, result)}<h3 class="subheading">这些内容可以删 / 后移</h3>${result.cuts.length ? result.cuts.map((c) => `<blockquote class="training-cut">${escape(c.quote)}<p>${escape(c.reason)}</p></blockquote>`).join("") : t('<p class="interview-help">没有需要删除的原文片段。</p>')}<h3 class="subheading">需要补充或保留</h3>${list(result.missing)}<h3 class="subheading">提炼重点 · 关键词</h3><div class="keyword-list" >${result.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div><h3 class="subheading">压缩前后对照 / 练习目标</h3><p class="problem-copy">${escape(result.comparison)}</p>`;
+    if (r.kind === "compression") body.innerHTML = `${dimensions({ relevance: t("ui.relevance"), conciseness: t("ui.conciseness"), fidelity: t("ui.factsAndMeaningPreserved") }, result)}<h3 class="subheading">${t("ui.removeOrMoveThesePartsLater")}</h3>${result.cuts.length ? result.cuts.map((c) => `<blockquote class="training-cut">${escape(c.quote)}<p>${escape(c.reason)}</p></blockquote>`).join("") : `<p class="interview-help">${t("ui.noOriginalPassagesNeedRemoval")}</p>`}<h3 class="subheading">${t("ui.addOrPreserveThesePoints")}</h3>${list(result.missing)}<h3 class="subheading">${t("ui.refineFocusKeywords")}</h3><div class="keyword-list" >${result.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div><h3 class="subheading">${t("ui.beforeAfterComparisonAndPracticeGoals")}</h3><p class="problem-copy">${escape(result.comparison)}</p>`;
     if (r.kind === "diagnosis") {
-      body.innerHTML = ui`${dimensions({ cause: t("根因判断"), repair: t("修复是否对症"), validation: t("验证覆盖") }, result)}<h3 class="subheading">已有依据</h3>${list(result.strengths)}<h3 class="subheading">还需检查</h3>${list(result.gaps)}<h3 class="subheading">下一步</h3>${list(result.nextSteps)}<p class="evaluation-note">静态审查，未运行代码。参考修复也需要结合实际环境验证。</p>`;
+      body.innerHTML = `${dimensions({ cause: t("ui.rootCause"), repair: t("ui.doesTheFixAddressTheCause"), validation: t("ui.validationCoverage") }, result)}<h3 class="subheading">${t("ui.existingEvidence")}</h3>${list(result.strengths)}<h3 class="subheading">${t("ui.stillToCheck")}</h3>${list(result.gaps)}<h3 class="subheading">${t("ui.nextStep")}</h3>${list(result.nextSteps)}<p class="evaluation-note">${t("ui.staticReviewCodeWasNotRunValidateThe")}</p>`;
       renderReference(r);
     }
     if (r.kind === "debrief") {
-      body.innerHTML = result.observations.map((o) => ui`<section class="debrief-observation"><h3>问题 ${escape(o.entryId)} · ${escape(review.input[`question:${o.entryId}`])}</h3>${dimensions({ content: t("内容与机制"), expression: t("重点表达"), evidence: t("依据与实际反馈") }, o)}<p class="problem-copy">建议练习：${escape(o.practice)}</p><div class="keyword-list" >${o.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div></section>`).join("") + ui`<h3 class="subheading">优先补强</h3>${result.priorities.map((p, i) => ui`<div class="training-priority"><div><strong>${escape(p.title)}</strong><p>${escape(p.reason)}</p></div><button class="button mint" data-priority="${i}">开始${escape(getConfig().trainingKinds[p.kind])} →</button></div>`).join("")}<h3 class="subheading">下一次面试前</h3>${list(result.nextSteps)}<p class="evaluation-note">评价依据你记录的书面内容；不推断录用结果、口语水平或未提供的面试官想法。</p>`;
+      body.innerHTML = result.observations.map((o) => `<section class="debrief-observation"><h3>${t("training.question", { value1: escape(o.entryId), value2: escape(review.input[`question:${o.entryId}`]) })}</h3>${dimensions({ content: t("ui.contentAndMechanism"), expression: t("ui.focusedExpression"), evidence: t("ui.evidenceAndActualFeedback") }, o)}<p class="problem-copy">${t("training.suggestedPractice", { value4: escape(o.practice) })}</p><div class="keyword-list" >${o.keywords.map((k) => `<span>${escape(k)}</span>`).join("")}</div></section>`).join("") + `<h3 class="subheading">${t("ui.priorityImprovements")}</h3>${result.priorities.map((p, i) => `<div class="training-priority"><div><strong>${escape(p.title)}</strong><p>${escape(p.reason)}</p></div><button class="button mint" data-priority="${i}">${t("training.start", { value4: escape(getConfig().trainingKinds[p.kind]) })}</button></div>`).join("")}<h3 class="subheading">${t("ui.beforeYourNextInterview")}</h3>${list(result.nextSteps)}<p class="evaluation-note">${t("ui.feedbackUsesYourWrittenRecordItDoesNot")}</p>`;
       body.querySelectorAll("[data-priority]").forEach((b) => b.onclick = () => {
         const p = result.priorities[Number(b.dataset.priority)];
         if (p.kind === "diagnosis") {
-          pendingFocus = ui`问题：${review.input[`question:${p.entryId}`] ?? ""}
-需练习：${p.reason}`.slice(0, 1e3);
+          pendingFocus = `${t("training.questionPracticeNeeded", { value1: review.input[`question:${p.entryId}`] ?? "", reason: p.reason })}`.slice(0, 1e3);
           hubKind = "diagnosis";
           location.hash = "training/diagnosis";
         } else void begin({ kind: p.kind, debriefId: r.id, reviewId: review.id, entryId: p.entryId });
@@ -273,7 +273,7 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
     const host = $("#diagnosis-reference");
     if (!host) return;
     if (!r.revealedAt) {
-      host.innerHTML = t('<article class="card flat training-reference"><h2>参考修复</h2><p class="interview-help">先根据评价再次尝试；需要对照时，再查看完整修复与解释。查看不调用模型。</p><button id="diagnosis-reveal" class="button flat">查看参考修复与讲解</button></article>');
+      host.innerHTML = `<article class="card flat training-reference"><h2>${t("ui.referenceFix")}</h2><p class="interview-help">${t("ui.tryAgainUsingTheFeedbackViewTheFull")}</p><button id="diagnosis-reveal" class="button flat">${t("ui.viewReferenceFixAndExplanation")}</button></article>`;
       $("#diagnosis-reveal").onclick = async () => {
         try {
           const updated = await api(`/api/trainings/${r.id}/reveal`, "POST", {});
@@ -290,7 +290,7 @@ function createTrainingPractice({ $, escape, date, options, pageHeading, list, a
     referenceDispose?.();
     host.dataset.revealed = r.id;
     const ref = r.scenario.reference;
-    host.innerHTML = ui`<article class="card flat training-reference"><h2>参考修复与讲解</h2><p class="problem-copy">${escape(ref.cause)}</p><div id="diagnosis-reference-code" class="reference-host"></div><p class="problem-copy">${escape(ref.explanation)}</p><h3 class="subheading">验证检查</h3>${list(ref.checks)}</article>`;
+    host.innerHTML = `<article class="card flat training-reference"><h2>${t("ui.referenceFixAndExplanation")}</h2><p class="problem-copy">${escape(ref.cause)}</p><div id="diagnosis-reference-code" class="reference-host"></div><p class="problem-copy">${escape(ref.explanation)}</p><h3 class="subheading">${t("ui.validationChecks")}</h3>${list(ref.checks)}</article>`;
     referenceDispose = mountReference($("#diagnosis-reference-code"), { language: r.language, value: ref.fixedCode });
   }
   function completed() {

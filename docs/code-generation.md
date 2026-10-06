@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | `src/contracts.ts` 与领域类型 | OpenAPI 3.1、API 客户端类型、JSON Schema、Ajv 独立校验器 | HTTP 请求/响应、前端 API、存储、备份、SSE |
 | `ModelOutputs` | 模型输出 Schema、运行时校验器 | 结构化模型提示词与解析；校验后再执行业务规则 |
+| `public/locales/{zh,ja,en}.json` | 固定 key 的访问接口、命名参数类型 | 界面文案与应用提示；`npm run i18n:generate`，不调用模型 |
 | 固定版本 `@openai/codex` CLI | 官方 App Server TypeScript 类型和 JSON Schema、方法/响应映射 | 语音 RPC 参数、返回值与通知校验 |
 
 ```sh

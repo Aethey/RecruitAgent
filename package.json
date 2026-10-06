@@ -21,16 +21,15 @@
     "restore": "node --import tsx scripts/data.ts restore",
     "release:check": "node scripts/release.mjs --check",
     "release:prepare": "node scripts/release.mjs",
-    "generate": "node scripts/generate-contracts.mjs",
+    "generate": "node scripts/generate-contracts.mjs && npm run i18n:generate",
     "generate:codex": "node scripts/generate-codex.mjs",
     "generate:all": "npm run generate:codex && npm run generate",
     "generated:check": "node scripts/generate-codex.mjs --check && node scripts/generate-contracts.mjs --check",
     "check:server": "tsc --noEmit",
     "check:web": "tsc --noEmit -p tsconfig.web.json",
-    "prebuild": "node scripts/generate-contracts.mjs --check",
-    "i18n:extract": "node --import tsx scripts/i18n.mjs extract",
-    "i18n:translate": "node --import tsx scripts/i18n.mjs translate",
-    "i18n:check": "node --import tsx scripts/i18n.mjs check"
+    "prebuild": "node scripts/generate-contracts.mjs --check && npm run i18n:check",
+    "i18n:check": "node scripts/i18n.mjs check",
+    "i18n:generate": "node scripts/i18n.mjs generate"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.99.2",

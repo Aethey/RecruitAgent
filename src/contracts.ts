@@ -44,6 +44,12 @@ export type EmptyInput = Record<string, never>;
 export type VoiceStartInput = Partial<VoiceSettings> & { id: string; sdp: string; interviewId?: string; preview?: boolean; synthetic?: boolean };
 export type VoiceActionInput = { action: 'begin' | 'next' | 'retry' | 'finish' | 'answer-started' | 'response-complete'; roundAt?: string; inputRevision?: number };
 export type VoiceControlInput = { action: 'stop' | 'pause' | 'resume' };
+export type VoiceDiagnosticInput = {
+  event: 'state' | 'transport' | 'response' | 'error' | 'verification';
+  phase?: string; type?: string; responseId?: string; code?: string; message?: string;
+  recording?: boolean; processing?: boolean; backendThinking?: boolean; paused?: boolean;
+  outputSpeaking?: boolean; audioVerified?: boolean; revision?: number; inputRevision?: number;
+};
 export type LibraryDetail = ReturnType<typeof librarySummary> & { extractedText: string; pages?: Omit<NonNullable<LibraryItem['pages']>[number], 'text'>[] };
 type Endpoint<B, R> = { body: B; response: R };
 type Read<R> = { response: R };
@@ -96,6 +102,7 @@ export interface ApiEndpoints {
   'POST /api/voice/sessions/{id}/action': Endpoint<VoiceActionInput, Awaited<ReturnType<VoiceInterviews['action']>>>;
   'POST /api/voice/sessions/{id}/control': Endpoint<VoiceControlInput, { action: VoiceControlInput['action']; interruptedTurnId: string | null }>;
   'POST /api/voice/sessions/{id}/verify': Endpoint<{ energy: number; received: number }, { verified: boolean }>;
+  'POST /api/voice/sessions/{id}/diagnostics': Endpoint<VoiceDiagnosticInput, { logged: boolean }>;
   'POST /api/voice/sessions/{id}/preview': Endpoint<EmptyInput, { started: boolean }>;
   'GET /api/breadth': Read<ReturnType<Study['breadthOverview']>>;
   'GET /api/study/catalog': Read<{ points: KnowledgePoint[] }>;

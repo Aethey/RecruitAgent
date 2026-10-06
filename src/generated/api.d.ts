@@ -592,7 +592,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/voice/sessions/{id}/preview": {
+    "/api/voice/sessions/{id}/diagnostics": {
         parameters: {
             query?: never;
             header?: never;
@@ -608,6 +608,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/voice/sessions/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["operation_45"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/breadth": {
         parameters: {
             query?: never;
@@ -615,7 +631,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["operation_45"];
+        get: operations["operation_46"];
         put?: never;
         post?: never;
         delete?: never;
@@ -631,7 +647,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["operation_46"];
+        get: operations["operation_47"];
         put?: never;
         post?: never;
         delete?: never;
@@ -649,7 +665,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_47"];
+        post: operations["operation_48"];
         delete?: never;
         options?: never;
         head?: never;
@@ -665,7 +681,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_48"];
+        post: operations["operation_49"];
         delete?: never;
         options?: never;
         head?: never;
@@ -681,7 +697,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_49"];
+        post: operations["operation_50"];
         delete?: never;
         options?: never;
         head?: never;
@@ -695,8 +711,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["operation_50"];
-        put: operations["operation_51"];
+        get: operations["operation_51"];
+        put: operations["operation_52"];
         post?: never;
         delete?: never;
         options?: never;
@@ -713,7 +729,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_52"];
+        post: operations["operation_53"];
         delete?: never;
         options?: never;
         head?: never;
@@ -729,7 +745,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_53"];
+        post: operations["operation_54"];
         delete?: never;
         options?: never;
         head?: never;
@@ -745,7 +761,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_54"];
+        post: operations["operation_55"];
         delete?: never;
         options?: never;
         head?: never;
@@ -759,7 +775,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["operation_55"];
+        get: operations["operation_56"];
         put?: never;
         post?: never;
         delete?: never;
@@ -777,7 +793,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_56"];
+        post: operations["operation_57"];
         delete?: never;
         options?: never;
         head?: never;
@@ -791,8 +807,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["operation_57"];
-        put: operations["operation_58"];
+        get: operations["operation_58"];
+        put: operations["operation_59"];
         post?: never;
         delete?: never;
         options?: never;
@@ -809,7 +825,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_59"];
+        post: operations["operation_60"];
         delete?: never;
         options?: never;
         head?: never;
@@ -825,7 +841,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_60"];
+        post: operations["operation_61"];
         delete?: never;
         options?: never;
         head?: never;
@@ -841,7 +857,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_61"];
+        post: operations["operation_62"];
         delete?: never;
         options?: never;
         head?: never;
@@ -857,7 +873,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_62"];
+        post: operations["operation_63"];
         delete?: never;
         options?: never;
         head?: never;
@@ -873,7 +889,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_63"];
+        post: operations["operation_64"];
         delete?: never;
         options?: never;
         head?: never;
@@ -887,8 +903,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["operation_64"];
-        put: operations["operation_65"];
+        get: operations["operation_65"];
+        put: operations["operation_66"];
         post?: never;
         delete?: never;
         options?: never;
@@ -905,7 +921,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_66"];
+        post: operations["operation_67"];
         delete?: never;
         options?: never;
         head?: never;
@@ -921,7 +937,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_67"];
+        post: operations["operation_68"];
         delete?: never;
         options?: never;
         head?: never;
@@ -937,7 +953,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_68"];
+        post: operations["operation_69"];
         delete?: never;
         options?: never;
         head?: never;
@@ -953,7 +969,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_69"];
+        post: operations["operation_70"];
         delete?: never;
         options?: never;
         head?: never;
@@ -969,7 +985,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_70"];
+        post: operations["operation_71"];
         delete?: never;
         options?: never;
         head?: never;
@@ -985,7 +1001,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_71"];
+        post: operations["operation_72"];
         delete?: never;
         options?: never;
         head?: never;
@@ -999,7 +1015,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["operation_72"];
+        get: operations["operation_73"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1017,7 +1033,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["operation_73"];
+        post: operations["operation_74"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1959,171 +1975,47 @@ export interface components {
             "GET /api/config": {
                 response: {
                     studyCategories: {
-                        /**
-                         * @default 算法知识
-                         * @constant
-                         */
-                        algorithm: "算法知识";
-                        /**
-                         * @default 语言写法
-                         * @constant
-                         */
-                        language: "语言写法";
-                        /**
-                         * @default 概念与方法
-                         * @constant
-                         */
-                        concept: "概念与方法";
-                        /**
-                         * @default 工程工具与 CLI
-                         * @constant
-                         */
-                        tools: "工程工具与 CLI";
-                        /**
-                         * @default 重点表达
-                         * @constant
-                         */
-                        expression: "重点表达";
+                        algorithm: string;
+                        language: string;
+                        concept: string;
+                        tools: string;
+                        expression: string;
                     };
                     studyFacets: {
-                        /**
-                         * @default 理解与记忆
-                         * @constant
-                         */
-                        recall: "理解与记忆";
-                        /**
-                         * @default 写法与命令
-                         * @constant
-                         */
-                        write: "写法与命令";
-                        /**
-                         * @default 场景应用
-                         * @constant
-                         */
-                        apply: "场景应用";
-                        /**
-                         * @default 简洁表达
-                         * @constant
-                         */
-                        explain: "简洁表达";
+                        recall: string;
+                        write: string;
+                        apply: string;
+                        explain: string;
                     };
                     trainingKinds: {
-                        /**
-                         * @default 回答压缩
-                         * @constant
-                         */
-                        compression: "回答压缩";
-                        /**
-                         * @default 递进追问
-                         * @constant
-                         */
-                        followup: "递进追问";
-                        /**
-                         * @default 工程故障诊断
-                         * @constant
-                         */
-                        diagnosis: "工程故障诊断";
-                        /**
-                         * @default 真实面试复盘
-                         * @constant
-                         */
-                        debrief: "真实面试复盘";
+                        compression: string;
+                        followup: string;
+                        diagnosis: string;
+                        debrief: string;
                     };
                     diagnosisTopics: {
-                        /**
-                         * @default 状态覆盖与竞态
-                         * @constant
-                         */
-                        state: "状态覆盖与竞态";
-                        /**
-                         * @default 重复请求与重试
-                         * @constant
-                         */
-                        requests: "重复请求与重试";
-                        /**
-                         * @default 异步、取消与生命周期
-                         * @constant
-                         */
-                        async: "异步、取消与生命周期";
-                        /**
-                         * @default 集合、边界与可变性
-                         * @constant
-                         */
-                        collections: "集合、边界与可变性";
-                        /**
-                         * @default 资源管理与错误恢复
-                         * @constant
-                         */
-                        resources: "资源管理与错误恢复";
+                        state: string;
+                        requests: string;
+                        async: string;
+                        collections: string;
+                        resources: string;
                     };
                     topics: {
-                        /**
-                         * @default 数组
-                         * @constant
-                         */
-                        array: "数组";
-                        /**
-                         * @default 字符串
-                         * @constant
-                         */
-                        string: "字符串";
-                        /**
-                         * @default 哈希表
-                         * @constant
-                         */
-                        hash: "哈希表";
-                        /**
-                         * @default 双指针 / 滑动窗口
-                         * @constant
-                         */
-                        "two-pointers": "双指针 / 滑动窗口";
-                        /**
-                         * @default 栈与队列
-                         * @constant
-                         */
-                        stack: "栈与队列";
-                        /**
-                         * @default 链表
-                         * @constant
-                         */
-                        "linked-list": "链表";
-                        /**
-                         * @default 树
-                         * @constant
-                         */
-                        tree: "树";
-                        /**
-                         * @default 图
-                         * @constant
-                         */
-                        graph: "图";
-                        /**
-                         * @default 二分查找
-                         * @constant
-                         */
-                        "binary-search": "二分查找";
-                        /**
-                         * @default 动态规划
-                         * @constant
-                         */
-                        dp: "动态规划";
+                        array: string;
+                        string: string;
+                        hash: string;
+                        "two-pointers": string;
+                        stack: string;
+                        "linked-list": string;
+                        tree: string;
+                        graph: string;
+                        "binary-search": string;
+                        dp: string;
                     };
                     difficulties: {
-                        /**
-                         * @default 简单
-                         * @constant
-                         */
-                        easy: "简单";
-                        /**
-                         * @default 中等
-                         * @constant
-                         */
-                        medium: "中等";
-                        /**
-                         * @default 困难
-                         * @constant
-                         */
-                        hard: "困难";
+                        easy: string;
+                        medium: string;
+                        hard: string;
                     };
                     languages: {
                         /**
@@ -2632,128 +2524,36 @@ export interface components {
                         };
                     };
                     interviewTypes: {
-                        /**
-                         * @default 共通 · 经验与表达
-                         * @constant
-                         */
-                        common: "共通 · 经验与表达";
-                        /**
-                         * @default 共通技术 · 简历深挖
-                         * @constant
-                         */
-                        technical: "共通技术 · 简历深挖";
-                        /**
-                         * @default 职位定制 · 简历 × JD
-                         * @constant
-                         */
-                        position: "职位定制 · 简历 × JD";
+                        common: string;
+                        technical: string;
+                        position: string;
                     };
                     interviewTopics: {
                         common: {
-                            /**
-                             * @default 综合轮练
-                             * @constant
-                             */
-                            all: "综合轮练";
-                            /**
-                             * @default 自我介绍与优势
-                             * @constant
-                             */
-                            introduction: "自我介绍与优势";
-                            /**
-                             * @default 成功、成就感与结果
-                             * @constant
-                             */
-                            success: "成功、成就感与结果";
-                            /**
-                             * @default 失败、压力与复盘
-                             * @constant
-                             */
-                            failure: "失败、压力与复盘";
-                            /**
-                             * @default 协作、沟通与分歧
-                             * @constant
-                             */
-                            teamwork: "协作、沟通与分歧";
-                            /**
-                             * @default 学习、主动性与担当外
-                             * @constant
-                             */
-                            learning: "学习、主动性与担当外";
-                            /**
-                             * @default 职业方向与动机
-                             * @constant
-                             */
-                            career: "职业方向与动机";
+                            all: string;
+                            introduction: string;
+                            success: string;
+                            failure: string;
+                            teamwork: string;
+                            learning: string;
+                            career: string;
                         };
                         technical: {
-                            /**
-                             * @default 综合轮练
-                             * @constant
-                             */
-                            all: "综合轮练";
-                            /**
-                             * @default 架构、BLoC 与状态建模
-                             * @constant
-                             */
-                            architecture: "架构、BLoC 与状态建模";
-                            /**
-                             * @default 移动端与生命周期
-                             * @constant
-                             */
-                            mobile: "移动端与生命周期";
-                            /**
-                             * @default 语言、并发与异步
-                             * @constant
-                             */
-                            language: "语言、并发与异步";
-                            /**
-                             * @default SDK、原生与 BLE
-                             * @constant
-                             */
-                            sdk: "SDK、原生与 BLE";
-                            /**
-                             * @default 测试、性能与安全
-                             * @constant
-                             */
-                            quality: "测试、性能与安全";
-                            /**
-                             * @default API、存储与可靠性
-                             * @constant
-                             */
-                            api: "API、存储与可靠性";
-                            /**
-                             * @default AI、RAG 与自动化
-                             * @constant
-                             */
-                            ai: "AI、RAG 与自动化";
-                            /**
-                             * @default 重构、取舍与交付
-                             * @constant
-                             */
-                            delivery: "重构、取舍与交付";
+                            all: string;
+                            architecture: string;
+                            mobile: string;
+                            language: string;
+                            sdk: string;
+                            quality: string;
+                            api: string;
+                            ai: string;
+                            delivery: string;
                         };
                         position: {
-                            /**
-                             * @default 按完整 JD 综合出题
-                             * @constant
-                             */
-                            all: "按完整 JD 综合出题";
-                            /**
-                             * @default 公司动机与岗位匹配
-                             * @constant
-                             */
-                            motivation: "公司动机与岗位匹配";
-                            /**
-                             * @default 必须条件与技术追问
-                             * @constant
-                             */
-                            requirements: "必须条件与技术追问";
-                            /**
-                             * @default 岗位情境与取舍
-                             * @constant
-                             */
-                            scenarios: "岗位情境与取舍";
+                            all: string;
+                            motivation: string;
+                            requirements: string;
+                            scenarios: string;
                         };
                     };
                     interviewSources: {
@@ -2975,7 +2775,7 @@ export interface components {
                 body: {
                     id: string;
                     message: string;
-                    context: components["schemas"]["Omit_src.chat.PageContext__capturedAt___record___6eb35dc6dd"] & {
+                    context: components["schemas"]["Omit_src.chat.PageContext__record___capturedAt___9144430f49"] & {
                         capturedAt?: string;
                     };
                 };
@@ -3343,8 +3143,7 @@ export interface components {
                         } | null;
                         /** @constant */
                         id: "gpt-live-1-codex";
-                        /** @constant */
-                        label: "GPT-Live 1 · Codex 默认";
+                        label: string;
                         /** @constant */
                         version: "v3";
                         /** @constant */
@@ -3590,6 +3389,28 @@ export interface components {
                     verified: boolean;
                 };
             };
+            "POST /api/voice/sessions/{id}/diagnostics": {
+                body: {
+                    /** @enum {string} */
+                    event: "error" | "response" | "state" | "transport" | "verification";
+                    phase?: string;
+                    type?: string;
+                    responseId?: string;
+                    code?: string;
+                    message?: string;
+                    recording?: boolean;
+                    processing?: boolean;
+                    backendThinking?: boolean;
+                    paused?: boolean;
+                    outputSpeaking?: boolean;
+                    audioVerified?: boolean;
+                    revision?: number;
+                    inputRevision?: number;
+                };
+                response: {
+                    logged: boolean;
+                };
+            };
             "POST /api/voice/sessions/{id}/preview": {
                 body: components["schemas"]["src.contracts.EmptyInput"];
                 response: {
@@ -3599,98 +3420,30 @@ export interface components {
             "GET /api/breadth": {
                 response: {
                     domains: {
-                        /**
-                         * @default 设计模式
-                         * @constant
-                         */
-                        patterns: "设计模式";
-                        /**
-                         * @default 架构与系统设计
-                         * @constant
-                         */
-                        architecture: "架构与系统设计";
-                        /**
-                         * @default 开发方法与交付
-                         * @constant
-                         */
-                        workflow: "开发方法与交付";
-                        /**
-                         * @default Flutter / Dart 工程
-                         * @constant
-                         */
-                        flutter: "Flutter / Dart 工程";
+                        patterns: string;
+                        architecture: string;
+                        workflow: string;
+                        flutter: string;
                         /**
                          * @default Kotlin / Java / Android
                          * @constant
                          */
                         jvm: "Kotlin / Java / Android";
-                        /**
-                         * @default Swift / Apple 工程
-                         * @constant
-                         */
-                        apple: "Swift / Apple 工程";
-                        /**
-                         * @default Web / 前端工程
-                         * @constant
-                         */
-                        web: "Web / 前端工程";
-                        /**
-                         * @default 后端 / 数据工程
-                         * @constant
-                         */
-                        backend: "后端 / 数据工程";
-                        /**
-                         * @default 云 / 基础设施
-                         * @constant
-                         */
-                        cloud: "云 / 基础设施";
-                        /**
-                         * @default 测试 / 可观测性
-                         * @constant
-                         */
-                        quality: "测试 / 可观测性";
+                        apple: string;
+                        web: string;
+                        backend: string;
+                        cloud: string;
+                        quality: string;
                     };
                     groups: {
-                        /**
-                         * @default 模式与架构
-                         * @constant
-                         */
-                        design: "模式与架构";
-                        /**
-                         * @default 代码生成与构建
-                         * @constant
-                         */
-                        generation: "代码生成与构建";
-                        /**
-                         * @default 互操作与接口
-                         * @constant
-                         */
-                        integration: "互操作与接口";
-                        /**
-                         * @default 测试与质量
-                         * @constant
-                         */
-                        testing: "测试与质量";
-                        /**
-                         * @default 协作与交付
-                         * @constant
-                         */
-                        delivery: "协作与交付";
-                        /**
-                         * @default 数据与并发
-                         * @constant
-                         */
-                        data: "数据与并发";
-                        /**
-                         * @default 运维与监控
-                         * @constant
-                         */
-                        operations: "运维与监控";
-                        /**
-                         * @default 安全与权限
-                         * @constant
-                         */
-                        security: "安全与权限";
+                        design: string;
+                        generation: string;
+                        integration: string;
+                        testing: string;
+                        delivery: string;
+                        data: string;
+                        operations: string;
+                        security: string;
                     };
                     points: {
                         progress: {
@@ -3725,8 +3478,7 @@ export interface components {
                     }[];
                     coverage: {
                         id: string;
-                        /** @enum {string} */
-                        label: "Flutter / Dart 工程" | "Kotlin / Java / Android" | "Swift / Apple 工程" | "Web / 前端工程" | "云 / 基础设施" | "后端 / 数据工程" | "开发方法与交付" | "架构与系统设计" | "测试 / 可观测性" | "设计模式";
+                        label: string;
                         total: number;
                         tested: number;
                         needsWork: number;
@@ -3764,7 +3516,7 @@ export interface components {
                 };
             };
             "POST /api/study/points": {
-                body: components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02"];
+                body: components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"];
                 response: {
                     id: string;
                     title: string;
@@ -4829,8 +4581,7 @@ export interface components {
                 todayIndependent: number;
                 facets: {
                     id: string;
-                    /** @enum {string} */
-                    label: "写法与命令" | "场景应用" | "理解与记忆" | "简洁表达";
+                    label: string;
                     reviewed: number;
                     due: number;
                 }[];
@@ -4869,7 +4620,6 @@ export interface components {
                     reviewed: number;
                     closed: boolean;
                 }[];
-                /** @default 独立答对：1→3→7→14→30天后继续自适应延长；部分正确：近期复习；答错或看过答案：10分钟后重测。每个维度独立计算。 */
                 rule: string;
             };
             stats: {
@@ -4880,8 +4630,7 @@ export interface components {
                 average: null | number;
                 topics: {
                     id: string;
-                    /** @enum {string} */
-                    label: "二分查找" | "动态规划" | "双指针 / 滑动窗口" | "哈希表" | "图" | "字符串" | "数组" | "栈与队列" | "树" | "链表";
+                    label: string;
                     count: number;
                     score: null | number;
                     hints: number;
@@ -4892,6 +4641,7 @@ export interface components {
             reviewLabel: string;
         };
         "Omit_src.domain.State__chats___interviews___library___trainings___studyBatches___e082b86c3c": {
+            problems: components["schemas"]["src.domain.Problem"][];
             interviewMaterials?: {
                 resume: string[];
                 personal: string[];
@@ -4899,7 +4649,6 @@ export interface components {
             };
             /** @constant */
             version: 1;
-            problems: components["schemas"]["src.domain.Problem"][];
             languageDrills?: components["schemas"]["src.language.LanguageDrill"][];
             interviewJobs?: {
                 id: string;
@@ -4984,8 +4733,9 @@ export interface components {
             userLanguage?: "en" | "ja" | "zh";
         };
         "src.contracts.EmptyInput": Record<string, never>;
-        "Omit_src.chat.PageContext__capturedAt___record___6eb35dc6dd": {
+        "Omit_src.chat.PageContext__record___capturedAt___9144430f49": {
             editor?: string;
+            selectedText: string;
             title: string;
             route: string;
             fields: {
@@ -4993,7 +4743,6 @@ export interface components {
                 value: string;
             }[];
             visibleText: string;
-            selectedText: string;
             pdfPage?: number;
         };
         "Partial_src.voice-options.VoiceSettings__1a12d658f9": {
@@ -5024,10 +4773,10 @@ export interface components {
             category: components["schemas"]["Category"];
             facets: ("apply" | "explain" | "recall" | "write")[];
         };
-        "Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02": {
+        "Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925": {
+            topic?: string;
             /** @enum {string} */
             language?: "dart" | "go" | "java" | "javascript" | "kotlin" | "python" | "swift" | "typescript";
-            topic?: string;
             description?: string;
         };
         "Pick_src.study.StudySelection__count___59db79ec8e": {
@@ -5035,9 +4784,9 @@ export interface components {
         };
         "Partial_Omit_src.study.StudySelection__count____a8e03d19a8": {
             /** @enum {string} */
-            language?: "dart" | "go" | "java" | "javascript" | "kotlin" | "python" | "swift" | "typescript";
-            /** @enum {string} */
             category?: "algorithm" | "all" | "concept" | "expression" | "language" | "tools";
+            /** @enum {string} */
+            language?: "dart" | "go" | "java" | "javascript" | "kotlin" | "python" | "swift" | "typescript";
             /** @enum {string} */
             facet?: "apply" | "auto" | "explain" | "recall" | "write";
             pointId?: string;
@@ -5088,7 +4837,7 @@ export interface components {
         };
         /** @enum {string} */
         Exclude_2: "compression" | "debrief" | "followup";
-        "src.contracts.JobInfo": components["schemas"]["Pick_src.tasks.Job__error___id___status___kind___d63bc37ec0"] & {
+        "src.contracts.JobInfo": components["schemas"]["Pick_src.tasks.Job__id___error___status___kind___5cd003bd99"] & {
             result?: {
                 problemId?: string;
                 drillId?: string;
@@ -5108,9 +4857,9 @@ export interface components {
                 analysis?: boolean;
             };
         };
-        "Pick_src.tasks.Job__error___id___status___kind___d63bc37ec0": {
-            error?: string;
+        "Pick_src.tasks.Job__id___error___status___kind___5cd003bd99": {
             id: string;
+            error?: string;
             /** @enum {string} */
             status: "aborted" | "done" | "error" | "running";
             kind: components["schemas"]["Kind"];
@@ -5291,7 +5040,7 @@ export interface components {
                 }[];
             };
             studyImport: {
-                points: (components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02"])[];
+                points: (components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"])[];
             };
             voiceTranslation: {
                 questions: {
@@ -5312,10 +5061,10 @@ export interface components {
         };
         "src.contracts.ModelQuestion": {
             question: string;
+            tips?: string[];
             /** @enum {string} */
             kind: "behavioral" | "motivation" | "technical";
             focus: string;
-            tips?: string[];
             keywords: string[];
             /** @enum {string} */
             answerBasis: "experience" | "knowledge" | "needs-detail";
@@ -6956,171 +6705,47 @@ export interface operations {
                 content: {
                     "application/json": {
                         studyCategories: {
-                            /**
-                             * @default 算法知识
-                             * @constant
-                             */
-                            algorithm: "算法知识";
-                            /**
-                             * @default 语言写法
-                             * @constant
-                             */
-                            language: "语言写法";
-                            /**
-                             * @default 概念与方法
-                             * @constant
-                             */
-                            concept: "概念与方法";
-                            /**
-                             * @default 工程工具与 CLI
-                             * @constant
-                             */
-                            tools: "工程工具与 CLI";
-                            /**
-                             * @default 重点表达
-                             * @constant
-                             */
-                            expression: "重点表达";
+                            algorithm: string;
+                            language: string;
+                            concept: string;
+                            tools: string;
+                            expression: string;
                         };
                         studyFacets: {
-                            /**
-                             * @default 理解与记忆
-                             * @constant
-                             */
-                            recall: "理解与记忆";
-                            /**
-                             * @default 写法与命令
-                             * @constant
-                             */
-                            write: "写法与命令";
-                            /**
-                             * @default 场景应用
-                             * @constant
-                             */
-                            apply: "场景应用";
-                            /**
-                             * @default 简洁表达
-                             * @constant
-                             */
-                            explain: "简洁表达";
+                            recall: string;
+                            write: string;
+                            apply: string;
+                            explain: string;
                         };
                         trainingKinds: {
-                            /**
-                             * @default 回答压缩
-                             * @constant
-                             */
-                            compression: "回答压缩";
-                            /**
-                             * @default 递进追问
-                             * @constant
-                             */
-                            followup: "递进追问";
-                            /**
-                             * @default 工程故障诊断
-                             * @constant
-                             */
-                            diagnosis: "工程故障诊断";
-                            /**
-                             * @default 真实面试复盘
-                             * @constant
-                             */
-                            debrief: "真实面试复盘";
+                            compression: string;
+                            followup: string;
+                            diagnosis: string;
+                            debrief: string;
                         };
                         diagnosisTopics: {
-                            /**
-                             * @default 状态覆盖与竞态
-                             * @constant
-                             */
-                            state: "状态覆盖与竞态";
-                            /**
-                             * @default 重复请求与重试
-                             * @constant
-                             */
-                            requests: "重复请求与重试";
-                            /**
-                             * @default 异步、取消与生命周期
-                             * @constant
-                             */
-                            async: "异步、取消与生命周期";
-                            /**
-                             * @default 集合、边界与可变性
-                             * @constant
-                             */
-                            collections: "集合、边界与可变性";
-                            /**
-                             * @default 资源管理与错误恢复
-                             * @constant
-                             */
-                            resources: "资源管理与错误恢复";
+                            state: string;
+                            requests: string;
+                            async: string;
+                            collections: string;
+                            resources: string;
                         };
                         topics: {
-                            /**
-                             * @default 数组
-                             * @constant
-                             */
-                            array: "数组";
-                            /**
-                             * @default 字符串
-                             * @constant
-                             */
-                            string: "字符串";
-                            /**
-                             * @default 哈希表
-                             * @constant
-                             */
-                            hash: "哈希表";
-                            /**
-                             * @default 双指针 / 滑动窗口
-                             * @constant
-                             */
-                            "two-pointers": "双指针 / 滑动窗口";
-                            /**
-                             * @default 栈与队列
-                             * @constant
-                             */
-                            stack: "栈与队列";
-                            /**
-                             * @default 链表
-                             * @constant
-                             */
-                            "linked-list": "链表";
-                            /**
-                             * @default 树
-                             * @constant
-                             */
-                            tree: "树";
-                            /**
-                             * @default 图
-                             * @constant
-                             */
-                            graph: "图";
-                            /**
-                             * @default 二分查找
-                             * @constant
-                             */
-                            "binary-search": "二分查找";
-                            /**
-                             * @default 动态规划
-                             * @constant
-                             */
-                            dp: "动态规划";
+                            array: string;
+                            string: string;
+                            hash: string;
+                            "two-pointers": string;
+                            stack: string;
+                            "linked-list": string;
+                            tree: string;
+                            graph: string;
+                            "binary-search": string;
+                            dp: string;
                         };
                         difficulties: {
-                            /**
-                             * @default 简单
-                             * @constant
-                             */
-                            easy: "简单";
-                            /**
-                             * @default 中等
-                             * @constant
-                             */
-                            medium: "中等";
-                            /**
-                             * @default 困难
-                             * @constant
-                             */
-                            hard: "困难";
+                            easy: string;
+                            medium: string;
+                            hard: string;
                         };
                         languages: {
                             /**
@@ -7629,128 +7254,36 @@ export interface operations {
                             };
                         };
                         interviewTypes: {
-                            /**
-                             * @default 共通 · 经验与表达
-                             * @constant
-                             */
-                            common: "共通 · 经验与表达";
-                            /**
-                             * @default 共通技术 · 简历深挖
-                             * @constant
-                             */
-                            technical: "共通技术 · 简历深挖";
-                            /**
-                             * @default 职位定制 · 简历 × JD
-                             * @constant
-                             */
-                            position: "职位定制 · 简历 × JD";
+                            common: string;
+                            technical: string;
+                            position: string;
                         };
                         interviewTopics: {
                             common: {
-                                /**
-                                 * @default 综合轮练
-                                 * @constant
-                                 */
-                                all: "综合轮练";
-                                /**
-                                 * @default 自我介绍与优势
-                                 * @constant
-                                 */
-                                introduction: "自我介绍与优势";
-                                /**
-                                 * @default 成功、成就感与结果
-                                 * @constant
-                                 */
-                                success: "成功、成就感与结果";
-                                /**
-                                 * @default 失败、压力与复盘
-                                 * @constant
-                                 */
-                                failure: "失败、压力与复盘";
-                                /**
-                                 * @default 协作、沟通与分歧
-                                 * @constant
-                                 */
-                                teamwork: "协作、沟通与分歧";
-                                /**
-                                 * @default 学习、主动性与担当外
-                                 * @constant
-                                 */
-                                learning: "学习、主动性与担当外";
-                                /**
-                                 * @default 职业方向与动机
-                                 * @constant
-                                 */
-                                career: "职业方向与动机";
+                                all: string;
+                                introduction: string;
+                                success: string;
+                                failure: string;
+                                teamwork: string;
+                                learning: string;
+                                career: string;
                             };
                             technical: {
-                                /**
-                                 * @default 综合轮练
-                                 * @constant
-                                 */
-                                all: "综合轮练";
-                                /**
-                                 * @default 架构、BLoC 与状态建模
-                                 * @constant
-                                 */
-                                architecture: "架构、BLoC 与状态建模";
-                                /**
-                                 * @default 移动端与生命周期
-                                 * @constant
-                                 */
-                                mobile: "移动端与生命周期";
-                                /**
-                                 * @default 语言、并发与异步
-                                 * @constant
-                                 */
-                                language: "语言、并发与异步";
-                                /**
-                                 * @default SDK、原生与 BLE
-                                 * @constant
-                                 */
-                                sdk: "SDK、原生与 BLE";
-                                /**
-                                 * @default 测试、性能与安全
-                                 * @constant
-                                 */
-                                quality: "测试、性能与安全";
-                                /**
-                                 * @default API、存储与可靠性
-                                 * @constant
-                                 */
-                                api: "API、存储与可靠性";
-                                /**
-                                 * @default AI、RAG 与自动化
-                                 * @constant
-                                 */
-                                ai: "AI、RAG 与自动化";
-                                /**
-                                 * @default 重构、取舍与交付
-                                 * @constant
-                                 */
-                                delivery: "重构、取舍与交付";
+                                all: string;
+                                architecture: string;
+                                mobile: string;
+                                language: string;
+                                sdk: string;
+                                quality: string;
+                                api: string;
+                                ai: string;
+                                delivery: string;
                             };
                             position: {
-                                /**
-                                 * @default 按完整 JD 综合出题
-                                 * @constant
-                                 */
-                                all: "按完整 JD 综合出题";
-                                /**
-                                 * @default 公司动机与岗位匹配
-                                 * @constant
-                                 */
-                                motivation: "公司动机与岗位匹配";
-                                /**
-                                 * @default 必须条件与技术追问
-                                 * @constant
-                                 */
-                                requirements: "必须条件与技术追问";
-                                /**
-                                 * @default 岗位情境与取舍
-                                 * @constant
-                                 */
-                                scenarios: "岗位情境与取舍";
+                                all: string;
+                                motivation: string;
+                                requirements: string;
+                                scenarios: string;
                             };
                         };
                         interviewSources: {
@@ -8387,7 +7920,7 @@ export interface operations {
                 "application/json": {
                     id: string;
                     message: string;
-                    context: components["schemas"]["Omit_src.chat.PageContext__capturedAt___record___6eb35dc6dd"] & {
+                    context: components["schemas"]["Omit_src.chat.PageContext__record___capturedAt___9144430f49"] & {
                         capturedAt?: string;
                     };
                 };
@@ -9460,8 +8993,7 @@ export interface operations {
                             } | null;
                             /** @constant */
                             id: "gpt-live-1-codex";
-                            /** @constant */
-                            label: "GPT-Live 1 · Codex 默认";
+                            label: string;
                             /** @constant */
                             version: "v3";
                             /** @constant */
@@ -9892,6 +9424,61 @@ export interface operations {
         };
         requestBody: {
             content: {
+                "application/json": {
+                    /** @enum {string} */
+                    event: "error" | "response" | "state" | "transport" | "verification";
+                    phase?: string;
+                    type?: string;
+                    responseId?: string;
+                    code?: string;
+                    message?: string;
+                    recording?: boolean;
+                    processing?: boolean;
+                    backendThinking?: boolean;
+                    paused?: boolean;
+                    outputSpeaking?: boolean;
+                    audioVerified?: boolean;
+                    revision?: number;
+                    inputRevision?: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            "2XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        logged: boolean;
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    operation_45: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
                 "application/json": components["schemas"]["src.contracts.EmptyInput"];
             };
         };
@@ -9920,7 +9507,7 @@ export interface operations {
             };
         };
     };
-    operation_45: {
+    operation_46: {
         parameters: {
             query?: never;
             header?: never;
@@ -9937,98 +9524,30 @@ export interface operations {
                 content: {
                     "application/json": {
                         domains: {
-                            /**
-                             * @default 设计模式
-                             * @constant
-                             */
-                            patterns: "设计模式";
-                            /**
-                             * @default 架构与系统设计
-                             * @constant
-                             */
-                            architecture: "架构与系统设计";
-                            /**
-                             * @default 开发方法与交付
-                             * @constant
-                             */
-                            workflow: "开发方法与交付";
-                            /**
-                             * @default Flutter / Dart 工程
-                             * @constant
-                             */
-                            flutter: "Flutter / Dart 工程";
+                            patterns: string;
+                            architecture: string;
+                            workflow: string;
+                            flutter: string;
                             /**
                              * @default Kotlin / Java / Android
                              * @constant
                              */
                             jvm: "Kotlin / Java / Android";
-                            /**
-                             * @default Swift / Apple 工程
-                             * @constant
-                             */
-                            apple: "Swift / Apple 工程";
-                            /**
-                             * @default Web / 前端工程
-                             * @constant
-                             */
-                            web: "Web / 前端工程";
-                            /**
-                             * @default 后端 / 数据工程
-                             * @constant
-                             */
-                            backend: "后端 / 数据工程";
-                            /**
-                             * @default 云 / 基础设施
-                             * @constant
-                             */
-                            cloud: "云 / 基础设施";
-                            /**
-                             * @default 测试 / 可观测性
-                             * @constant
-                             */
-                            quality: "测试 / 可观测性";
+                            apple: string;
+                            web: string;
+                            backend: string;
+                            cloud: string;
+                            quality: string;
                         };
                         groups: {
-                            /**
-                             * @default 模式与架构
-                             * @constant
-                             */
-                            design: "模式与架构";
-                            /**
-                             * @default 代码生成与构建
-                             * @constant
-                             */
-                            generation: "代码生成与构建";
-                            /**
-                             * @default 互操作与接口
-                             * @constant
-                             */
-                            integration: "互操作与接口";
-                            /**
-                             * @default 测试与质量
-                             * @constant
-                             */
-                            testing: "测试与质量";
-                            /**
-                             * @default 协作与交付
-                             * @constant
-                             */
-                            delivery: "协作与交付";
-                            /**
-                             * @default 数据与并发
-                             * @constant
-                             */
-                            data: "数据与并发";
-                            /**
-                             * @default 运维与监控
-                             * @constant
-                             */
-                            operations: "运维与监控";
-                            /**
-                             * @default 安全与权限
-                             * @constant
-                             */
-                            security: "安全与权限";
+                            design: string;
+                            generation: string;
+                            integration: string;
+                            testing: string;
+                            delivery: string;
+                            data: string;
+                            operations: string;
+                            security: string;
                         };
                         points: {
                             progress: {
@@ -10063,8 +9582,7 @@ export interface operations {
                         }[];
                         coverage: {
                             id: string;
-                            /** @enum {string} */
-                            label: "Flutter / Dart 工程" | "Kotlin / Java / Android" | "Swift / Apple 工程" | "Web / 前端工程" | "云 / 基础设施" | "后端 / 数据工程" | "开发方法与交付" | "架构与系统设计" | "测试 / 可观测性" | "设计模式";
+                            label: string;
                             total: number;
                             tested: number;
                             needsWork: number;
@@ -10086,7 +9604,7 @@ export interface operations {
             };
         };
     };
-    operation_46: {
+    operation_47: {
         parameters: {
             query?: never;
             header?: never;
@@ -10143,7 +9661,7 @@ export interface operations {
             };
         };
     };
-    operation_47: {
+    operation_48: {
         parameters: {
             query?: never;
             header?: never;
@@ -10152,7 +9670,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02"];
+                "application/json": components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"];
             };
         };
         responses: {
@@ -10202,7 +9720,7 @@ export interface operations {
             };
         };
     };
-    operation_48: {
+    operation_49: {
         parameters: {
             query?: never;
             header?: never;
@@ -10243,7 +9761,7 @@ export interface operations {
             };
         };
     };
-    operation_49: {
+    operation_50: {
         parameters: {
             query?: never;
             header?: never;
@@ -10281,7 +9799,7 @@ export interface operations {
             };
         };
     };
-    operation_50: {
+    operation_51: {
         parameters: {
             query?: never;
             header?: never;
@@ -10388,7 +9906,7 @@ export interface operations {
             };
         };
     };
-    operation_51: {
+    operation_52: {
         parameters: {
             query?: never;
             header?: never;
@@ -10429,7 +9947,7 @@ export interface operations {
             };
         };
     };
-    operation_52: {
+    operation_53: {
         parameters: {
             query?: never;
             header?: never;
@@ -10471,7 +9989,7 @@ export interface operations {
             };
         };
     };
-    operation_53: {
+    operation_54: {
         parameters: {
             query?: never;
             header?: never;
@@ -10582,7 +10100,7 @@ export interface operations {
             };
         };
     };
-    operation_54: {
+    operation_55: {
         parameters: {
             query?: never;
             header?: never;
@@ -10694,7 +10212,7 @@ export interface operations {
             };
         };
     };
-    operation_55: {
+    operation_56: {
         parameters: {
             query?: never;
             header?: never;
@@ -10755,7 +10273,7 @@ export interface operations {
             };
         };
     };
-    operation_56: {
+    operation_57: {
         parameters: {
             query?: never;
             header?: never;
@@ -10817,7 +10335,7 @@ export interface operations {
             };
         };
     };
-    operation_57: {
+    operation_58: {
         parameters: {
             query?: never;
             header?: never;
@@ -10850,7 +10368,7 @@ export interface operations {
             };
         };
     };
-    operation_58: {
+    operation_59: {
         parameters: {
             query?: never;
             header?: never;
@@ -10920,7 +10438,7 @@ export interface operations {
             };
         };
     };
-    operation_59: {
+    operation_60: {
         parameters: {
             query?: never;
             header?: never;
@@ -10988,7 +10506,7 @@ export interface operations {
             };
         };
     };
-    operation_60: {
+    operation_61: {
         parameters: {
             query?: never;
             header?: never;
@@ -11026,7 +10544,7 @@ export interface operations {
             };
         };
     };
-    operation_61: {
+    operation_62: {
         parameters: {
             query?: never;
             header?: never;
@@ -11066,7 +10584,7 @@ export interface operations {
             };
         };
     };
-    operation_62: {
+    operation_63: {
         parameters: {
             query?: never;
             header?: never;
@@ -11193,7 +10711,7 @@ export interface operations {
             };
         };
     };
-    operation_63: {
+    operation_64: {
         parameters: {
             query?: never;
             header?: never;
@@ -11236,7 +10754,7 @@ export interface operations {
             };
         };
     };
-    operation_64: {
+    operation_65: {
         parameters: {
             query?: never;
             header?: never;
@@ -11352,47 +10870,6 @@ export interface operations {
             };
         };
     };
-    operation_65: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    draft: components["schemas"]["Record_string_string__14902eed9d"];
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            "2XX": {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        saved: boolean;
-                    };
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        error: string;
-                    };
-                };
-            };
-        };
-    };
     operation_66: {
         parameters: {
             query?: never;
@@ -11417,8 +10894,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        jobId: string;
-                        chatId?: string;
+                        saved: boolean;
                     };
                 };
             };
@@ -11489,8 +10965,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    turnId: string;
-                    answer: string;
+                    draft: components["schemas"]["Record_string_string__14902eed9d"];
                 };
             };
         };
@@ -11532,7 +11007,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    draft: components["schemas"]["Record_string_string__14902eed9d"];
+                    turnId: string;
+                    answer: string;
                 };
             };
         };
@@ -11563,6 +11039,48 @@ export interface operations {
         };
     };
     operation_70: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    draft: components["schemas"]["Record_string_string__14902eed9d"];
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            "2XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        jobId: string;
+                        chatId?: string;
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        error: string;
+                    };
+                };
+            };
+        };
+    };
+    operation_71: {
         parameters: {
             query?: never;
             header?: never;
@@ -11682,7 +11200,7 @@ export interface operations {
             };
         };
     };
-    operation_71: {
+    operation_72: {
         parameters: {
             query?: never;
             header?: never;
@@ -11720,7 +11238,7 @@ export interface operations {
             };
         };
     };
-    operation_72: {
+    operation_73: {
         parameters: {
             query?: never;
             header?: never;
@@ -11753,7 +11271,7 @@ export interface operations {
             };
         };
     };
-    operation_73: {
+    operation_74: {
         parameters: {
             query?: never;
             header?: never;

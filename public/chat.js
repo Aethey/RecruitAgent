@@ -1,5 +1,5 @@
 import { element, elements } from './dom.ts';
-import { t, ui } from "./i18n.js";
+import { t, errorText } from "./i18n.js";
 import { safeMarkdown as markdown } from './markdown.js';
 import './chat.css';
 
@@ -11,33 +11,33 @@ const write = (key, value) => { try { localStorage.setItem(key, value); } catch 
 /** @param {{api: import('../src/generated/api-client.js').ApiClient, [option: string]: any}} options */
 export function createChat({ api, escape, date, toast, startTask, selectModel, beginLogin, getAccount, getModels, getBusy, getActiveJob, pageContext }) {
   const root = document.createElement('div'); root.id = 'global-chat';
-  root.innerHTML = ui`
-    <button id="chat-launcher" class="chat-launcher convex" type="button" aria-label="打开 Codex 聊天" aria-controls="chat-window" aria-expanded="false" title="点击聊天 · 拖动移动">
+  root.innerHTML = `
+    <button id="chat-launcher" class="chat-launcher convex" type="button" aria-label="${t("ui.openCodexChat")}" aria-controls="chat-window" aria-expanded="false" title="${t("ui.clickToChatDragToMove")}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-4 3V9.5A7.5 7.5 0 0 1 9.5 2H14"/><path d="m16 2 1.5 4.5L22 8l-4.5 1.5L16 14l-1.5-4.5L10 8l4.5-1.5Z"/></svg><span class="chat-unread" hidden></span>
     </button>
-    <section id="chat-window" class="chat-window" role="dialog" aria-label="Codex 页面聊天" hidden>
-      <button id="chat-resize" class="chat-resize" type="button" aria-label="调整聊天窗口大小" title="拖动左上角调整大小 · 方向键微调">
+    <section id="chat-window" class="chat-window" role="dialog" aria-label="${t("ui.codexPageChat")}" hidden>
+      <button id="chat-resize" class="chat-resize" type="button" aria-label="${t("ui.resizeChatWindow")}" title="${t("ui.dragTopLeftToResizeArrowKeysFor")}">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 13V4h9M4 4l11 11"/></svg>
       </button>
-      <button id="chat-resize-bottom" class="chat-resize chat-resize-bottom" type="button" aria-label="从右下角调整聊天窗口大小" title="拖动右下角调整大小 · 方向键微调">
+      <button id="chat-resize-bottom" class="chat-resize chat-resize-bottom" type="button" aria-label="${t("ui.resizeChatFromBottomRight")}" title="${t("ui.dragBottomRightToResizeArrowKeysFor")}">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 13V4h9M4 4l11 11"/></svg>
       </button>
-      <header class="chat-header"><div><strong>Codex</strong><span>聊聊当前页面</span></div><div class="chat-header-actions">
-        <button id="chat-history-toggle" class="chat-icon" type="button" aria-label="对话历史" aria-expanded="false" title="对话历史">◷</button>
-        <button id="chat-new" class="chat-icon" type="button" aria-label="新建对话" title="新建对话">＋</button>
-        <button id="chat-maximize" class="chat-icon" type="button" aria-label="放大聊天窗口" aria-pressed="false" title="放大聊天窗口">
+      <header class="chat-header"><div><strong>Codex</strong><span>${t("ui.chatAboutThisPage")}</span></div><div class="chat-header-actions">
+        <button id="chat-history-toggle" class="chat-icon" type="button" aria-label="${t("ui.conversationHistory")}" aria-expanded="false" title="${t("ui.conversationHistory")}">◷</button>
+        <button id="chat-new" class="chat-icon" type="button" aria-label="${t("ui.newConversation")}" title="${t("ui.newConversation")}">＋</button>
+        <button id="chat-maximize" class="chat-icon" type="button" aria-label="${t("ui.maximizeChatWindow")}" aria-pressed="false" title="${t("ui.maximizeChatWindow")}">
           <svg class="chat-expand-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/></svg>
           <svg class="chat-restore-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" hidden><path d="M7 6V3h10v10h-3"/><rect x="3" y="7" width="10" height="10" rx="1"/></svg>
         </button>
-        <button id="chat-close" class="chat-icon" type="button" aria-label="收起聊天窗口" title="收起">×</button>
+        <button id="chat-close" class="chat-icon" type="button" aria-label="${t("ui.collapseChatWindow")}" title="${t("ui.collapse")}">×</button>
       </div></header>
-      <div class="chat-toolbar"><label for="chat-model">模型</label><select id="chat-model" aria-label="聊天模型"></select></div>
-      <div class="chat-context"><span aria-hidden="true">↗</span><span id="chat-page-title"></span><span class="chat-context-note">发送时自动读取</span></div>
-      <div id="chat-history" class="chat-history" hidden><div class="chat-history-heading"><strong>对话历史</strong><button id="chat-history-close" class="chat-icon" type="button" aria-label="关闭对话历史">×</button></div><div id="chat-history-list"></div></div>
-      <div id="chat-messages" class="chat-messages" role="log" aria-label="聊天消息" aria-live="off"></div>
-      <button id="chat-latest" class="chat-latest" type="button" hidden>↓ 最新消息</button>
-      <form id="chat-form" class="chat-composer"><label for="chat-input" class="visually-hidden">向 Codex 提问</label><textarea id="chat-input" rows="2" maxlength="20000" placeholder="哪里不太理解？可以直接问这里的题目或讲解。"></textarea>
-        <div class="chat-composer-actions"><span id="chat-status" role="status">Enter 发送 · Shift+Enter 换行</span><button id="chat-stop" class="button flat small" type="button" hidden>停止生成</button><button id="chat-send" class="button primary small" type="submit">发送 ↑</button></div>
+      <div class="chat-toolbar"><label for="chat-model">${t("ui.model")}</label><select id="chat-model" aria-label="${t("ui.chatModel")}"></select></div>
+      <div class="chat-context"><span aria-hidden="true">↗</span><span id="chat-page-title"></span><span class="chat-context-note">${t("ui.pageIncludedAutomatically")}</span></div>
+      <div id="chat-history" class="chat-history" hidden><div class="chat-history-heading"><strong>${t("ui.conversationHistory")}</strong><button id="chat-history-close" class="chat-icon" type="button" aria-label="${t("ui.closeConversationHistory")}">×</button></div><div id="chat-history-list"></div></div>
+      <div id="chat-messages" class="chat-messages" role="log" aria-label="${t("ui.chatMessages")}" aria-live="off"></div>
+      <button id="chat-latest" class="chat-latest" type="button" hidden>${t("ui.latestMessages")}</button>
+      <form id="chat-form" class="chat-composer"><label for="chat-input" class="visually-hidden">${t("ui.askCodex")}</label><textarea id="chat-input" rows="2" maxlength="20000" placeholder="${t("ui.whatSUnclearAskAboutThisProblemOr")}"></textarea>
+        <div class="chat-composer-actions"><span id="chat-status" role="status">${t("ui.enterToSendShiftEnterForANew")}</span><button id="chat-stop" class="button flat small" type="button" hidden>${t("ui.stopGenerating")}</button><button id="chat-send" class="button primary small" type="submit">${t("ui.send")}</button></div>
       </form>
     </section>`;
   document.body.append(root);
@@ -68,7 +68,7 @@ export function createChat({ api, escape, date, toast, startTask, selectModel, b
     panel.classList.toggle('compact', width < 440);
     panel.classList.toggle('short', height < 440);
     $('#chat-resize').hidden = maximized; $('#chat-resize-bottom').hidden = maximized;
-    const expand = $('#chat-maximize'), label = maximized ? t('还原聊天窗口') : t('放大聊天窗口');
+    const expand = $('#chat-maximize'), label = maximized ? t("ui.restoreChatWindow") : t("ui.maximizeChatWindow");
     expand.setAttribute('aria-label', label); expand.setAttribute('aria-pressed', String(maximized)); expand.title = label;
     $('.chat-expand-icon').hidden = maximized; $('.chat-restore-icon').hidden = !maximized;
     if (stick) messages.scrollTop = messages.scrollHeight;
@@ -138,7 +138,7 @@ export function createChat({ api, escape, date, toast, startTask, selectModel, b
 
   function setOpen(value) {
     opened = value; panel.hidden = !value; launcher.setAttribute('aria-expanded', String(value));
-    launcher.setAttribute('aria-label', value ? t('收起 Codex 聊天') : t('打开 Codex 聊天'));
+    launcher.setAttribute('aria-label', value ? t("ui.collapseCodexChat") : t("ui.openCodexChat"));
     layout();
     if (value) { $('.chat-unread').hidden = true; sync(); scrollLatest(); input.focus({ preventScroll: true }); }
     else { saveDraft(); launcher.focus({ preventScroll: true }); }
@@ -156,23 +156,23 @@ export function createChat({ api, escape, date, toast, startTask, selectModel, b
   $('#chat-latest').onclick = scrollLatest;
   function renderMessages() {
     if (!thread?.turns.length) {
-      messages.innerHTML = ui`<div class="chat-empty"><span aria-hidden="true">✧</span><h3>从这里没想通的地方开始</h3><p>题目、讲解、评价和正在写的内容，会随每次提问带给 Codex。</p><p>选中页面里的一段文字，也可以针对它追问。</p></div>`;
+      messages.innerHTML = `<div class="chat-empty"><span aria-hidden="true">✧</span><h3>${t("ui.startWithWhatYouDonTUnderstand")}</h3><p>${t("ui.eachQuestionIncludesTheProblemExplanationReviewAnd")}</p><p>${t("ui.selectTextOnThePageToAskAbout")}</p></div>`;
       return;
     }
-    messages.innerHTML = thread.turns.map(turn => ui`
+    messages.innerHTML = thread.turns.map(turn => `
       <article class="chat-turn" data-chat-turn="${escape(turn.id)}">
-        <div class="chat-message chat-user"><div class="chat-message-meta"><strong>你</strong><time>${date(turn.createdAt)}</time></div><div class="chat-user-text">${escape(turn.user)}</div>
-          <details class="chat-snapshot"><summary title="查看本轮使用的页面上下文">↗ ${escape(turn.context.title)}</summary><a href="${escape(turn.context.route)}">回到来源页面 ↗</a><p>${date(turn.context.capturedAt)} 的页面快照</p><pre>${escape([turn.context.selectedText && ui`选中文字：\n${turn.context.selectedText}`, turn.context.visibleText, turn.context.fields.map(field => `${field.label}：${field.value}`).join('\n'), turn.context.editor && ui`当前代码：\n${turn.context.editor}`, turn.context.record && ui`当前记录：\n${turn.context.record}`].filter(Boolean).join('\n\n'))}</pre></details>
+        <div class="chat-message chat-user"><div class="chat-message-meta"><strong>${t("ui.you")}</strong><time>${date(turn.createdAt)}</time></div><div class="chat-user-text">${escape(turn.user)}</div>
+          <details class="chat-snapshot"><summary title="${t("ui.viewThisTurnSPageContext")}">↗ ${escape(turn.context.title)}</summary><a href="${escape(turn.context.route)}">${t("ui.goToSourcePage")}</a><p>${t("chat.pageSnapshot", { value6: date(turn.context.capturedAt) })}</p><pre>${escape([turn.context.selectedText && `${t("chat.selectedText", { selectedText: turn.context.selectedText })}`, turn.context.visibleText, turn.context.fields.map(field => `${field.label}：${field.value}`).join('\n'), turn.context.editor && `${t("chat.currentCode", { editor: turn.context.editor })}`, turn.context.record && `${t("chat.currentRecord", { record: turn.context.record })}`].filter(Boolean).join('\n\n'))}</pre></details>
         </div>
-        <div class="chat-message chat-assistant"><div class="chat-message-meta"><strong>Codex</strong><span>${escape(turn.model)}</span><button class="chat-copy" data-chat-copy="${escape(turn.id)}" type="button" title="复制回复" aria-label="复制 Codex 回复" ${turn.assistant ? '' : 'hidden'}>复制</button></div>
-          <div class="chat-markdown">${turn.assistant ? markdown(turn.assistant) : turn.status === 'streaming' ? t('<span class="chat-thinking"><i></i><i></i><i></i> 正在思考…</span>') : ''}</div>
-          <div class="chat-turn-status">${turn.status === 'streaming' ? t('正在生成…') : turn.error ? escape(turn.error) : ''}</div>
-          ${['error', 'aborted'].includes(turn.status) && turn.id === thread.turns.at(-1).id ? t('<button class="button flat small chat-retry" type="button">重试回复 ↻</button>') : ''}
+        <div class="chat-message chat-assistant"><div class="chat-message-meta"><strong>Codex</strong><span>${escape(turn.model)}</span><button class="chat-copy" data-chat-copy="${escape(turn.id)}" type="button" title="${t("ui.copyReply")}" aria-label="${t("ui.copyCodexReply")}" ${turn.assistant ? '' : 'hidden'}>${t("ui.copy")}</button></div>
+          <div class="chat-markdown">${turn.assistant ? markdown(turn.assistant) : turn.status === 'streaming' ? `<span class="chat-thinking"><i></i><i></i><i></i> ${t("ui.thinking")}</span>` : ''}</div>
+          <div class="chat-turn-status">${turn.status === 'streaming' ? t("ui.generating2") : turn.error ? escape(errorText(turn.error)) : ''}</div>
+          ${['error', 'aborted'].includes(turn.status) && turn.id === thread.turns.at(-1).id ? `<button class="button flat small chat-retry" type="button">${t("ui.retryReply")}</button>` : ''}
         </div>
       </article>`).join('');
     messages.querySelectorAll('[data-chat-copy]').forEach(button => button.onclick = async () => {
-      try { await navigator.clipboard.writeText(thread.turns.find(turn => turn.id === button.dataset.chatCopy).assistant); button.textContent = t('已复制'); }
-      catch { toast(t('复制失败，可以选中回复手动复制。')); }
+      try { await navigator.clipboard.writeText(thread.turns.find(turn => turn.id === button.dataset.chatCopy).assistant); button.textContent = t("ui.copied"); }
+      catch { toast(t("ui.copyFailedSelectTheReplyAndCopyIt")); }
     });
     messages.querySelector('.chat-retry')?.addEventListener('click', () => void retry());
     scrollLatest(); sync();
@@ -192,10 +192,10 @@ export function createChat({ api, escape, date, toast, startTask, selectModel, b
     $('#chat-stop').hidden = active?.kind !== 'chat';
     messages.querySelectorAll('.chat-retry').forEach(button => { button.disabled = busy; });
     $('#chat-page-title').textContent = pageContext.metadata().title;
-    $('#chat-page-title').title = t('每次发送时读取最新页面内容，历史回复保留当时的页面快照。');
-    $('#chat-status').textContent = pending ? t('正在发送…') : active?.kind === 'chat' ? t('Codex 正在回复…')
-      : busy ? t('请等待或取消当前任务') : !initialized ? t('正在连接本机服务…')
-      : !account?.authenticated ? t('先连接 Codex，即可开始聊天') : t('Enter 发送 · Shift+Enter 换行');
+    $('#chat-page-title').title = t("ui.eachMessageIncludesTheLatestPageEarlierReplies");
+    $('#chat-status').textContent = pending ? t("ui.sending") : active?.kind === 'chat' ? t("ui.codexIsReplying")
+      : busy ? t("ui.waitForOrCancelTheCurrentTask") : !initialized ? t("ui.connectingToLocalService")
+      : !account?.authenticated ? t("ui.connectCodexToStartChatting") : t("ui.enterToSendShiftEnterForANew");
     launcher.classList.toggle('responding', active?.kind === 'chat');
   }
   $('#chat-model').onchange = async event => { await selectModel(event.target.value); sync(); };
@@ -231,7 +231,7 @@ export function createChat({ api, escape, date, toast, startTask, selectModel, b
     finally { $('#chat-stop').disabled = false; }
   };
   function renderHistory() {
-    $('#chat-history-list').innerHTML = threads.length ? threads.map(item => ui`<div class="chat-history-row ${item.id === thread?.id ? 'active' : ''}"><button class="chat-history-open" data-chat-open="${escape(item.id)}" type="button"><strong>${escape(item.title)}</strong><span>${escape(item.pageTitle || t('还没有消息'))}</span><small>${date(item.updatedAt)} · ${item.turnCount} 轮${item.status === 'streaming' ? t(' · 生成中') : ''}</small></button><button class="chat-icon" data-chat-delete="${escape(item.id)}" type="button" aria-label="删除对话 ${escape(item.title)}" title="删除对话">×</button></div>`).join('') : t('<p class="chat-history-empty">还没有对话。第一条消息发送后会保存在这台电脑。</p>');
+    $('#chat-history-list').innerHTML = threads.length ? threads.map(item => `<div class="chat-history-row ${item.id === thread?.id ? 'active' : ''}"><button class="chat-history-open" data-chat-open="${escape(item.id)}" type="button"><strong>${escape(errorText(item.title))}</strong><span>${escape(item.pageTitle || t("ui.noMessagesYet"))}</span><small>${t("chat.turns", { value5: date(item.updatedAt), turnCount: item.turnCount, value7: item.status === 'streaming' ? t("chat.message") : '' })}</small></button><button class="chat-icon" data-chat-delete="${escape(item.id)}" type="button" aria-label="${t("chat.deleteConversation", { value9: escape(errorText(item.title)) })}" title="${t("ui.deleteConversation")}">×</button></div>`).join('') : `<p class="chat-history-empty">${t("ui.noConversationsYetYourFirstMessageIsSaved")}</p>`;
     $('#chat-history-list').querySelectorAll('[data-chat-open]').forEach(button => button.onclick = () => void openThread(button.dataset.chatOpen).catch(error => toast(error.message)));
     $('#chat-history-list').querySelectorAll('[data-chat-delete]').forEach(button => button.onclick = async () => {
       try {

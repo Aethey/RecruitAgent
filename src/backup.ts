@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { createHash, randomUUID } from 'node:crypto';
 import { lstat, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -23,37 +24,37 @@ export async function exportBackup(store: Store, dataDir: string): Promise<Buffe
   const files: Archive['files'] = [];
   let bytes = Buffer.byteLength(JSON.stringify(state));
   for (const name of new Set((state.library ?? []).map(item => item.blob))) {
-    if (!blobName(name)) throw new AppError(400, '资料文件名无效，无法备份。');
+    if (!blobName(name)) throw new AppError(400, formatMessage('zh', "ui.invalidMaterialFilenameCannotBackUp"));
     const data = await readFile(resolve(dataDir, 'library', name));
     bytes += Math.ceil(data.length * 4 / 3);
-    if (bytes > LIMIT) throw new AppError(413, '备份超过 512 MB，请先按 README 手动备份数据目录。');
+    if (bytes > LIMIT) throw new AppError(413, formatMessage('zh', "ui.theBackupExceedsMBManuallyBackUpThe"));
     files.push({ name, hash: hash(data), data: data.toString('base64') });
   }
-  if (bytes > LIMIT) throw new AppError(413, '备份超过 512 MB。');
+  if (bytes > LIMIT) throw new AppError(413, formatMessage('zh', "ui.theBackupExceedsMB"));
   const archive: Archive = { format: 'recruitagent-backup', version: 1, createdAt: new Date().toISOString(), state, stateHash: hash(JSON.stringify(state)), files };
   const encoded = Buffer.from(JSON.stringify(archive));
-  if (encoded.length > LIMIT) throw new AppError(413, '备份超过 512 MB。');
+  if (encoded.length > LIMIT) throw new AppError(413, formatMessage('zh', "ui.theBackupExceedsMB"));
   return compress(encoded);
 }
 
 export async function restoreBackup(data: Buffer, target: string) {
   let archive: Archive;
   try { archive = JSON.parse((await decompress(data, { maxOutputLength: LIMIT })).toString('utf8')); }
-  catch { throw new Error('备份无法读取或超过 512 MB；目标目录未写入。'); }
+  catch { throw new Error(formatMessage('zh', "ui.theBackupCannotBeReadOrExceedsMB")); }
   archive = archiveValue(archive);
-  if (archive?.format !== 'recruitagent-backup' || archive.version !== 1 || !archive.state || !Array.isArray(archive.files) || hash(JSON.stringify(archive.state)) !== archive.stateHash) throw new Error('备份格式或校验不正确。');
+  if (archive?.format !== 'recruitagent-backup' || archive.version !== 1 || !archive.state || !Array.isArray(archive.files) || hash(JSON.stringify(archive.state)) !== archive.stateHash) throw new Error(formatMessage('zh', "ui.theBackupFormatOrValidationIsIncorrect"));
   const state = Object.fromEntries(fields.filter(key => archive.state[key] !== undefined).map(key => [key, archive.state[key]])) as State;
   const blobs = (state.library ?? []).map(item => item.blob);
-  if (!blobs.every(blobName) || new Set(blobs).size !== blobs.length) throw new Error('备份中的资料路径无效。');
+  if (!blobs.every(blobName) || new Set(blobs).size !== blobs.length) throw new Error(formatMessage('zh', "ui.theSourcePathInTheBackupIsInvalid"));
   const decoded = new Map<string, Buffer>();
   for (const file of archive.files) {
-    if (!blobName(file.name) || !blobs.includes(file.name) || decoded.has(file.name) || typeof file.data !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(file.data)) throw new Error('备份中的资料文件无效。');
+    if (!blobName(file.name) || !blobs.includes(file.name) || decoded.has(file.name) || typeof file.data !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(file.data)) throw new Error(formatMessage('zh', "ui.theSourceFileInTheBackupIsInvalid"));
     const content = Buffer.from(file.data, 'base64');
-    if (hash(content) !== file.hash) throw new Error('备份中的资料校验失败。');
+    if (hash(content) !== file.hash) throw new Error(formatMessage('zh', "ui.sourceValidationFailedForTheBackup"));
     decoded.set(file.name, content);
   }
-  if (decoded.size !== blobs.length) throw new Error('备份缺少资料原文件。');
-  try { await lstat(target); throw new Error('恢复目录已存在。请指定新的目录，原数据和凭据不会被覆盖。'); }
+  if (decoded.size !== blobs.length) throw new Error(formatMessage('zh', "ui.theBackupIsMissingTheOriginalSourceFile"));
+  try { await lstat(target); throw new Error(formatMessage('zh', "ui.theRestoreDirectoryAlreadyExistsSpecifyANew")); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   await mkdir(dirname(target), { recursive: true });
   const stage = resolve(dirname(target), `.recruitagent-restore-${randomUUID()}`);

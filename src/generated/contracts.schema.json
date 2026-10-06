@@ -4226,29 +4226,19 @@
                   "type": "object",
                   "properties": {
                     "algorithm": {
-                      "type": "string",
-                      "const": "算法知识",
-                      "default": "算法知识"
+                      "type": "string"
                     },
                     "language": {
-                      "type": "string",
-                      "const": "语言写法",
-                      "default": "语言写法"
+                      "type": "string"
                     },
                     "concept": {
-                      "type": "string",
-                      "const": "概念与方法",
-                      "default": "概念与方法"
+                      "type": "string"
                     },
                     "tools": {
-                      "type": "string",
-                      "const": "工程工具与 CLI",
-                      "default": "工程工具与 CLI"
+                      "type": "string"
                     },
                     "expression": {
-                      "type": "string",
-                      "const": "重点表达",
-                      "default": "重点表达"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -4263,24 +4253,16 @@
                   "type": "object",
                   "properties": {
                     "recall": {
-                      "type": "string",
-                      "const": "理解与记忆",
-                      "default": "理解与记忆"
+                      "type": "string"
                     },
                     "write": {
-                      "type": "string",
-                      "const": "写法与命令",
-                      "default": "写法与命令"
+                      "type": "string"
                     },
                     "apply": {
-                      "type": "string",
-                      "const": "场景应用",
-                      "default": "场景应用"
+                      "type": "string"
                     },
                     "explain": {
-                      "type": "string",
-                      "const": "简洁表达",
-                      "default": "简洁表达"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -4294,24 +4276,16 @@
                   "type": "object",
                   "properties": {
                     "compression": {
-                      "type": "string",
-                      "const": "回答压缩",
-                      "default": "回答压缩"
+                      "type": "string"
                     },
                     "followup": {
-                      "type": "string",
-                      "const": "递进追问",
-                      "default": "递进追问"
+                      "type": "string"
                     },
                     "diagnosis": {
-                      "type": "string",
-                      "const": "工程故障诊断",
-                      "default": "工程故障诊断"
+                      "type": "string"
                     },
                     "debrief": {
-                      "type": "string",
-                      "const": "真实面试复盘",
-                      "default": "真实面试复盘"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -4325,29 +4299,19 @@
                   "type": "object",
                   "properties": {
                     "state": {
-                      "type": "string",
-                      "const": "状态覆盖与竞态",
-                      "default": "状态覆盖与竞态"
+                      "type": "string"
                     },
                     "requests": {
-                      "type": "string",
-                      "const": "重复请求与重试",
-                      "default": "重复请求与重试"
+                      "type": "string"
                     },
                     "async": {
-                      "type": "string",
-                      "const": "异步、取消与生命周期",
-                      "default": "异步、取消与生命周期"
+                      "type": "string"
                     },
                     "collections": {
-                      "type": "string",
-                      "const": "集合、边界与可变性",
-                      "default": "集合、边界与可变性"
+                      "type": "string"
                     },
                     "resources": {
-                      "type": "string",
-                      "const": "资源管理与错误恢复",
-                      "default": "资源管理与错误恢复"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -4362,54 +4326,34 @@
                   "type": "object",
                   "properties": {
                     "array": {
-                      "type": "string",
-                      "const": "数组",
-                      "default": "数组"
+                      "type": "string"
                     },
                     "string": {
-                      "type": "string",
-                      "const": "字符串",
-                      "default": "字符串"
+                      "type": "string"
                     },
                     "hash": {
-                      "type": "string",
-                      "const": "哈希表",
-                      "default": "哈希表"
+                      "type": "string"
                     },
                     "two-pointers": {
-                      "type": "string",
-                      "const": "双指针 / 滑动窗口",
-                      "default": "双指针 / 滑动窗口"
+                      "type": "string"
                     },
                     "stack": {
-                      "type": "string",
-                      "const": "栈与队列",
-                      "default": "栈与队列"
+                      "type": "string"
                     },
                     "linked-list": {
-                      "type": "string",
-                      "const": "链表",
-                      "default": "链表"
+                      "type": "string"
                     },
                     "tree": {
-                      "type": "string",
-                      "const": "树",
-                      "default": "树"
+                      "type": "string"
                     },
                     "graph": {
-                      "type": "string",
-                      "const": "图",
-                      "default": "图"
+                      "type": "string"
                     },
                     "binary-search": {
-                      "type": "string",
-                      "const": "二分查找",
-                      "default": "二分查找"
+                      "type": "string"
                     },
                     "dp": {
-                      "type": "string",
-                      "const": "动态规划",
-                      "default": "动态规划"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -4429,19 +4373,13 @@
                   "type": "object",
                   "properties": {
                     "easy": {
-                      "type": "string",
-                      "const": "简单",
-                      "default": "简单"
+                      "type": "string"
                     },
                     "medium": {
-                      "type": "string",
-                      "const": "中等",
-                      "default": "中等"
+                      "type": "string"
                     },
                     "hard": {
-                      "type": "string",
-                      "const": "困难",
-                      "default": "困难"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -6628,19 +6566,13 @@
                   "type": "object",
                   "properties": {
                     "common": {
-                      "type": "string",
-                      "const": "共通 · 经验与表达",
-                      "default": "共通 · 经验与表达"
+                      "type": "string"
                     },
                     "technical": {
-                      "type": "string",
-                      "const": "共通技术 · 简历深挖",
-                      "default": "共通技术 · 简历深挖"
+                      "type": "string"
                     },
                     "position": {
-                      "type": "string",
-                      "const": "职位定制 · 简历 × JD",
-                      "default": "职位定制 · 简历 × JD"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -6656,39 +6588,25 @@
                       "type": "object",
                       "properties": {
                         "all": {
-                          "type": "string",
-                          "const": "综合轮练",
-                          "default": "综合轮练"
+                          "type": "string"
                         },
                         "introduction": {
-                          "type": "string",
-                          "const": "自我介绍与优势",
-                          "default": "自我介绍与优势"
+                          "type": "string"
                         },
                         "success": {
-                          "type": "string",
-                          "const": "成功、成就感与结果",
-                          "default": "成功、成就感与结果"
+                          "type": "string"
                         },
                         "failure": {
-                          "type": "string",
-                          "const": "失败、压力与复盘",
-                          "default": "失败、压力与复盘"
+                          "type": "string"
                         },
                         "teamwork": {
-                          "type": "string",
-                          "const": "协作、沟通与分歧",
-                          "default": "协作、沟通与分歧"
+                          "type": "string"
                         },
                         "learning": {
-                          "type": "string",
-                          "const": "学习、主动性与担当外",
-                          "default": "学习、主动性与担当外"
+                          "type": "string"
                         },
                         "career": {
-                          "type": "string",
-                          "const": "职业方向与动机",
-                          "default": "职业方向与动机"
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -6705,49 +6623,31 @@
                       "type": "object",
                       "properties": {
                         "all": {
-                          "type": "string",
-                          "const": "综合轮练",
-                          "default": "综合轮练"
+                          "type": "string"
                         },
                         "architecture": {
-                          "type": "string",
-                          "const": "架构、BLoC 与状态建模",
-                          "default": "架构、BLoC 与状态建模"
+                          "type": "string"
                         },
                         "mobile": {
-                          "type": "string",
-                          "const": "移动端与生命周期",
-                          "default": "移动端与生命周期"
+                          "type": "string"
                         },
                         "language": {
-                          "type": "string",
-                          "const": "语言、并发与异步",
-                          "default": "语言、并发与异步"
+                          "type": "string"
                         },
                         "sdk": {
-                          "type": "string",
-                          "const": "SDK、原生与 BLE",
-                          "default": "SDK、原生与 BLE"
+                          "type": "string"
                         },
                         "quality": {
-                          "type": "string",
-                          "const": "测试、性能与安全",
-                          "default": "测试、性能与安全"
+                          "type": "string"
                         },
                         "api": {
-                          "type": "string",
-                          "const": "API、存储与可靠性",
-                          "default": "API、存储与可靠性"
+                          "type": "string"
                         },
                         "ai": {
-                          "type": "string",
-                          "const": "AI、RAG 与自动化",
-                          "default": "AI、RAG 与自动化"
+                          "type": "string"
                         },
                         "delivery": {
-                          "type": "string",
-                          "const": "重构、取舍与交付",
-                          "default": "重构、取舍与交付"
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -6766,24 +6666,16 @@
                       "type": "object",
                       "properties": {
                         "all": {
-                          "type": "string",
-                          "const": "按完整 JD 综合出题",
-                          "default": "按完整 JD 综合出题"
+                          "type": "string"
                         },
                         "motivation": {
-                          "type": "string",
-                          "const": "公司动机与岗位匹配",
-                          "default": "公司动机与岗位匹配"
+                          "type": "string"
                         },
                         "requirements": {
-                          "type": "string",
-                          "const": "必须条件与技术追问",
-                          "default": "必须条件与技术追问"
+                          "type": "string"
                         },
                         "scenarios": {
-                          "type": "string",
-                          "const": "岗位情境与取舍",
-                          "default": "岗位情境与取舍"
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -7717,7 +7609,7 @@
                 "context": {
                   "allOf": [
                     {
-                      "$ref": "#/definitions/Omit_src.chat.PageContext__capturedAt___record___6eb35dc6dd"
+                      "$ref": "#/definitions/Omit_src.chat.PageContext__record___capturedAt___9144430f49"
                     },
                     {
                       "type": "object",
@@ -9178,8 +9070,7 @@
                             "const": "gpt-live-1-codex"
                           },
                           "label": {
-                            "type": "string",
-                            "const": "GPT-Live 1 · Codex 默认"
+                            "type": "string"
                           },
                           "version": {
                             "type": "string",
@@ -10177,6 +10068,83 @@
             "response"
           ]
         },
+        "POST /api/voice/sessions/{id}/diagnostics": {
+          "type": "object",
+          "properties": {
+            "body": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "enum": [
+                    "error",
+                    "response",
+                    "state",
+                    "transport",
+                    "verification"
+                  ],
+                  "type": "string"
+                },
+                "phase": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "responseId": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "recording": {
+                  "type": "boolean"
+                },
+                "processing": {
+                  "type": "boolean"
+                },
+                "backendThinking": {
+                  "type": "boolean"
+                },
+                "paused": {
+                  "type": "boolean"
+                },
+                "outputSpeaking": {
+                  "type": "boolean"
+                },
+                "audioVerified": {
+                  "type": "boolean"
+                },
+                "revision": {
+                  "type": "number"
+                },
+                "inputRevision": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "event"
+              ]
+            },
+            "response": {
+              "type": "object",
+              "properties": {
+                "logged": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "logged"
+              ]
+            }
+          },
+          "required": [
+            "body",
+            "response"
+          ]
+        },
         "POST /api/voice/sessions/{id}/preview": {
           "type": "object",
           "properties": {
@@ -10210,24 +10178,16 @@
                   "type": "object",
                   "properties": {
                     "patterns": {
-                      "type": "string",
-                      "const": "设计模式",
-                      "default": "设计模式"
+                      "type": "string"
                     },
                     "architecture": {
-                      "type": "string",
-                      "const": "架构与系统设计",
-                      "default": "架构与系统设计"
+                      "type": "string"
                     },
                     "workflow": {
-                      "type": "string",
-                      "const": "开发方法与交付",
-                      "default": "开发方法与交付"
+                      "type": "string"
                     },
                     "flutter": {
-                      "type": "string",
-                      "const": "Flutter / Dart 工程",
-                      "default": "Flutter / Dart 工程"
+                      "type": "string"
                     },
                     "jvm": {
                       "type": "string",
@@ -10235,29 +10195,19 @@
                       "default": "Kotlin / Java / Android"
                     },
                     "apple": {
-                      "type": "string",
-                      "const": "Swift / Apple 工程",
-                      "default": "Swift / Apple 工程"
+                      "type": "string"
                     },
                     "web": {
-                      "type": "string",
-                      "const": "Web / 前端工程",
-                      "default": "Web / 前端工程"
+                      "type": "string"
                     },
                     "backend": {
-                      "type": "string",
-                      "const": "后端 / 数据工程",
-                      "default": "后端 / 数据工程"
+                      "type": "string"
                     },
                     "cloud": {
-                      "type": "string",
-                      "const": "云 / 基础设施",
-                      "default": "云 / 基础设施"
+                      "type": "string"
                     },
                     "quality": {
-                      "type": "string",
-                      "const": "测试 / 可观测性",
-                      "default": "测试 / 可观测性"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -10277,44 +10227,28 @@
                   "type": "object",
                   "properties": {
                     "design": {
-                      "type": "string",
-                      "const": "模式与架构",
-                      "default": "模式与架构"
+                      "type": "string"
                     },
                     "generation": {
-                      "type": "string",
-                      "const": "代码生成与构建",
-                      "default": "代码生成与构建"
+                      "type": "string"
                     },
                     "integration": {
-                      "type": "string",
-                      "const": "互操作与接口",
-                      "default": "互操作与接口"
+                      "type": "string"
                     },
                     "testing": {
-                      "type": "string",
-                      "const": "测试与质量",
-                      "default": "测试与质量"
+                      "type": "string"
                     },
                     "delivery": {
-                      "type": "string",
-                      "const": "协作与交付",
-                      "default": "协作与交付"
+                      "type": "string"
                     },
                     "data": {
-                      "type": "string",
-                      "const": "数据与并发",
-                      "default": "数据与并发"
+                      "type": "string"
                     },
                     "operations": {
-                      "type": "string",
-                      "const": "运维与监控",
-                      "default": "运维与监控"
+                      "type": "string"
                     },
                     "security": {
-                      "type": "string",
-                      "const": "安全与权限",
-                      "default": "安全与权限"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -10478,18 +10412,6 @@
                         "type": "string"
                       },
                       "label": {
-                        "enum": [
-                          "Flutter / Dart 工程",
-                          "Kotlin / Java / Android",
-                          "Swift / Apple 工程",
-                          "Web / 前端工程",
-                          "云 / 基础设施",
-                          "后端 / 数据工程",
-                          "开发方法与交付",
-                          "架构与系统设计",
-                          "测试 / 可观测性",
-                          "设计模式"
-                        ],
                         "type": "string"
                       },
                       "total": {
@@ -10670,7 +10592,7 @@
                   "$ref": "#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"
                 },
                 {
-                  "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02"
+                  "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"
                 }
               ]
             },
@@ -14208,6 +14130,7 @@
         "POST /api/voice/sessions",
         "POST /api/voice/sessions/{id}/action",
         "POST /api/voice/sessions/{id}/control",
+        "POST /api/voice/sessions/{id}/diagnostics",
         "POST /api/voice/sessions/{id}/preview",
         "POST /api/voice/sessions/{id}/verify",
         "PUT /api/interview-sources",
@@ -15439,12 +15362,6 @@
                         "type": "string"
                       },
                       "label": {
-                        "enum": [
-                          "写法与命令",
-                          "场景应用",
-                          "理解与记忆",
-                          "简洁表达"
-                        ],
                         "type": "string"
                       },
                       "reviewed": {
@@ -15628,8 +15545,7 @@
                   }
                 },
                 "rule": {
-                  "type": "string",
-                  "default": "独立答对：1→3→7→14→30天后继续自适应延长；部分正确：近期复习；答错或看过答案：10分钟后重测。每个维度独立计算。"
+                  "type": "string"
                 }
               },
               "required": [
@@ -15676,18 +15592,6 @@
                         "type": "string"
                       },
                       "label": {
-                        "enum": [
-                          "二分查找",
-                          "动态规划",
-                          "双指针 / 滑动窗口",
-                          "哈希表",
-                          "图",
-                          "字符串",
-                          "数组",
-                          "栈与队列",
-                          "树",
-                          "链表"
-                        ],
                         "type": "string"
                       },
                       "count": {
@@ -15751,6 +15655,12 @@
     "Omit_src.domain.State__chats___interviews___library___trainings___studyBatches___e082b86c3c": {
       "type": "object",
       "properties": {
+        "problems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/src.domain.Problem"
+          }
+        },
         "interviewMaterials": {
           "type": "object",
           "properties": {
@@ -15782,12 +15692,6 @@
         "version": {
           "type": "number",
           "const": 1
-        },
-        "problems": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/src.domain.Problem"
-          }
         },
         "languageDrills": {
           "type": "array",
@@ -16166,10 +16070,13 @@
     "src.contracts.EmptyInput": {
       "type": "object"
     },
-    "Omit_src.chat.PageContext__capturedAt___record___6eb35dc6dd": {
+    "Omit_src.chat.PageContext__record___capturedAt___9144430f49": {
       "type": "object",
       "properties": {
         "editor": {
+          "type": "string"
+        },
+        "selectedText": {
           "type": "string"
         },
         "title": {
@@ -16197,9 +16104,6 @@
           }
         },
         "visibleText": {
-          "type": "string"
-        },
-        "selectedText": {
           "type": "string"
         },
         "pdfPage": {
@@ -16348,9 +16252,12 @@
         "title"
       ]
     },
-    "Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02": {
+    "Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925": {
       "type": "object",
       "properties": {
+        "topic": {
+          "type": "string"
+        },
         "language": {
           "enum": [
             "dart",
@@ -16362,9 +16269,6 @@
             "swift",
             "typescript"
           ],
-          "type": "string"
-        },
-        "topic": {
           "type": "string"
         },
         "description": {
@@ -16386,6 +16290,17 @@
     "Partial_Omit_src.study.StudySelection__count____a8e03d19a8": {
       "type": "object",
       "properties": {
+        "category": {
+          "enum": [
+            "algorithm",
+            "all",
+            "concept",
+            "expression",
+            "language",
+            "tools"
+          ],
+          "type": "string"
+        },
         "language": {
           "enum": [
             "dart",
@@ -16396,17 +16311,6 @@
             "python",
             "swift",
             "typescript"
-          ],
-          "type": "string"
-        },
-        "category": {
-          "enum": [
-            "algorithm",
-            "all",
-            "concept",
-            "expression",
-            "language",
-            "tools"
           ],
           "type": "string"
         },
@@ -16634,7 +16538,7 @@
     "src.contracts.JobInfo": {
       "allOf": [
         {
-          "$ref": "#/definitions/Pick_src.tasks.Job__error___id___status___kind___d63bc37ec0"
+          "$ref": "#/definitions/Pick_src.tasks.Job__id___error___status___kind___5cd003bd99"
         },
         {
           "type": "object",
@@ -16705,13 +16609,13 @@
         }
       ]
     },
-    "Pick_src.tasks.Job__error___id___status___kind___d63bc37ec0": {
+    "Pick_src.tasks.Job__id___error___status___kind___5cd003bd99": {
       "type": "object",
       "properties": {
-        "error": {
+        "id": {
           "type": "string"
         },
-        "id": {
+        "error": {
           "type": "string"
         },
         "status": {
@@ -17580,7 +17484,7 @@
                     "$ref": "#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"
                   },
                   {
-                    "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__language___topic___description____da416eba02"
+                    "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"
                   }
                 ]
               }
@@ -17686,6 +17590,12 @@
         "question": {
           "type": "string"
         },
+        "tips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "kind": {
           "enum": [
             "behavioral",
@@ -17696,12 +17606,6 @@
         },
         "focus": {
           "type": "string"
-        },
-        "tips": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         },
         "keywords": {
           "type": "array",

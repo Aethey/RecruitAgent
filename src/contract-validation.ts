@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import * as validators from './generated/validators.mjs';
 import type { ValidateFunction } from 'ajv';
 import type { ModelOutputs, BackupArchive } from './contracts.ts';
@@ -16,7 +17,7 @@ export function stateValue(value: unknown): State {
   return value;
 }
 export function archiveValue(value: unknown): BackupArchive {
-  if (!validators.validateArchive(value)) throw new Error('备份格式或数据结构不正确。');
+  if (!validators.validateArchive(value)) throw new Error(formatMessage('zh', "ui.theBackupFormatOrDataStructureIsIncorrect"));
   return value;
 }
 export function nativeParams<M extends RpcMethod>(method: M, value: unknown): value is RpcParams<M> {

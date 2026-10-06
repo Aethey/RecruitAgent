@@ -38,8 +38,9 @@ async function fixture(t: test.TestContext) {
   voice.emit = (id,event,value) => { events.push({id,event,value}); if (event === 'interview-progress') progress.set(id,value); emit(id,event,value); };
   const complete = (id: string) => { const current = progress.get(id); return interviews.action(id,{action:'response-complete',roundAt:current.round.at,inputRevision:current.inputRevision}); };
   const input = (id: string,revision: number) => interviews.action(id,{action:'answer-started',roundAt:progress.get(id).round.at,inputRevision:revision});
-  t.after(async () => { await voice.close(); await store.flush(); await rm(dataDir,{recursive:true,force:true}); });
-  return {dataDir,store,rpc,voice,interviews,ai,progress,events,complete,input};
+  const apps: {close(): Promise<void>}[] = [];
+  t.after(async () => { for (const app of apps) await app.close(); await voice.close(); await store.flush(); await rm(dataDir,{recursive:true,force:true}); });
+  return {dataDir,store,rpc,voice,interviews,ai,progress,events,complete,input,apps};
 }
 const speak = (rpc: FakeVoiceRpc,role: string,value: string) => rpc.emit('thread/realtime/transcript/done',{threadId:'native-thread',role,text:value});
 
@@ -154,9 +155,9 @@ test('legacy voice settings follow the global language; invalid languages and ma
 });
 
 test('interview HTTP settings and actions are local-only, return bounded context, and preserve voice results across navigation',async t => {
-  const {dataDir,rpc} = await fixture(t), ai = new FakeAI();
+  const {dataDir,rpc,apps} = await fixture(t), ai = new FakeAI();
   const app = await createApp({dataDir,ai,sourceDir:null,interviewSources:fakeInterviewSources,voiceRpcFactory:async () => rpc});
-  await new Promise<void>(resolveListen => app.server.listen(0,'127.0.0.1',resolveListen)); t.after(() => app.close());
+  await new Promise<void>(resolveListen => app.server.listen(0,'127.0.0.1',resolveListen)); apps.push(app);
   const address = app.server.address(); assert(address && typeof address !== 'string'); const base='http://127.0.0.1:'+address.port;
   const request = (path: string,method='GET',body?: unknown,origin?: string) => fetch(base+path,{method,headers:{'Content-Type':'application/json',...(origin ? {Origin:origin} : {})},...(body ? {body:JSON.stringify(body)} : {})});
   assert.equal((await request('/api/voice/options')).status,200);

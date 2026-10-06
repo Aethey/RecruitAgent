@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { AppError, type State } from "./domain.ts";
@@ -30,28 +31,28 @@ export class Store {
       if (data.settings?.visibleModels !== undefined && (!Array.isArray(data.settings.visibleModels) || data.settings.visibleModels.some(id => typeof id !== "string"))) throw new Error("Invalid model visibility settings");
       this.state = data;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw new Error("做题记录无法读取，请检查 data/state.json；原文件未覆盖。", { cause: error });
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw new Error(formatMessage('zh', "ui.couldNotReadPracticeRecordsCheckDataState"), { cause: error });
     }
   }
   snapshot(): State { return structuredClone(this.state); }
   problem(id: string) {
     const p = this.state.problems.find(p => p.id === id);
-    if (!p) throw new AppError(404, "题目不存在。");
+    if (!p) throw new AppError(404, formatMessage('zh', "ui.theQuestionDoesNotExist"));
     return structuredClone(p);
   }
   languageDrill(id: string) {
     const drill = this.state.languageDrills?.find(d => d.id === id);
-    if (!drill) throw new AppError(404, "语言练习不存在。");
+    if (!drill) throw new AppError(404, formatMessage('zh', "ui.languageExerciseNotFound"));
     return structuredClone(drill);
   }
   interview(id: string) {
     const set = this.state.interviews?.find(s => s.id === id);
-    if (!set) throw new AppError(404, "面试练习不存在。");
+    if (!set) throw new AppError(404, formatMessage('zh', "ui.theInterviewPracticeDoesNotExist"));
     return structuredClone(set);
   }
   interviewJob(id: string) {
     const job = this.state.interviewJobs?.find(j => j.id === id);
-    if (!job) throw new AppError(404, "职位资料不存在。");
+    if (!job) throw new AppError(404, formatMessage('zh', "ui.jobMaterialNotFound"));
     return structuredClone(job);
   }
   update<T>(change: (state: State) => T): Promise<T> {
@@ -70,5 +71,5 @@ export class Store {
     return next;
   }
   async flush() { await this.pending; }
-  training(id:string){const record=this.state.trainings?.find(t=>t.id===id);if(!record)throw new AppError(404,"训练记录不存在。");return structuredClone(record);}
+  training(id:string){const record=this.state.trainings?.find(t=>t.id===id);if(!record)throw new AppError(404,formatMessage('zh', "ui.trainingRecordNotFound"));return structuredClone(record);}
 }

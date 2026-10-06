@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 // @ts-ignore Browser module has no TypeScript declarations.
 import { createVoiceSession } from '../public/voice-session.js';
+// @ts-ignore Browser module has no TypeScript declarations.
+import { voiceActivity } from '../public/voice-activity.js';
 
-function browserFixture(t: test.TestContext, control: (action: string) => Promise<unknown> = async () => ({})) {
+function browserFixture(t: test.TestContext, control: (action: string) => Promise<unknown> = async () => ({}), verify: () => Promise<unknown> = async () => ({verified:true})) {
   const originals = new Map<string,PropertyDescriptor | undefined>();
   const replace = (name: string,value: unknown) => { originals.set(name,Object.getOwnPropertyDescriptor(globalThis,name)); Object.defineProperty(globalThis,name,{value,writable:true,configurable:true}); };
   let microphoneRequests = 0, stops = 0, closes = 0, deletes = 0;
@@ -39,7 +41,7 @@ function browserFixture(t: test.TestContext, control: (action: string) => Promis
   replace('navigator',{mediaDevices:{getUserMedia:async () => { microphoneRequests++; return media(); }}});
   replace('fetch',async () => { deletes++; return new Response(JSON.stringify({ended:true}),{status:200}); });
   const output = {muted:false,pause() {},play() { return Promise.resolve(); },srcObject:null}, states: any[] = [];
-  const session = createVoiceSession({api:async (url: string,_method: string,input: any) => { requests.push({url,input}); if (url.endsWith('/control')) return control(input.action); return {id:input.id,sdp:'answer'}; },audio:() => output,onState:(state: unknown) => states.push(state),onEvent:(name: string,value: unknown) => events.push({name,value})});
+  const session = createVoiceSession({api:async (url: string,_method: string,input: any) => { requests.push({url,input}); if (url.endsWith('/control')) return control(input.action); if (url.endsWith('/verify')) return verify(); return {id:input.id,sdp:'answer'}; },audio:() => output,onState:(state: unknown) => states.push(state),onEvent:(name: string,value: unknown) => events.push({name,value})});
   t.after(async () => { await session.end(); for (const [name,descriptor] of originals) { if (descriptor) Object.defineProperty(globalThis,name,descriptor); else Reflect.deleteProperty(globalThis,name); } });
   const flush = async () => { for (let i=0;i<12;i++) await Promise.resolve(); };
   return {session,states,events,counts:() => ({microphoneRequests,stops,closes,deletes}),tracks,commands,requests,output,flush,tick:async (ms=100) => { now+=ms; for (const callback of intervals.values()) callback(); await flush(); },setOutputSample:(sample: number) => { if (!output.srcObject) remotePeer.ontrack?.({streams:[media()]}); analysers.at(-1)!.sample=sample; },message:(value:any) => channel.onmessage?.({data:JSON.stringify(value)}),event:(name:string,value:any) => eventListeners.get(name)?.({data:JSON.stringify(value)})};
@@ -54,6 +56,53 @@ test('microphone capture state turns on after connection, follows mute, and clos
   await Promise.all([session.end(),session.end()]);
   assert.equal(session.state().phase,'ended'); assert.equal(session.state().busy,false); assert.equal(session.state().recording,false);
   assert.equal(counts().deletes,1); assert.equal(counts().stops,1); assert.equal(counts().closes,1);
+});
+
+test('a failed background turn does not hide an active microphone, and a new response clears its stale notice',async t => {
+  const {session,event,message} = browserFixture(t);
+  await session.start({model:'gpt-live-1-codex'},false);
+  event('voice-activity',{activity:'failed',message:'当前模型不可用'});
+  assert.equal(session.state().recording,true);
+  assert.equal(voiceActivity(session.state()).recording,true);
+  message({type:'response.created',response:{id:'recovered'}});
+  assert.equal(session.state().notice,'');
+  assert.equal(voiceActivity(session.state()).activity,'processing');
+});
+
+test('audible output clears a failed turn notice even without a data-channel response event',async t => {
+  const {session,event,setOutputSample,tick} = browserFixture(t);
+  await session.start({},false);
+  event('voice-activity',{activity:'failed',message:'当前模型不可用'});
+  setOutputSample(170); await tick();
+  assert.equal(session.state().notice,'');
+  assert.equal(voiceActivity(session.state()).activity,'speaking');
+});
+
+test('audio verification retries after a transient failure and notifies only the current session',async t => {
+  let attempts = 0;
+  const {session,events,requests,tick} = browserFixture(t,undefined,async () => { if (++attempts === 1) throw new Error('temporary failure'); return {verified:true}; });
+  // @ts-ignore Mock transport exposes only the statistics this test needs.
+  t.mock.method(globalThis.RTCPeerConnection.prototype,'getStats',async () => new Map([['audio',{kind:'audio',type:'inbound-rtp',bytesReceived:256,totalAudioEnergy:1}]]));
+  await session.start({model:'gpt-live-1-codex'},false);
+  await tick(1000);
+  assert.equal(requests.filter(r=>r.url.endsWith('/verify')).length,1);
+  assert.equal(events.filter(e=>e.name==='model-verified').length,0);
+  await tick(5000);
+  assert.equal(requests.filter(r=>r.url.endsWith('/verify')).length,2);
+  assert.equal(events.filter(e=>e.name==='model-verified').length,1);
+  assert.equal(session.state().audioVerified,true);
+});
+
+test('a verification acknowledgement arriving after end cannot update a new call',async t => {
+  let acknowledge!: (value:unknown) => void;
+  const {session,events,tick,flush} = browserFixture(t,undefined,() => new Promise(resolve=>{acknowledge=resolve;}));
+  // @ts-ignore Minimal browser transport statistics.
+  t.mock.method(globalThis.RTCPeerConnection.prototype,'getStats',async () => new Map([['audio',{kind:'audio',type:'inbound-rtp',bytesReceived:256,totalAudioEnergy:1}]]));
+  await session.start({model:'gpt-live-1-codex'},false); await tick(1000);
+  await session.end(); await session.start({model:'gpt-live-1-codex'},false);
+  acknowledge({verified:true}); await flush();
+  assert.equal(events.filter(e=>e.name==='model-verified').length,0);
+  assert.equal(session.state().audioVerified,false);
 });
 
 test('voice preview supplies silent audio frames without ever requesting or claiming microphone capture',async t => {

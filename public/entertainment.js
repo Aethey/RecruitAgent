@@ -1,5 +1,5 @@
 import { element, elements } from './dom.ts';
-import { t, ui, userLanguage } from "./i18n.js";
+import { t, userLanguage, catalogText } from "./i18n.js";
 import { CARD_CATEGORIES, KNOWLEDGE_CARDS, shuffledCards } from './knowledge-cards.js';
 import './entertainment.css';
 
@@ -99,12 +99,12 @@ export function createEntertainment({ escape, pageHeading }) {
   // Only this bundled, authored catalog is translated; imported/user cards are never passed here.
   const localizedCard = card => ({
     ...card,
-    ...Object.fromEntries(['topic','question','answer','takeaway'].map(field => [field,t(card[field],userLanguage())])),
-    ...(card.source ? {source:[t(card.source[0],userLanguage()),card.source[1]]} : {}),
+    ...Object.fromEntries(['topic','question','answer','takeaway'].map(field => [field,t(card[field], undefined, userLanguage())])),
+    ...(card.source ? {source:[t(card.source[0], undefined, userLanguage()),card.source[1]]} : {}),
   });
   function announce() {
     const card = localizedCard(deck[index]);
-    find('#ent-announcement').textContent = ui`${t(CARD_CATEGORIES[card.category].label)}，第 ${index + 1} 张，共 ${deck.length} 张。${flipped ? t('已显示答案。') : t('当前是问题。')}`;
+    find('#ent-announcement').textContent = `${t("entertainment.cardOfCards", { value1: catalogText(CARD_CATEGORIES[card.category].label), value2: index + 1, length: deck.length, value4: flipped ? t("ui.answerDisplayed") : t("ui.questionDisplayed") })}`;
   }
   function renderCard() {
     const card = localizedCard(deck[index]), meta = CARD_CATEGORIES[card.category], button = find('#ent-card');
@@ -112,21 +112,21 @@ export function createEntertainment({ escape, pageHeading }) {
     root.style.setProperty('--ent-accent', meta.color);
     button.dataset.cardId = card.id; button.dataset.flipped = 'false';
     button.setAttribute('aria-pressed', 'false');
-    button.setAttribute('aria-label', ui`查看答案：${card.question}`);
-    button.innerHTML = ui`<span class="ent-card-flipper">
+    button.setAttribute('aria-label', `${t("entertainment.viewAnswer", { question: card.question })}`);
+    button.innerHTML = `<span class="ent-card-flipper">
       <span class="ent-card-face ent-card-front" aria-hidden="false">
-        <span class="ent-face-top"><span class="ent-card-category">${escape(t(meta.label))}</span><span class="ent-card-number">${number(index + 1)}</span></span>
-        <span class="ent-front-content"><span class="ent-card-symbol" aria-hidden="true">${escape(meta.symbol)}</span><span class="ent-card-eyebrow">${meta.english}</span><span class="ent-card-topic">${escape(card.topic)}</span><span class="ent-card-question">${escape(card.question)}</span></span>
-        <span class="ent-face-bottom"><span>先想一想，再看答案</span><span class="ent-flip-mark" aria-hidden="true">↺</span></span>
+        <span class="ent-face-top"><span class="ent-card-category">${escape(catalogText(meta.label))}</span><span class="ent-card-number">${number(index + 1)}</span></span>
+        <span class="ent-front-content"><span class="ent-card-symbol" aria-hidden="true">${escape(meta.symbol)}</span><span class="ent-card-eyebrow">${t(meta.english)}</span><span class="ent-card-topic">${escape(card.topic)}</span><span class="ent-card-question">${escape(card.question)}</span></span>
+        <span class="ent-face-bottom"><span>${t("ui.thinkFirstThenSeeTheAnswer")}</span><span class="ent-flip-mark" aria-hidden="true">↺</span></span>
       </span>
       <span class="ent-card-face ent-card-back" aria-hidden="true">
-        <span class="ent-face-top"><span class="ent-card-category">${escape(t(meta.label))} · 答案</span><span class="ent-card-number">${number(index + 1)}</span></span>
-        <span class="ent-back-content"><span class="ent-card-eyebrow">THE OTHER SIDE</span><span class="ent-card-topic">${escape(card.topic)}</span><span class="ent-card-answer">${card.answer.split('\n').map(p => `<span>${escape(p)}</span>`).join('')}</span><span class="ent-takeaway"><small>记住这一点</small><span>${escape(card.takeaway)}</span></span></span>
-        <span class="ent-face-bottom"><span>再点一次，回到问题</span><span class="ent-flip-mark" aria-hidden="true">↺</span></span>
+        <span class="ent-face-top"><span class="ent-card-category">${t("entertainment.answer", { value7: escape(catalogText(meta.label)) })}</span><span class="ent-card-number">${number(index + 1)}</span></span>
+        <span class="ent-back-content"><span class="ent-card-eyebrow">${t("chrome.theOtherSide")}</span><span class="ent-card-topic">${escape(card.topic)}</span><span class="ent-card-answer">${card.answer.split('\n').map(p => `<span>${escape(p)}</span>`).join('')}</span><span class="ent-takeaway"><small>${t("ui.rememberThis")}</small><span>${escape(card.takeaway)}</span></span></span>
+        <span class="ent-face-bottom"><span>${t("ui.clickAgainToReturnToTheQuestion2")}</span><span class="ent-flip-mark" aria-hidden="true">↺</span></span>
       </span></span>`;
     find('#ent-counter').textContent = `${number(index + 1)} / ${deck.length}`;
     find('#ent-progress').style.width = `${(index + 1) / deck.length * 100}%`;
-    find('#ent-deck-label').textContent = category === 'all' ? t('随机漫游 · 全部领域') : ui`主题漫游 · ${t(CARD_CATEGORIES[category].label)}`;
+    find('#ent-deck-label').textContent = category === 'all' ? t("ui.randomExplorationAllDomains") : `${t("entertainment.topicExploration", { value1: catalogText(CARD_CATEGORIES[category].label) })}`;
     const reference = find('#ent-reference');
     reference.hidden = true;
     if (card.source) { reference.textContent = `${card.source[0]} ↗`; reference.href = card.source[1]; }
@@ -139,7 +139,7 @@ export function createEntertainment({ escape, pageHeading }) {
     flipped = !flipped;
     button.dataset.flipped = String(flipped);
     button.setAttribute('aria-pressed', String(flipped));
-    button.setAttribute('aria-label', flipped ? ui`${card.topic}的答案：${card.answer}。再点一次返回问题。` : ui`查看答案：${card.question}`);
+    button.setAttribute('aria-label', flipped ? `${t("entertainment.answerClickAgainToReturnToTheQuestion", { topic: card.topic, answer: card.answer })}` : `${t("entertainment.viewAnswer", { question: card.question })}`);
     find('.ent-card-front').setAttribute('aria-hidden', String(flipped));
     find('.ent-card-back').setAttribute('aria-hidden', String(!flipped));
     find('#ent-reference').hidden = !flipped || !card.source;
@@ -170,7 +170,7 @@ export function createEntertainment({ escape, pageHeading }) {
     if (phase === 'opening') return;
     category = id;
     elements('[data-ent-category]', root).forEach(button => button.setAttribute('aria-pressed', String(button.dataset.entCategory === id)));
-    find('#ent-start-note').textContent = ui`${countFor(id)} 张知识卡 · 随机出现`;
+    find('#ent-start-note').textContent = `${t("entertainment.knowledgeCardsRandomOrder2", { value1: countFor(id) })}`;
     if (phase === 'playing') shuffle();
   }
   function start() {
@@ -205,28 +205,28 @@ export function createEntertainment({ escape, pageHeading }) {
     // Model updates and completed background jobs can rerender the app. Keep the active card.
     if (root?.isConnected) return;
     dispose();
-    element('#page').innerHTML = pageHeading('A LITTLE CURIOSITY, A LITTLE MAGIC', t('娱乐模式'), t('让知识从雾里出现。翻一张，想一想，再看答案。'), ui`<span class="ent-heading-tag">✧ ${KNOWLEDGE_CARDS.length} 张知识卡</span>`) + ui`
-      <section id="ent-scene" class="ent-scene" data-phase="idle" aria-label="知识卡片漫游">
+    element('#page').innerHTML = pageHeading(t("chrome.aLittleCuriosityALittleMagic"), t("ui.exploreCards"), t("ui.letKnowledgeEmergeFromTheMistPickA"), `<span class="ent-heading-tag">${t("entertainment.knowledgeCards", { length: KNOWLEDGE_CARDS.length })}</span>`) + `
+      <section id="ent-scene" class="ent-scene" data-phase="idle" aria-label="${t("ui.knowledgeCardExploration")}">
         <canvas class="ent-smoke" aria-hidden="true"></canvas><div class="ent-stars" aria-hidden="true"></div><div class="ent-reveal" aria-hidden="true"></div>
-        <div class="ent-room-header"><span class="ent-room-title"><span aria-hidden="true">✧</span> THE KNOWLEDGE ROOM</span><button id="ent-stop" class="ent-text-button" type="button" hidden>返回开场 ↗</button><span class="ent-room-note">跟着好奇心，随便逛逛。</span></div>
-        <div class="ent-categories" role="group" aria-label="知识领域">
-          ${[['all', t('全部'), KNOWLEDGE_CARDS.length], ...Object.entries(CARD_CATEGORIES).map(([id, meta]) => [id, t(meta.label), countFor(id)])].map(([id, label, count]) => `<button type="button" data-ent-category="${id}" aria-pressed="${category === id}">${label}<small>${count}</small></button>`).join('')}
+        <div class="ent-room-header"><span class="ent-room-title"><span aria-hidden="true">✧</span> ${t("chrome.theKnowledgeRoom")}</span><button id="ent-stop" class="ent-text-button" type="button" hidden>${t("ui.backToStart")}</button><span class="ent-room-note">${t("ui.followYourCuriosity")}</span></div>
+        <div class="ent-categories" role="group" aria-label="${t("ui.domains")}">
+          ${[['all', t("ui.all"), KNOWLEDGE_CARDS.length], ...Object.entries(CARD_CATEGORIES).map(([id, meta]) => [id, catalogText(meta.label), countFor(id)])].map(([id, label, count]) => `<button type="button" data-ent-category="${id}" aria-pressed="${category === id}">${label}<small>${count}</small></button>`).join('')}
         </div>
         <div id="ent-intro" class="ent-intro">
-          <div class="ent-intro-deck" aria-hidden="true"><span class="ent-preview-card ent-preview-left">{ }</span><span class="ent-preview-card ent-preview-right">⌘</span><span class="ent-preview-card ent-preview-main"><small>A LITTLE DISCOVERY</small><span>?</span><i>答案，藏在另一面。</i></span><span class="ent-orbit-star">✧</span></div>
-          <span class="ent-intro-eyebrow">TURN CURIOSITY INTO DISCOVERY</span><h2>把知识，翻成一点乐趣。</h2><p>不赶时间。先想一想，<br>再翻开另一面的答案。</p>
-          <button id="ent-start" class="ent-start" type="button">开始漫游 <span aria-hidden="true">↗</span></button>
-          <small id="ent-start-note">${countFor(category)} 张知识卡 · 随机出现</small><p id="ent-opening-status" class="visually-hidden" role="status" hidden>雾正在散开，知识卡即将出现…</p>
+          <div class="ent-intro-deck" aria-hidden="true"><span class="ent-preview-card ent-preview-left">{ }</span><span class="ent-preview-card ent-preview-right">⌘</span><span class="ent-preview-card ent-preview-main"><small>${t("chrome.aLittleDiscovery")}</small><span>?</span><i>${t("ui.theAnswerIsOnTheOtherSide")}</i></span><span class="ent-orbit-star">✧</span></div>
+          <span class="ent-intro-eyebrow">${t("chrome.turnCuriosityIntoDiscovery")}</span><h2>${t("ui.turnKnowledgeIntoALittleFun")}</h2><p>${t("ui.takeYourTimeThinkFirst")}<br>${t("ui.thenFlipToSeeTheAnswer")}</p>
+          <button id="ent-start" class="ent-start" type="button">${t("ui.startExploring")} <span aria-hidden="true">↗</span></button>
+          <small id="ent-start-note">${t("entertainment.knowledgeCardsRandomOrder", { value2: countFor(category) })}</small><p id="ent-opening-status" class="visually-hidden" role="status" hidden>${t("ui.theMistIsClearingYourCardsAreComing")}</p>
         </div>
         <div id="ent-playing" class="ent-playing" hidden>
-          <div class="ent-deck-meta"><span id="ent-deck-label"></span><span id="ent-counter" aria-label="牌组位置"></span></div>
+          <div class="ent-deck-meta"><span id="ent-deck-label"></span><span id="ent-counter" aria-label="${t("ui.deckPosition")}"></span></div>
           <div class="ent-table">
-            <button id="ent-previous" class="ent-nav ent-nav-previous" type="button" aria-label="上一张知识卡"><span aria-hidden="true">←</span><small>上一张</small></button>
+            <button id="ent-previous" class="ent-nav ent-nav-previous" type="button" aria-label="${t("ui.previousKnowledgeCard")}"><span aria-hidden="true">←</span><small>${t("ui.previous")}</small></button>
             <div class="ent-card-slot"><div id="ent-travel" class="ent-card-travel"><button id="ent-card" class="ent-card" type="button" aria-pressed="false"></button></div></div>
-            <button id="ent-next" class="ent-nav ent-nav-next" type="button" aria-label="下一张知识卡"><span aria-hidden="true">→</span><small>下一张</small></button>
+            <button id="ent-next" class="ent-nav ent-nav-next" type="button" aria-label="${t("ui.nextKnowledgeCard")}"><span aria-hidden="true">→</span><small>${t("ui.next")}</small></button>
           </div>
           <div class="ent-reference-line"><a id="ent-reference" target="_blank" rel="noopener noreferrer" hidden></a></div>
-          <div class="ent-play-controls"><button id="ent-shuffle" class="ent-text-button" type="button"><span aria-hidden="true">⤨</span> 重新洗牌</button><span class="ent-desktop-hint">← → 换卡 · 点击 / 空格翻面</span><span class="ent-mobile-hint">左右滑动换卡 · 点击翻面</span><span class="ent-position-track" aria-hidden="true"><i id="ent-progress"></i></span></div>
+          <div class="ent-play-controls"><button id="ent-shuffle" class="ent-text-button" type="button"><span aria-hidden="true">⤨</span> ${t("ui.shuffleAgain")}</button><span class="ent-desktop-hint">${t("ui.changeCardClickSpaceToFlip")}</span><span class="ent-mobile-hint">${t("ui.swipeToChangeTapToFlip")}</span><span class="ent-position-track" aria-hidden="true"><i id="ent-progress"></i></span></div>
         </div>
         <p id="ent-announcement" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
       </section>`;

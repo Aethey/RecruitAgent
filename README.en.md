@@ -16,13 +16,19 @@ Released under the MIT license. Documents, learning records and login credential
 
 ## Screenshots
 
-These screenshots show the Japanese interface in an isolated demo environment. Documents and practice records are samples; no personal details, contact information or real account information are included. `Test Model` is a demo model.
+These screenshots show the Japanese interface. The voice interview image is cropped from the running app and contains no personal documents or account identifiers. The other images use an isolated demo environment. `Test Model` is a demo model.
 
 ### Interview preparation
 
 Choose an interview type and topic, then prepare questions using the documents you selected.
 
 ![Japanese interview preparation: interview types, question settings and answer guidance](docs/images/interview-practice.jpg)
+
+### Voice interview
+
+Choose the interview language, voice and tone, then answer Codex's questions by voice. Read the answer transcript and feedback on the same page.
+
+![Japanese voice interview: voice settings, question, answer and feedback](docs/images/voice-interview.png)
 
 ### Algorithm practice
 
@@ -64,7 +70,7 @@ Once dependencies are installed, `npm start` also works. Use `npm run doctor` to
 
 ## First use
 
-The initial interface language is Chinese. In `设置 → 语言设置` (Settings → Language settings), change `界面语言` (Interface language) and `用户语言` (User language) to `English` and save. Choose `日本語` for Japanese interview practice. Existing documents and AI output keep their original language; newly generated content uses the selected user language. This setting does not translate the Chinese text of the built-in knowledge cards.
+The initial interface language is Chinese. In `设置 → 语言设置` (Settings → Language settings), change `界面语言` (Interface language) and `用户语言` (User language) to `English` and save. Choose `日本語` for Japanese interview practice. Existing documents and AI output keep their original language; newly generated content uses the selected user language. Bundled knowledge cards use the selected user language through the three-language resources.
 
 1. Open Settings → Getting started and choose Connect Codex at the top right.
 2. Authenticate with your own account on the official OpenAI page. Model access and usage limits depend on actual request results.
@@ -129,6 +135,14 @@ npm run restore -- backups/my-study.json.gz --data-dir ./data-restored
 
 Restore validates the format, checksums and file paths, preserving existing folders. Stop the application, set `DATA_DIR` to `./data-restored` in `.env`, then restart and authenticate again. See the [release checklist in Chinese](docs/release-checklist.md) for upgrade steps.
 
+## Communication logs
+
+Each Codex text request, voice RPC and significant call state change is recorded in `data/logs/codex.jsonl` (under `logs/` in a custom `DATA_DIR`). Records include UTC timestamps, instance/request/session/thread IDs, model, duration, outcome and redacted errors. The HTTP `X-Request-ID` response header links requests to their logs. Browser records cover connection, recording, response and audio verification transitions.
+
+Logs exclude prompts, answers, résumés, audio, images, SDP and credentials. Each file rotates at about 5 MB, keeping the current file and three archives. Logs are excluded from Git, releases and backups. View them with `tail -f data/logs/codex.jsonl`. Interview answer text remains in the existing interview history.
+
+Failed model checks describe the last check. The current connection and verified audio take precedence in the call display. A failed background turn does not mean the whole voice connection failed; recovered responses clear stale notices.
+
 ## Development and release
 
 ```sh
@@ -148,3 +162,18 @@ CI is configured for Linux, macOS and Windows; actual results must be checked in
 The server listens only on the local loopback address. Each person runs it on their own computer; GitHub hosts the source and downloads. This version does not provide a public server for multiple users.
 
 [CLI generation and type safety](docs/code-generation.md)
+
+## Localization resources and code generation
+
+Maintain UI text in `public/locales/zh.json`, `public/locales/ja.json` and `public/locales/en.json`. All three resources use the same stable keys. Add all three translations for new text; keep the key when changing wording and update the corresponding translations.
+
+```sh
+npm run i18n:generate
+npm run i18n:check
+```
+
+`i18n:generate` reads the local resources and generates message keys, parameter types and accessors in `src/generated/localizations.ts`. **It generates code, not translations, and does not call a model or translation service.** Regenerate this file with the CLI rather than editing it directly.
+
+Pages use `t('ui.startVoiceInterview')`; messages with variables use named parameters, such as `t('voice.stats', {seconds, sent, received})`. Resource checks reject mismatched keys, empty translations, inconsistent placeholders, stale generated output and Chinese text written directly in UI code. `npm run check` includes these checks and frontend/backend type checks.
+
+User documents, answers, code and stored AI content retain their original text.

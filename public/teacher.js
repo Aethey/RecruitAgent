@@ -1,5 +1,5 @@
 import { element, elements } from './dom.ts';
-import { t, ui } from "./i18n.js";
+import { t } from "./i18n.js";
 import { safeMarkdown } from './markdown.js';
 import { createTeacherMonitor } from './teacher-monitor.js';
 import './teacher.css';
@@ -12,20 +12,20 @@ const remember = (key, value) => { try { localStorage.setItem(key, String(value)
 export function createTeacher({ api, escape, date, startTask, stopTeacher, selectModel, beginLogin, getCurrent, getAccount, getModels, getBusy, getActiveJob, getSettings }) {
   const preferences = () => getSettings?.() ?? { trigger: 'idle', idleSeconds: 20 };
   const root = document.createElement('aside'); root.id = 'teacher-panel'; root.hidden = true;
-  root.setAttribute('aria-label', t('实时教师'));
-  root.innerHTML = ui`
-    <header class="teacher-header"><div><span class="teacher-symbol" aria-hidden="true">✦</span><strong>实时教师</strong><small>Codex · 陪你想下一步</small></div><button id="teacher-exit" type="button" class="chat-icon" aria-label="退出实时教师" title="退出实时教师">×</button></header>
-    <div class="teacher-controls"><label class="visually-hidden" for="teacher-model">教师模型</label><select id="teacher-model"></select><button id="teacher-pause" class="teacher-button" type="button">暂停观察</button></div>
-    <div class="teacher-status"><span class="status-dot" aria-hidden="true"></span><span id="teacher-state" role="status">准备观察</span></div>
+  root.setAttribute('aria-label', t("ui.liveTeacher2"));
+  root.innerHTML = `
+    <header class="teacher-header"><div><span class="teacher-symbol" aria-hidden="true">✦</span><strong>${t("ui.liveTeacher2")}</strong><small>${t("ui.codexThinkThroughTheNextStep")}</small></div><button id="teacher-exit" type="button" class="chat-icon" aria-label="${t("ui.exitLiveTeacher")}" title="${t("ui.exitLiveTeacher")}">×</button></header>
+    <div class="teacher-controls"><label class="visually-hidden" for="teacher-model">${t("ui.teacherModel")}</label><select id="teacher-model"></select><button id="teacher-pause" class="teacher-button" type="button">${t("ui.pauseObservation")}</button></div>
+    <div class="teacher-status"><span class="status-dot" aria-hidden="true"></span><span id="teacher-state" role="status">${t("ui.readyToObserve")}</span></div>
     <p id="teacher-problem" class="teacher-problem"></p>
     <div class="teacher-scroll">
-      <div id="teacher-stale" class="teacher-stale" hidden>代码已修改 · 以下是上一版本的提示</div>
-      <article id="teacher-feedback" class="chat-markdown teacher-feedback" aria-label="教师引导"></article>
+      <div id="teacher-stale" class="teacher-stale" hidden>${t("ui.codeChangedHintForThePreviousVersion")}</div>
+      <article id="teacher-feedback" class="chat-markdown teacher-feedback" aria-label="${t("ui.teacherGuidance")}"></article>
       <p id="teacher-error" class="teacher-error" role="status" hidden></p>
-      <details id="teacher-history" class="teacher-history"><summary>本题引导记录 <span id="teacher-count">0</span></summary><div id="teacher-records"></div></details>
+      <details id="teacher-history" class="teacher-history"><summary>${t("ui.guidanceHistoryForThisProblem")} <span id="teacher-count">0</span></summary><div id="teacher-records"></div></details>
     </div>
-    <footer class="teacher-footer"><div class="teacher-actions"><button id="teacher-check" class="teacher-button" type="button">分析当前代码</button><button id="teacher-question-toggle" class="teacher-button" type="button" aria-expanded="false">追问</button><button id="teacher-connect" class="teacher-button" type="button" hidden>连接 Codex</button></div>
-      <form id="teacher-question" hidden><label class="visually-hidden" for="teacher-input">向教师追问</label><textarea id="teacher-input" maxlength="4000" rows="2" placeholder="这一步我还不理解…"></textarea><button id="teacher-send" class="button primary" type="submit">发送追问 →</button></form>
+    <footer class="teacher-footer"><div class="teacher-actions"><button id="teacher-check" class="teacher-button" type="button">${t("ui.analyzeCurrentCode")}</button><button id="teacher-question-toggle" class="teacher-button" type="button" aria-expanded="false">${t("ui.followUp")}</button><button id="teacher-connect" class="teacher-button" type="button" hidden>${t("ui.connectCodex")}</button></div>
+      <form id="teacher-question" hidden><label class="visually-hidden" for="teacher-input">${t("ui.askTheTeacher")}</label><textarea id="teacher-input" maxlength="4000" rows="2" placeholder="${t("ui.iStillDonTUnderstandThisStep")}"></textarea><button id="teacher-send" class="button primary" type="submit">${t("ui.sendQuestion")}</button></form>
       <small id="teacher-trigger-note"></small>
     </footer>`;
   document.body.append(root);
@@ -44,8 +44,8 @@ export function createTeacher({ api, escape, date, startTask, stopTeacher, selec
     const current = getCurrent(), active = getActiveJob();
     const own = active?.kind === 'teacher' && (!active.chatId || active.chatId === thread?.id);
     const failed = thread?.turns.at(-1)?.status === 'error' && !isStale();
-    const labels = { off: t('观察已关闭'), paused: t('已暂停 · 可以独立思考'), away: t('离开答题页 · 观察已暂停'), manual: t('仅手动分析 · 点击按钮获取引导'), blocked: t('等待当前任务结束'), watching: t('观察中 · 修改代码后继续'), typing: ui`等待停止输入 ${preferences().idleSeconds} 秒`, waiting: t('等待下一次观察'), checking: t('正在看你的代码…') };
-    $('#teacher-state').textContent = !current ? labels.away : loading ? t('正在读取本题引导记录…') : !getAccount()?.authenticated ? t('连接 Codex 后开始观察') : error || failed ? t('需要重试 · 点击分析当前代码') : own ? (isStale() ? t('代码已更新 · 当前提示基于旧版本') : thread?.turns.at(-1)?.teacher?.trigger === 'question' ? t('正在回答你的追问…') : t('正在给你一个思考方向…')) : paused ? labels.paused : labels[scheduleState];
+    const labels = { off: t("ui.observationOff"), paused: t("ui.pausedTimeToThinkIndependently"), away: t("ui.awayFromAnswerPageObservationPaused"), manual: t("ui.manualOnlyClickToGetGuidance"), blocked: t("ui.waitingForTheCurrentTask"), watching: t("ui.observingChangeCodeToContinue"), typing: `${t("teacher.waitingForInactivitySeconds", { idleSeconds: preferences().idleSeconds })}`, waiting: t("ui.waitingForNextObservation"), checking: t("ui.readingYourCode") };
+    $('#teacher-state').textContent = !current ? labels.away : loading ? t("ui.loadingGuidanceForThisProblem") : !getAccount()?.authenticated ? t("ui.connectCodexToStartObservation") : error || failed ? t("ui.retryNeededAnalyzeCurrentCode") : own ? (isStale() ? t("ui.codeChangedThisHintUsesAnOlderVersion") : thread?.turns.at(-1)?.teacher?.trigger === 'question' ? t("ui.answeringYourQuestion") : t("ui.preparingAThinkingHint")) : paused ? labels.paused : labels[scheduleState];
     element('.status-dot', root).classList.toggle('muted', paused || !current || !getAccount()?.authenticated || !!error);
   }
   function isStale() {
@@ -59,7 +59,7 @@ export function createTeacher({ api, escape, date, startTask, stopTeacher, selec
     const stamp = `${thread?.id}|${turn?.id}|${turn?.status}|${stale}|${turn?.assistant}|${settings.trigger}|${settings.idleSeconds}`;
     if (feedbackStamp !== stamp) {
       feedbackStamp = stamp;
-      $('#teacher-feedback').innerHTML = turn?.assistant ? safeMarkdown(turn.assistant) : turn?.status === 'streaming' ? t('<p class="teacher-placeholder">正在结合题目和当前代码思考…</p>') : ui`<p class="teacher-placeholder">先写下你的思路。${settings.trigger === 'manual' ? t('需要引导时，点击「分析当前代码」。') : ui`停止输入 ${settings.idleSeconds} 秒后，我会结合题目和代码给一个思考提示；也可以手动点击分析。`}</p>`;
+      $('#teacher-feedback').innerHTML = turn?.assistant ? safeMarkdown(turn.assistant) : turn?.status === 'streaming' ? `<p class="teacher-placeholder">${t("ui.thinkingAboutTheProblemAndCurrentCode")}</p>` : `<p class="teacher-placeholder">${t("teacher.startWithYourOwnIdeas", { value1: settings.trigger === 'manual' ? t("ui.clickAnalyzeCurrentCodeWhenYouWantGuidance") : `${t("teacher.afterInactivityOfSecondsILlGiveA", { idleSeconds: settings.idleSeconds })}` })}</p>`;
     }
     $('#teacher-error').hidden = !error && !turn?.error;
     $('#teacher-error').textContent = error || turn?.error || '';
@@ -70,7 +70,7 @@ export function createTeacher({ api, escape, date, startTask, stopTeacher, selec
     const stamp = JSON.stringify(thread?.turns);
     if (stamp === historyStamp) return;
     historyStamp = stamp;
-    $('#teacher-records').innerHTML = (thread?.turns ?? []).slice().reverse().map((turn, i) => ui`<article class="teacher-record"><div class="teacher-record-meta">第 ${(thread?.turns.length ?? 0) - i} 次 · ${date(turn.createdAt)} · ${escape(turn.model)}${turn.status === 'aborted' ? t(' · 已中断') : turn.status === 'error' ? t(' · 失败') : ''}</div>${turn.teacher?.trigger === 'question' ? `<p class="teacher-record-question">${escape(turn.user)}</p>` : ''}<div class="chat-markdown">${safeMarkdown(turn.assistant || t('尚未生成提示。'))}</div><details><summary>当时的代码</summary><pre>${escape(turn.context.editor)}</pre></details></article>`).join('') || t('<p>本题还没有引导记录。</p>');
+    $('#teacher-records').innerHTML = (thread?.turns ?? []).slice().reverse().map((turn, i) => `<article class="teacher-record"><div class="teacher-record-meta">${t("teacher.attempt", { value1: (thread?.turns.length ?? 0) - i, value2: date(turn.createdAt), value3: escape(turn.model), value4: turn.status === 'aborted' ? t("teacher.message2") : turn.status === 'error' ? t("teacher.message") : '' })}</div>${turn.teacher?.trigger === 'question' ? `<p class="teacher-record-question">${escape(turn.user)}</p>` : ''}<div class="chat-markdown">${safeMarkdown(turn.assistant || t("ui.noHintGeneratedYet"))}</div><details><summary>${t("ui.codeAtTheTime")}</summary><pre>${escape(turn.context.editor)}</pre></details></article>`).join('') || `<p>${t("ui.noGuidanceHistoryForThisProblemYet")}</p>`;
   }
   async function follow(current) {
     const token = ++epoch; following = current.problemId; loading = true; thread = null; error = ''; feedbackStamp = historyStamp = ''; renderFeedback();
@@ -90,7 +90,7 @@ export function createTeacher({ api, escape, date, startTask, stopTeacher, selec
     monitor.configure({ automatic: settings.trigger === 'idle', idleMs: settings.idleSeconds * 1000 });
     root.hidden = !enabled; document.body.classList.toggle('teacher-visible', enabled);
     const toggle = element('#teacher-toggle');
-    if (toggle) { toggle.setAttribute('aria-pressed', String(enabled)); toggle.textContent = enabled ? t('✦ 教师陪练中') : t('✦ 实时教师'); }
+    if (toggle) { toggle.setAttribute('aria-pressed', String(enabled)); toggle.textContent = enabled ? t("ui.teacherActive") : t("ui.liveTeacher"); }
     if (!enabled) return;
     const current = getCurrent();
     if (current && following !== current.problemId) { void follow(current); }
@@ -101,7 +101,7 @@ export function createTeacher({ api, escape, date, startTask, stopTeacher, selec
         obsoleteTimer = setTimeout(() => { if (getActiveJob()?.kind === 'teacher' && (!getCurrent() || isStale())) void stopTeacher().catch(e => { error = e.message; renderFeedback(); }); }, current ? settings.idleSeconds * 1000 : 0);
       }
     }
-    $('#teacher-problem').textContent = current?.title ?? (thread ? ui`已暂停：${thread.title}` : t('回到算法答题页，继续教师陪练。'));
+    $('#teacher-problem').textContent = current?.title ?? (thread ? `${t("teacher.paused", { title: thread.title })}` : t("ui.returnToTheAlgorithmAnswerPageToContinue"));
     const models = getModels(), model = getAccount()?.model;
     const modelStamp = models.map(model => model.id).join('|');
     if ($('#teacher-model').dataset.models !== modelStamp) {
@@ -111,11 +111,11 @@ export function createTeacher({ api, escape, date, startTask, stopTeacher, selec
     $('#teacher-model').value = model ?? '';
     const foregroundBusy = getBusy() && getActiveJob()?.kind !== 'teacher';
     $('#teacher-model').disabled = foregroundBusy || loading;
-    $('#teacher-pause').textContent = paused ? t('继续观察') : t('暂停观察');
+    $('#teacher-pause').textContent = paused ? t("ui.resumeObservation") : t("ui.pauseObservation");
     $('#teacher-check').disabled = !current || loading || foregroundBusy || !getAccount()?.authenticated;
     $('#teacher-send').disabled = !current || loading || foregroundBusy || manualPending || !getAccount()?.authenticated;
     $('#teacher-connect').hidden = !!getAccount()?.authenticated;
-    $('#teacher-trigger-note').textContent = settings.trigger === 'manual' ? t('仅手动分析 · 输入不会自动触发') : ui`自动分析 · 停止输入 ${settings.idleSeconds} 秒后`;
+    $('#teacher-trigger-note').textContent = settings.trigger === 'manual' ? t("ui.manualOnlyTypingDoesNotTriggerAnalysis") : `${t("teacher.automaticAnalysisAfterInactivityOfSeconds", { idleSeconds: settings.idleSeconds })}`;
     monitor.observe(current); renderFeedback(); renderStatus();
   }
   async function request(snapshot, trigger, message) {
@@ -124,7 +124,7 @@ export function createTeacher({ api, escape, date, startTask, stopTeacher, selec
     const token = epoch, id = thread.id;
     error = '';
     const result = await startTask(`/api/teachers/${id}/messages`, { id: crypto.randomUUID(), code: snapshot.code, revision, trigger, ...(message ? { message } : {}) }, 'teacher', { quiet: true, chatId: id });
-    if (!result) { error = t('教师请求未完成，请检查连接后再试。'); renderFeedback(); renderStatus(); return; }
+    if (!result) { error = t("ui.teacherRequestFailedCheckTheConnectionAndRetry"); renderFeedback(); renderStatus(); return; }
     if (!enabled || token !== epoch || getCurrent()?.code !== snapshot.code || (trigger === 'observe' && observationDisabled())) await stopTeacher();
     return result;
   }

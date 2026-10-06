@@ -1,4 +1,4 @@
-import { t, ui } from "./i18n.js";
+import { t } from "./i18n.js";
 import * as monaco from "monaco-editor";
 
 // Both workers run in the browser and load entirely from this application's origin.
@@ -61,7 +61,7 @@ export function mountEditor(container, { id, filename, language, value, onChange
   editor = monaco.editor.create(container, {
     model,
     theme: "algo-practice",
-    ariaLabel: t("解题代码"),
+    ariaLabel: t("ui.solutionCode"),
     automaticLayout: true,
     autoIndent: "full",
     matchBrackets: "always",
@@ -92,7 +92,7 @@ export function mountReference(container, { language, value }) {
   const referenceModel = monaco.editor.createModel(value, language);
   const reference = monaco.editor.create(container, {
     model: referenceModel, theme: "algo-practice", readOnly: true, domReadOnly: true,
-    ariaLabel: t("正确模板"), automaticLayout: true, minimap: { enabled: false },
+    ariaLabel: t("ui.referenceTemplate"), automaticLayout: true, minimap: { enabled: false },
     fontFamily: "Menlo, Monaco, Consolas, monospace", fontSize: compactScreen.matches ? 16 : 14,
     lineHeight: 25, lineNumbersMinChars: 3, wordWrap: "on", scrollBeyondLastLine: false,
     padding: { top: 16, bottom: 16 }, stickyScroll: { enabled: false },

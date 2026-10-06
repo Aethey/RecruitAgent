@@ -1,5 +1,5 @@
 import { element, elements } from './dom.ts';
-import { t, ui } from "./i18n.js";
+import { t } from "./i18n.js";
 // A compact trigger and a separately sized list, with native button keyboard support.
 export function createModelPicker(onSelect) {
   const trigger = element('#model-select');
@@ -73,7 +73,7 @@ export function createModelPicker(onSelect) {
     update(values, value) {
       models = values; selected = value;
       label.textContent = models.find(model => model.id === selected)?.name ?? selected;
-      trigger.setAttribute('aria-label', ui`Codex 模型：${label.textContent}`);
+      trigger.setAttribute('aria-label', `${t("modelPicker.codexModel", { textContent: label.textContent })}`);
       panel.replaceChildren(...models.map(model => {
         const option = document.createElement('button');
         option.type = 'button'; option.tabIndex = -1;

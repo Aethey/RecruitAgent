@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { translateSource } from "./ui-messages.ts";
 import { DEFAULT_LOCALE, LOCALE_TAGS, isLocale } from "./locales.ts";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -14,6 +15,9 @@ import { Store } from "./store.ts";
 import { Tasks } from "./tasks.ts";
 import { Chat } from "./chat.ts";
 import { CodexVoice, type VoiceRpc } from "./codex-voice.ts";
+import { Diagnostics, loggedAI } from './diagnostics.ts';
+import { randomUUID } from 'node:crypto';
+import type { VoiceDiagnosticInput } from './contracts.ts';
 import { VoiceInterviews } from "./voice-interview.ts";
 import { LANGUAGE_SYLLABUS, languageSelection } from "./language.ts";
 import { INTERVIEW_TYPES, INTERVIEW_TOPICS, interviewSelection, interviewAnswers, publicInterview } from "./interview.ts";
@@ -29,38 +33,40 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 function json(response: ServerResponse, status: number, body: unknown) {
   if (status >= 200 && status < 300) {
     const contract = apiContract(response.req.method ?? 'GET', new URL(response.req.url ?? '/', 'http://localhost').pathname);
-    if (!contract || !validateApiValue(contract.response, body)) throw new AppError(500, '接口返回的数据格式不正确。');
+    if (!contract || !validateApiValue(contract.response, body)) throw new AppError(500, formatMessage('zh', "ui.theDataFormatReturnedByTheAPIIs"));
   }
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
   response.end(JSON.stringify(body));
 }
 async function body(request: IncomingMessage) {
-  if (!request.headers["content-type"]?.startsWith("application/json")) throw new AppError(415, "请求必须使用 JSON。");
+  if (!request.headers["content-type"]?.startsWith("application/json")) throw new AppError(415, formatMessage('zh', "ui.requestsMustUseJSON"));
   let bytes = 0;
   const chunks: Buffer[] = [];
   for await (const chunk of request) {
     bytes += chunk.length;
-    if (bytes > 400000) throw new AppError(413, "请求内容过大。");
+    if (bytes > 400000) throw new AppError(413, formatMessage('zh', "ui.requestContentIsTooLarge"));
     chunks.push(chunk);
   }
   let input: unknown;
   try { input = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
-  catch { throw new AppError(400, "JSON 格式不正确。"); }
+  catch { throw new AppError(400, formatMessage('zh', "ui.invalidJSONFormat")); }
   const contract = apiContract(request.method ?? 'GET', new URL(request.url ?? '/', 'http://localhost').pathname);
-  if (contract?.request && !validateApiValue(contract.request, input)) throw new AppError(400, '请求的数据结构不正确。');
+  if (contract?.request && !validateApiValue(contract.request, input)) throw new AppError(400, formatMessage('zh', "ui.theRequestDataStructureIsInvalid"));
   return input;
 }
 export async function createApp(options: { dataDir?: string; ai?: AI; interviewSources?: InterviewSources; jobReader?: JobReader; sourceDir?: string | null; libraryReader?: PublicResourceReader; studyClock?: () => Date; voiceRpcFactory?: () => Promise<VoiceRpc> } = {}) {
   const dataDir = resolve(root, options.dataDir ?? process.env.DATA_DIR ?? "data");
+  const diagnostics = new Diagnostics(dataDir);
+  diagnostics.record('server','created');
   const store = new Store(resolve(dataDir, "state.json"));
   await store.load();
   const chats = new Chat(store);
-  const voice = new CodexVoice(dataDir, options.voiceRpcFactory);
+  const voice = new CodexVoice(dataDir, options.voiceRpcFactory,40000,diagnostics);
   await chats.recover();
   const library=new Library(store,resolve(dataDir,"library"),options.libraryReader);
   const sourceDir = options.sourceDir === null ? null : resolve(root, options.sourceDir ?? process.env.SOURCE_DIR ?? "sources");
   if(sourceDir)await library.importExisting(sourceDir);
-  const ai = options.ai ?? await PiAI.create(dataDir);
+  const ai = loggedAI(options.ai ?? await PiAI.create(dataDir,diagnostics),diagnostics);
   const voiceInterviews = new VoiceInterviews(store,voice,ai);
   await voiceInterviews.recover();
   const savedModel = store.snapshot().settings?.model;
@@ -70,19 +76,22 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
   const study = new Study(store, options.studyClock);
   const auth = new Auth(ai), tasks = new Tasks(ai, store, interviewSources,library,study);
   let modelChanging = false;
-  function ensureModelReady() { if (modelChanging) throw new AppError(409, "模型正在切换，请稍后重试。"); }
+  function ensureModelReady() { if (modelChanging) throw new AppError(409, formatMessage('zh', "ui.theModelIsSwitchingPleaseTryAgainLater")); }
   async function modelSettings() {
     const { model } = await ai.status();
     const settings = store.snapshot().settings, saved = settings?.visibleModels;
     return { model, visibleModels: ai.models().filter(option => !saved || saved.includes(option.id) || option.id === model).map(option => option.id), teacher: settings?.teacher ?? DEFAULT_TEACHER_SETTINGS, uiLanguage: settings?.uiLanguage ?? DEFAULT_LOCALE, userLanguage: settings?.userLanguage ?? DEFAULT_LOCALE };
   }
-  const server = createServer((request, response) => { void route(request, response); });
+  const server = createServer((request, response) => {
+    const requestId = randomUUID(); response.setHeader('X-Request-ID',requestId);
+    diagnostics.run(requestId,() => { void route(request,response); });
+  });
   async function route(request: IncomingMessage, response: ServerResponse) {
     try {
       const host = request.headers.host ?? "";
-      if (!/^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(host)) throw new AppError(403, "只允许本机访问。");
+      if (!/^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(host)) throw new AppError(403, formatMessage('zh', "ui.localAccessOnly"));
       const origin = request.headers.origin;
-      if (origin && origin !== `http://${host}`) throw new AppError(403, "不允许跨站请求。");
+      if (origin && origin !== `http://${host}`) throw new AppError(403, formatMessage('zh', "ui.crossSiteRequestsAreNotAllowed"));
       response.setHeader("X-Content-Type-Options", "nosniff");
       response.setHeader("Referrer-Policy", "no-referrer");
       // Monaco needs runtime styles; PDF image decoders need WASM compilation, without JavaScript eval.
@@ -101,11 +110,11 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
       if (method === "GET" && path === "/api/voice/options") { json(response,200,await voice.options()); return; }
       if (method === "POST" && path === "/api/voice/sessions") {
         const input = object(await body(request)), language = store.snapshot().settings?.userLanguage ?? DEFAULT_LOCALE;
-        if (input.preview && input.interviewId) throw new AppError(400,"音色试听不属于面试回答。");
+        if (input.preview && input.interviewId) throw new AppError(400,formatMessage('zh', "ui.voicePreviewIsNotPartOfTheInterview"));
         json(response,201,input.preview === true ? await voice.startPreview(input,language) : input.interviewId ? await voiceInterviews.start(input,language) : await voice.start(input,language)); return;
       }
-      const voiceAction = path.match(/^\/api\/voice\/sessions\/([\w-]+)\/(action|verify|preview|control)$/);
-      if (method === "POST" && voiceAction) { const input = await body(request); json(response,200,voiceAction[2] === "control" ? await voice.control(voiceAction[1],input) : voiceAction[2] === "action" ? await voiceInterviews.action(voiceAction[1],input) : voiceAction[2] === "preview" ? await voice.preview(voiceAction[1]) : await voice.verifyAudio(voiceAction[1],input)); return; }
+      const voiceAction = path.match(/^\/api\/voice\/sessions\/([\w-]+)\/(action|verify|preview|control|diagnostics)$/);
+      if (method === "POST" && voiceAction) { const input = await body(request); json(response,200,voiceAction[2] === "diagnostics" ? voice.diagnostic(voiceAction[1],input as VoiceDiagnosticInput) : voiceAction[2] === "control" ? await voice.control(voiceAction[1],input) : voiceAction[2] === "action" ? await voiceInterviews.action(voiceAction[1],input) : voiceAction[2] === "preview" ? await voice.preview(voiceAction[1]) : await voice.verifyAudio(voiceAction[1],input)); return; }
       const voiceSession = path.match(/^\/api\/voice\/sessions\/([\w-]+)(\/events)?$/);
       if (method === "GET" && voiceSession?.[2]) { voice.connect(voiceSession[1],response,after); return; }
       if (method === "DELETE" && voiceSession && !voiceSession[2]) { await voice.end(voiceSession[1]); json(response,200,{ended:true}); return; }
@@ -119,7 +128,7 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
       const chat = path.match(/^\/api\/chats\/([\w-]+)$/);
       if (method === "GET" && chat) { json(response, 200, chats.get(chat[1])); return; }
       if (method === "DELETE" && chat) {
-        if (tasks.activeJob()?.chatId === chat[1]) throw new AppError(409, "请先停止这段对话的生成，再删除。");
+        if (tasks.activeJob()?.chatId === chat[1]) throw new AppError(409, formatMessage('zh', "ui.pleaseStopGeneratingThisConversationBeforeDeletingIt"));
         await chats.delete(chat[1]); json(response, 200, { deleted: true }); return;
       }
       const chatMessage = path.match(/^\/api\/chats\/([\w-]+)\/(messages|retry)$/);
@@ -134,7 +143,7 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
       const teacherMessage = path.match(/^\/api\/teachers\/([\w-]+)\/messages$/);
       if (method === "POST" && teacherMessage) {
         ensureModelReady(); const input = object(await body(request));
-        if (input.trigger === "observe" && store.snapshot().settings?.teacher?.trigger === "manual") throw new AppError(409, "实时教师已设为仅手动分析，请点击分析当前代码或发送追问。");
+        if (input.trigger === "observe" && store.snapshot().settings?.teacher?.trigger === "manual") throw new AppError(409, formatMessage('zh', "ui.theRealTimeTeacherIsSetToManual"));
         const job = await tasks.teacher(chats, teacherMessage[1], input);
         json(response, 202, { jobId: job.id, chatId: teacherMessage[1] }); return;
       }
@@ -161,10 +170,10 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
         json(response,200,{items});return;
       }
       if(method==="POST"&&path==="/api/library/files"){
-        if(Number(request.headers["content-length"])>LIBRARY_LIMIT)throw new AppError(413,"文件超过20 MB。");
-        let filename:string;try{filename=decodeURIComponent(request.headers["x-file-name"] as string??"");}catch{throw new AppError(400,"文件名无效。");}
+        if(Number(request.headers["content-length"])>LIBRARY_LIMIT)throw new AppError(413,formatMessage('zh', "ui.fileExceedsMB"));
+        let filename:string;try{filename=decodeURIComponent(request.headers["x-file-name"] as string??"");}catch{throw new AppError(400,formatMessage('zh', "ui.invalidFileName"));}
         text(filename,500);let length=0;const chunks:Buffer[]=[];
-        for await(const chunk of request){length+=chunk.length;if(length>LIBRARY_LIMIT)throw new AppError(413,"文件超过20 MB。");chunks.push(chunk);}
+        for await(const chunk of request){length+=chunk.length;if(length>LIBRARY_LIMIT)throw new AppError(413,formatMessage('zh', "ui.fileExceedsMB"));chunks.push(chunk);}
         const result=await library.importFile(filename,Buffer.concat(chunks));json(response,result.duplicate?200:201,{item:librarySummary(result.item),duplicate:result.duplicate});return;
       }
       if(method==="POST"&&path==="/api/library/urls"){
@@ -174,7 +183,7 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
         await body(request);const ids=sourceDir?await library.importExisting(sourceDir):[];json(response,200,{imported:ids.length,ids});return;
       }
       if(method==="POST"&&path==="/api/library/organize"){
-        ensureModelReady();const input=object(await body(request));if(!Array.isArray(input.ids)||input.ids.some(id=>typeof id!=="string"))throw new AppError(400,"请选择要整理的资料。");
+        ensureModelReady();const input=object(await body(request));if(!Array.isArray(input.ids)||input.ids.some(id=>typeof id!=="string"))throw new AppError(400,formatMessage('zh', "ui.pleaseChooseTheMaterialsToOrganize"));
         const job=await tasks.organizeLibrary(input.ids as string[]);json(response,202,{jobId:job.id});return;
       }
       const libraryItem=path.match(/^\/api\/library\/([\w-]+)$/);
@@ -186,18 +195,18 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
       if (method === "PUT" && path === "/api/settings") {
         const input = object(await body(request));
         const ids = input.visibleModels;
-        if (ids === undefined && input.teacher === undefined && input.uiLanguage === undefined && input.userLanguage === undefined) throw new AppError(400, "请选择要更新的设置。");
-        if (ids !== undefined && (!Array.isArray(ids) || !ids.length || ids.length > ai.models().length || ids.some(id => typeof id !== "string" || !ai.models().some(option => option.id === id)) || new Set(ids).size !== ids.length)) throw new AppError(400, "请至少选择一个有效模型，且不要重复选择。");
+        if (ids === undefined && input.teacher === undefined && input.uiLanguage === undefined && input.userLanguage === undefined) throw new AppError(400, formatMessage('zh', "ui.chooseSettingsToUpdate"));
+        if (ids !== undefined && (!Array.isArray(ids) || !ids.length || ids.length > ai.models().length || ids.some(id => typeof id !== "string" || !ai.models().some(option => option.id === id)) || new Set(ids).size !== ids.length)) throw new AppError(400, formatMessage('zh', "ui.selectAtLeastOneValidModelWithoutDuplicates"));
         const teacher = input.teacher === undefined ? undefined : teacherSettings(input.teacher);
         for (const key of ["uiLanguage", "userLanguage"] as const) {
-          if (input[key] !== undefined && !isLocale(input[key])) throw new AppError(400, "请选择中文、英文或日语。");
+          if (input[key] !== undefined && !isLocale(input[key])) throw new AppError(400, formatMessage('zh', "ui.chooseChineseEnglishOrJapanese"));
         }
         const uiLanguage = isLocale(input.uiLanguage) ? input.uiLanguage : undefined;
         const userLanguage = isLocale(input.userLanguage) ? input.userLanguage : undefined;
         ensureModelReady(); modelChanging = true;
         try {
           const { model } = await ai.status();
-          if (Array.isArray(ids) && !ids.includes(model)) throw new AppError(400, "当前使用的模型必须保留；请先切换模型，再隐藏它。");
+          if (Array.isArray(ids) && !ids.includes(model)) throw new AppError(400, formatMessage('zh', "ui.keepTheCurrentModelVisibleSwitchModelsBefore"));
           await store.update(state => { state.settings = { ...state.settings, model, ...(Array.isArray(ids) ? { visibleModels: [...ids] } : {}), ...(teacher ? { teacher } : {}), ...(uiLanguage ? { uiLanguage } : {}), ...(userLanguage ? { userLanguage } : {}) }; });
         } finally { modelChanging = false; }
         json(response, 200, await modelSettings()); return;
@@ -205,11 +214,11 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
       if (method === "PUT" && path === "/api/model") {
         const model = text(object(await body(request)).model, 150);
         ensureModelReady();
-        if (tasks.activeJob()) throw new AppError(409, "请先等待或取消当前任务，再切换模型。");
-        if (!ai.models().some(option => option.id === model)) throw new AppError(400, "请选择列表中的 Codex 模型。");
+        if (tasks.activeJob()) throw new AppError(409, formatMessage('zh', "ui.pleaseWaitForOrCancelTheCurrentTask"));
+        if (!ai.models().some(option => option.id === model)) throw new AppError(400, formatMessage('zh', "ui.pleaseChooseACodexModelFromTheList"));
         modelChanging = true;
         try {
-          if (!(await modelSettings()).visibleModels.includes(model)) throw new AppError(400, "该模型已隐藏，请先在设置中勾选显示。");
+          if (!(await modelSettings()).visibleModels.includes(model)) throw new AppError(400, formatMessage('zh', "ui.thisModelIsHiddenEnableItInSettings"));
           await store.update(state => { state.settings = { ...state.settings, model }; });
           ai.setModel(model);
         } finally { modelChanging = false; }
@@ -218,7 +227,7 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
       if (method === "GET" && path === "/api/auth/status") { json(response, 200, await ai.status()); return; }
       if (method === "POST" && path === "/api/auth/login") {
         await body(request);
-        if (tasks.activeJob()) throw new AppError(409, "请先等待或取消当前任务。");
+        if (tasks.activeJob()) throw new AppError(409, formatMessage('zh', "ui.pleaseWaitForOrCancelTheCurrentTask2"));
         const login = auth.start(); json(response, 202, { id: login.id }); return;
       }
       const authEvents = path.match(/^\/api\/auth\/([\w-]+)\/events$/);
@@ -245,24 +254,24 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
         ensureModelReady();const job=await tasks.generateDiagnosis(diagnosisSelection(await body(request)));json(response,202,{jobId:job.id});return;
       }
       if(method==="POST"&&path==="/api/trainings"){
-        const v=object(await body(request));if(!["compression","followup","debrief"].includes(v.kind as string))throw new AppError(400,"请选择训练类型。");
+        const v=object(await body(request));if(!["compression","followup","debrief"].includes(v.kind as string))throw new AppError(400,formatMessage('zh', "ui.pleaseChooseATrainingType"));
         const kind=v.kind as TrainingKind;let question:string|undefined,original="",sources:import("./interview.ts").Source[]=[],seed:import("./interview.ts").Question|undefined;
         if(kind!=="debrief"){
-          if(v.interviewId){const set=store.interview(text(v.interviewId,100));seed=set.questions.find(q=>q.id===v.questionId);if(!seed)throw new AppError(404,"面试题不存在。");question=seed.question;original=v.original===undefined?(set.answers[seed.id]??""):typeof v.original==="string"&&v.original.length<=10000?v.original:(()=>{throw new AppError(400,"原回答过长。");})();sources=set.sources;}
-          else if(v.debriefId){const parent=store.training(text(v.debriefId,100));if(parent.kind!=="debrief")throw new AppError(400,"来源不是面试复盘。");const review=parent.reviews.find(r=>r.id===v.reviewId);if(!review)throw new AppError(404,"复盘评价不存在。");const entry=debriefEntries(review.input).find(e=>e.id===v.entryId);if(!entry)throw new AppError(404,"复盘问题不存在。");question=entry.question;original=entry.answer;sources=[{id:"debrief-entry",kind:"personal",title:"本人记录的面试问题与回答",content:JSON.stringify(entry)}];}
+          if(v.interviewId){const set=store.interview(text(v.interviewId,100));seed=set.questions.find(q=>q.id===v.questionId);if(!seed)throw new AppError(404,formatMessage('zh', "ui.theInterviewQuestionDoesNotExist"));question=seed.question;original=v.original===undefined?(set.answers[seed.id]??""):typeof v.original==="string"&&v.original.length<=10000?v.original:(()=>{throw new AppError(400,formatMessage('zh', "ui.theOriginalAnswerIsTooLong"));})();sources=set.sources;}
+          else if(v.debriefId){const parent=store.training(text(v.debriefId,100));if(parent.kind!=="debrief")throw new AppError(400,formatMessage('zh', "ui.theSourceIsNotAnInterviewRecap"));const review=parent.reviews.find(r=>r.id===v.reviewId);if(!review)throw new AppError(404,formatMessage('zh', "ui.theReviewEvaluationDoesNotExist"));const entry=debriefEntries(review.input).find(e=>e.id===v.entryId);if(!entry)throw new AppError(404,formatMessage('zh', "ui.theReviewQuestionDoesNotExist"));question=entry.question;original=entry.answer;sources=[{id:"debrief-entry",kind:"personal",title:"本人记录的面试问题与回答",content:JSON.stringify(entry)}];}
           else{question=text(v.question,400);original=v.original===undefined?"":text(v.original,10000);sources=[{id:"personal-answer",kind:"personal",title:"本人输入的回答材料",content:original||"本人尚未补充回答。"}];}
           seed??={id:"q1",question:question!,kind:"technical",focus:"理由、边界与验证",keywords:["結論を先に述べる","理由と本人の行動を説明する","確認できる結果・不明点を分ける"],answerBasis:"needs-detail",evidenceNote:"用户记录，需要本人补充实际依据。",sourceIds:sources.map(s=>s.id).slice(0,6)};
         }
         const draft:Record<string,string>=kind==="compression"?{original,points:""}:kind==="followup"?{["answer:"+seed!.id]:original}: {company:"",role:"",date:"",stage:"",notes:"","question:1":"","answer:1":"","feedback:1":""};
-        const record=trainingRecord(kind,kind==="debrief"?"新面试复盘":question!.slice(0,120),draft,sources);Object.assign(record,{question,...(v.interviewId?{interviewId:v.interviewId,questionId:v.questionId}:{}),...(v.debriefId?{debriefId:v.debriefId,entryId:v.entryId}:{}),...(kind==="followup"?{turns:[seed],finished:false}:{})});
+        const record=trainingRecord(kind,kind==="debrief"?formatMessage('zh', "ui.newInterviewDebrief"):question!.slice(0,120),draft,sources);Object.assign(record,{question,...(v.interviewId?{interviewId:v.interviewId,questionId:v.questionId}:{}),...(v.debriefId?{debriefId:v.debriefId,entryId:v.entryId}:{}),...(kind==="followup"?{turns:[seed],finished:false}:{})});
         await store.update(s=>{(s.trainings??=[]).push(record);});json(response,201,publicTraining(record));return;
       }
       const training=path.match(/^\/api\/trainings\/([\w-]+)$/);
       if(method==="GET"&&training){json(response,200,publicTraining(store.training(training[1])));return;}
-      if(method==="PUT"&&training){const patch=draftInput(await body(request),store.training(training[1]));await store.update(s=>{const i=s.trainings!.find(t=>t.id===training[1])!;Object.assign(i.draft,patch);i.updatedAt=new Date().toISOString();if(i.kind==="debrief")i.title=[i.draft.company,i.draft.role].filter(Boolean).join(" · ").slice(0,150)||"新面试复盘";});json(response,200,{saved:true});return;}
+      if(method==="PUT"&&training){const patch=draftInput(await body(request),store.training(training[1]));await store.update(s=>{const i=s.trainings!.find(t=>t.id===training[1])!;Object.assign(i.draft,patch);i.updatedAt=new Date().toISOString();if(i.kind==="debrief")i.title=[i.draft.company,i.draft.role].filter(Boolean).join(" · ").slice(0,150)||formatMessage('zh', "ui.newInterviewDebrief");});json(response,200,{saved:true});return;}
       const trainingAction=path.match(/^\/api\/trainings\/([\w-]+)\/(analyze|rewrite|next|review|reveal)$/);
       if(method==="POST"&&trainingAction){const [,id,action]=trainingAction;
-        if(action==="reveal"){await body(request);const record=store.training(id);if(record.kind!=="diagnosis"||!record.reviews.length)throw new AppError(400,"先提交一次故障诊断，再查看参考修复。");await store.update(s=>{const i=s.trainings!.find(t=>t.id===id)!;i.revealedAt??=new Date().toISOString();});json(response,200,publicTraining(store.training(id)));return;}
+        if(action==="reveal"){await body(request);const record=store.training(id);if(record.kind!=="diagnosis"||!record.reviews.length)throw new AppError(400,formatMessage('zh', "ui.submitOneFaultDiagnosisFirstThenViewThe"));await store.update(s=>{const i=s.trainings!.find(t=>t.id===id)!;i.revealedAt??=new Date().toISOString();});json(response,200,publicTraining(store.training(id)));return;}
         ensureModelReady();const job=await tasks.train(id,action,await body(request));json(response,202,{jobId:job.id});return;
       }
       if (method === "POST" && path === "/api/interviews") {
@@ -320,13 +329,13 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
       if (method === "GET" && jobInfo) { const job = tasks.get(jobInfo[1]); json(response, 200, { id: job.id, kind: job.kind, status: job.status, result: job.result, error: job.error }); return; }
       const bundle = path.match(/^\/assets\/([a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*\.(js|css|ttf|txt))$/);
       const pdfResource=path.match(/^\/assets\/pdf\/(cmaps|standard_fonts|wasm)\/([a-zA-Z0-9_.-]+)$/);
-      if(method==="GET"&&pdfResource){let data:Buffer;try{data=await readFile(resolve(root,"node_modules/pdfjs-dist",pdfResource[1],pdfResource[2]));}catch{throw new AppError(404,"PDF资源不存在。");}response.writeHead(200,{"Content-Type":pdfResource[2].endsWith(".wasm")?"application/wasm":pdfResource[2].endsWith(".js")?"text/javascript":"application/octet-stream","Cache-Control":"public, max-age=86400"});response.end(data);return;}
+      if(method==="GET"&&pdfResource){let data:Buffer;try{data=await readFile(resolve(root,"node_modules/pdfjs-dist",pdfResource[1],pdfResource[2]));}catch{throw new AppError(404,formatMessage('zh', "ui.pDFResourceNotFound"));}response.writeHead(200,{"Content-Type":pdfResource[2].endsWith(".wasm")?"application/wasm":pdfResource[2].endsWith(".js")?"text/javascript":"application/octet-stream","Cache-Control":"public, max-age=86400"});response.end(data);return;}
       if (method === "GET" && bundle) {
         const mime: Record<string, string> = { js: "text/javascript", css: "text/css", ttf: "font/ttf", txt: "text/plain" };
         let content: Buffer;
         try { content = await readFile(resolve(root, "public/assets", bundle[1])); }
         catch (error) {
-          if (error instanceof Error && "code" in error && error.code === "ENOENT") throw new AppError(404, "资源不存在。");
+          if (error instanceof Error && "code" in error && error.code === "ENOENT") throw new AppError(404, formatMessage('zh', "ui.resourceNotFound"));
           throw error;
         }
         response.writeHead(200, { "Content-Type": mime[bundle[2]], "Cache-Control": "no-cache" }); response.end(content); return;
@@ -338,16 +347,18 @@ export async function createApp(options: { dataDir?: string; ai?: AI; interviewS
         const uiLanguage = preferences?.uiLanguage ?? DEFAULT_LOCALE, userLanguage = preferences?.userLanguage ?? DEFAULT_LOCALE;
         response.end(file === "index.html" ? content.toString("utf8").replace('<html lang="zh-CN">', `<html lang="${LOCALE_TAGS[uiLanguage]}" data-ui-language="${uiLanguage}" data-user-language="${userLanguage}">`) : content); return;
       }
-      throw new AppError(404, "页面或接口不存在。");
+      throw new AppError(404, formatMessage('zh', "ui.thePageOrEndpointDoesNotExist"));
     } catch (error) {
+      diagnostics.record('http','failed',{method:request.method,path:(request.url ?? '/').split('?')[0],status:error instanceof AppError ? error.status : 500,error});
       if (response.headersSent) { response.end(); return; }
-      json(response, error instanceof AppError ? error.status : 500, { error: translateSource(error instanceof AppError ? error.message : "服务暂时无法完成请求，请重试。", store.snapshot().settings?.uiLanguage ?? DEFAULT_LOCALE) });
+      json(response, error instanceof AppError ? error.status : 500, { error: translateSource(error instanceof AppError ? error.message : formatMessage('zh', "ui.theServiceCannotCompleteTheRequestRightNow"), store.snapshot().settings?.uiLanguage ?? DEFAULT_LOCALE) });
     }
   }
-  return { server, store, tasks, auth, library, study, voice, voiceInterviews, async close() {
+  return { server, store, tasks, auth, library, study, voice, voiceInterviews, diagnostics, async close() {
     const closing = new Promise<void>((resolveClose, reject) => server.close(error => error ? reject(error) : resolveClose()));
     await Promise.all([auth.stop(), tasks.stop(), voice.close()]);
     server.closeAllConnections(); await closing; await store.flush();
+    diagnostics.record('server','closed'); await diagnostics.flush();
   } };
 }
 

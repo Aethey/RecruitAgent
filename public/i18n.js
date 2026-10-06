@@ -1,7 +1,5 @@
 import { LOCALES, LOCALE_TAGS, isLocale } from '../src/locales.ts';
-import { translateSource, translateMessage } from '../src/ui-messages.ts';
-import { mapTemplate } from '../src/ui-source.ts';
-
+import { formatMessage, authoredMessageKey } from '../src/generated/localizations.ts';
 export { LOCALES };
 const initialInterface = globalThis.document?.documentElement.dataset.uiLanguage;
 let interfaceLanguage = isLocale(initialInterface) ? initialInterface : 'zh';
@@ -11,17 +9,28 @@ export const uiLanguage = () => interfaceLanguage;
 export const userLanguage = () => contentLanguage;
 export const languageTag = () => LOCALE_TAGS[interfaceLanguage];
 
-/** Explicit source messages only. User text, code and AI replies never pass through this function. */
-export function t(source, locale = interfaceLanguage) {
-  return translateSource(String(source ?? ''), locale, String(source ?? '').includes('<'));
+/** @template {import('../src/generated/localizations.ts').MessageKey} K
+ * @param {K} key
+ * @param {import('../src/generated/localizations.ts').BrowserMessageArgs<K>} args
+ */
+export function t(key, ...args) {
+  const [params, locale = interfaceLanguage] = /** @type {[Record<string, string | number> | undefined, import('../src/locales.ts').Locale?]} */ (/** @type {unknown} */ (args));
+  return formatMessage(locale, key, .../** @type {import('../src/generated/localizations.ts').MessageArgs<K>} */ ([params]));
 }
-/** @param {Parameters<typeof translateMessage>[0]} key */
-export function message(key, params = {}, locale = interfaceLanguage) {
-  return translateMessage(key, locale, params);
+/** @type {typeof t} */
+export const message = t;
+
+/** Application-authored catalogs received through existing API contracts. */
+export function catalogText(value, locale = interfaceLanguage) {
+  const key = authoredMessageKey(String(value));
+  if (key) return formatMessage(locale, key);
+  if (/[\u3400-\u9fff]/u.test(String(value))) throw new Error('Unregistered authored catalog message');
+  return String(value ?? '');
 }
-/** Translate authored template fragments; interpolation values are preserved byte for byte. */
-export function ui(parts, ...values) {
-  return mapTemplate(parts, values, source => translateSource(source, interfaceLanguage));
+/** Preserve external technical details; known application errors use generated resources. */
+export function errorText(value, locale = interfaceLanguage) {
+  const key = authoredMessageKey(String(value));
+  return key ? formatMessage(locale, key) : String(value ?? '');
 }
 export function setLanguages(settings) {
   if (isLocale(settings.uiLanguage)) interfaceLanguage = settings.uiLanguage;
@@ -32,17 +41,10 @@ export function setLanguages(settings) {
     document.documentElement.dataset.userLanguage = contentLanguage;
   }
 }
-/** Called once for the authored application shell, before any user content is mounted. */
+/** Only explicit resource bindings in the authored shell are applied. */
 export function localizeShell() {
-  document.title = t(document.title);
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode, source = node.nodeValue.trim();
-    if (source) node.nodeValue = node.nodeValue.replace(source, t(source));
-  }
-  for (const element of document.body.querySelectorAll('[title], [aria-label], [placeholder]')) {
-    for (const attribute of ['title', 'aria-label', 'placeholder']) {
-      if (element.hasAttribute(attribute)) element.setAttribute(attribute, t(element.getAttribute(attribute)));
-    }
+  for (const element of document.querySelectorAll('[data-i18n]')) element.textContent = t(/** @type {import('../src/generated/localizations.ts').MessageKey} */ (element.getAttribute('data-i18n')));
+  for (const attribute of ['title', 'aria-label', 'placeholder']) {
+    for (const element of document.querySelectorAll(`[data-i18n-${attribute}]`)) element.setAttribute(attribute, t(/** @type {import('../src/generated/localizations.ts').MessageKey} */ (element.getAttribute(`data-i18n-${attribute}`))));
   }
 }

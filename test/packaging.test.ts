@@ -16,16 +16,17 @@ import { FakeAI } from './fixtures.ts';
 const resume = '# Example career\nI built a learning demo using typed events. My role was UI integration and local persistence. No production measurements are available.';
 async function workspace(t: { after(fn: () => Promise<void>): void }) {
   const directory = await mkdtemp(join(tmpdir(), 'recruitagent-packaging-'));
-  t.after(() => rm(directory, { recursive: true, force: true }));
+  const apps: {close(): Promise<void>}[] = [];
+  t.after(async () => { for (const app of apps) await app.close(); await rm(directory, {recursive:true,force:true}); });
   const store = new Store(join(directory, 'data', 'state.json')); await store.load();
   const library = new Library(store, join(directory, 'data', 'library'));
-  return { directory, store, library };
+  return { directory, store, library, apps };
 }
 test('empty installation and missing voice dependency preserve text features; selected materials persist and feed generation', async t => {
-  const { directory } = await workspace(t), dataDir = join(directory, 'app');
+  const { directory, apps } = await workspace(t), dataDir = join(directory, 'app');
   const ai = new FakeAI(), app = await createApp({ dataDir, ai, sourceDir: null, voiceRpcFactory: async () => { throw new Error('CLI missing'); } });
   await new Promise<void>(resolve => app.server.listen(0, '127.0.0.1', resolve));
-  t.after(() => app.close());
+  apps.push(app);
   const address = app.server.address(); assert(address && typeof address !== 'string');
   const base = `http://127.0.0.1:${address.port}`;
   const get = (path: string) => fetch(base + path);

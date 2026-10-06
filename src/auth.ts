@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { randomUUID } from "node:crypto";
 import { AppError } from "./domain.ts";
 import { Events } from "./events.ts";
@@ -13,7 +14,7 @@ export class Auth {
   private current?: Login;
   constructor(private ai: AI) {}
   get(id: string) {
-    if (this.current?.id !== id) throw new AppError(404, "登录流程已过期，请重新连接。");
+    if (this.current?.id !== id) throw new AppError(404, formatMessage('zh', "ui.theLoginFlowHasExpiredPleaseReconnect"));
     return this.current;
   }
   start() {
@@ -22,7 +23,7 @@ export class Auth {
     const controller = new AbortController();
     const login: Login = { id: randomUUID(), status: "pending", events: new Events(), controller, promise: Promise.resolve() };
     this.current = login;
-    const timer = setTimeout(() => controller.abort(new Error("登录超时")), 15 * 60 * 1000);
+    const timer = setTimeout(() => controller.abort(new Error(formatMessage('zh', "ui.loginTimedOut"))), 15 * 60 * 1000);
     login.promise = this.ai.login({
       signal: controller.signal,
       prompt: (prompt: Prompt) => {
@@ -39,7 +40,7 @@ export class Auth {
           const onAbort = () => {
             login.answer = undefined;
             login.events.emit("prompt_cancelled", { id });
-            reject(new Error("登录步骤结束"));
+            reject(new Error(formatMessage('zh', "ui.loginStepFinished")));
           };
           if (signal.aborted) { onAbort(); return; }
           login.answer = { id, resolve: value => { signal.removeEventListener("abort", onAbort); login.answer = undefined; resolve(value); } };
@@ -57,13 +58,13 @@ export class Auth {
       login.events.emit("done", { authenticated: true });
     }).catch(() => {
       login.status = controller.signal.aborted ? "cancelled" : "error";
-      login.events.emit("error", { message: controller.signal.aborted ? "登录已取消或超时，请重新连接。" : "OAuth 登录失败，请重新连接并完成授权。" });
+      login.events.emit("error", { message: controller.signal.aborted ? formatMessage('zh', "ui.loginWasCanceledOrTimedOutPleaseReconnect") : formatMessage('zh', "ui.oAuthLoginFailedReconnectAndCompleteAuthorization") });
     }).finally(() => { clearTimeout(timer); login.answer = undefined; });
     return login;
   }
   answer(id: string, promptId: string, value: string) {
     const login = this.get(id);
-    if (login.status !== "pending" || login.answer?.id !== promptId) throw new AppError(409, "该授权步骤已结束。");
+    if (login.status !== "pending" || login.answer?.id !== promptId) throw new AppError(409, formatMessage('zh', "ui.thisAuthorizationStepHasEnded"));
     login.answer.resolve(value);
   }
   async stop() {

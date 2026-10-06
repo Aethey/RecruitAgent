@@ -1,17 +1,18 @@
+import { formatMessage } from './generated/localizations.ts';
 import { AppError, object } from "./domain.ts";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "./locales.ts";
 import type { RealtimeVoice } from './generated/codex/RealtimeVoice.js';
 import type { RealtimeVoicesList } from './generated/codex/RealtimeVoicesList.js';
 
 export const VOICE_TONES = {
-  natural: { label: "自然", instruction: "语气自然、清楚、平稳，像面对面交谈。使用口语短句，按句意停顿，避免书面汇报式长句和每轮重复的开场白。" },
-  gentle: { label: "温和", instruction: "语气温和、耐心，语速稍慢，但点评仍直接指出具体问题。" },
-  strict: { label: "严谨", instruction: "语气严谨、克制，问题和点评简洁直接，不讽刺、不施压。" },
-  lively: { label: "轻快", instruction: "语气轻快、有精神，保持清晰，不夸张、不讨好。" },
+  natural: { label: formatMessage('zh', "ui.natural"), instruction: "语气自然、清楚、平稳，像面对面交谈。使用口语短句，按句意停顿，避免书面汇报式长句和每轮重复的开场白。" },
+  gentle: { label: formatMessage('zh', "ui.gentle"), instruction: "语气温和、耐心，语速稍慢，但点评仍直接指出具体问题。" },
+  strict: { label: formatMessage('zh', "ui.rigorous"), instruction: "语气严谨、克制，问题和点评简洁直接，不讽刺、不施压。" },
+  lively: { label: formatMessage('zh', "ui.lightAndUpbeat"), instruction: "语气轻快、有精神，保持清晰，不夸张、不讨好。" },
 } as const;
 // The ChatGPT WebRTC call transport accepts v1 and v3; v2 is a separate API transport.
 export const VOICE_MODELS = [
-  { id: "gpt-live-1-codex", label: "GPT-Live 1 · Codex 默认", version: "v3", group: "v1", source: "codex" },
+  { id: "gpt-live-1-codex", label: formatMessage('zh', "ui.gPTLiveCodexDefault"), version: "v3", group: "v1", source: "codex" },
   { id: "gpt-live-1", label: "GPT-Live 1", version: "v3", group: "v1", source: "api" },
   { id: "gpt-realtime-1.5", label: "GPT-Realtime 1.5", version: "v1", group: "v1", source: "codex" },
   { id: "gpt-realtime-2.1", label: "GPT-Realtime 2.1", version: "v1", group: "v1", source: "api" },
@@ -33,7 +34,7 @@ export const VOICE_PREVIEW_TEXT: Record<Locale,string> = {
 
 export function voiceModel(id: string) {
   const model = VOICE_MODELS.find(m => m.id === id);
-  if (!model) throw new AppError(400, "请选择列表中的语音模型。");
+  if (!model) throw new AppError(400, formatMessage('zh', "ui.pleaseChooseAVoiceModelFromTheList"));
   return model;
 }
 export function voiceSettings(value: unknown, catalog: VoiceCatalog, defaults = DEFAULT_VOICE_SETTINGS): VoiceSettings {
@@ -42,8 +43,8 @@ export function voiceSettings(value: unknown, catalog: VoiceCatalog, defaults = 
   const tone = input.tone ?? defaults.tone, showTips = input.showTips ?? defaults.showTips;
   const language = input.language ?? defaults.language ?? DEFAULT_LOCALE;
   const selectedVoice = catalog[model.group].find(option => option === voice);
-  if (!selectedVoice) throw new AppError(400, "这个语音模型不支持所选音色，请重新选择。");
-  if (typeof tone !== "string" || !Object.hasOwn(VOICE_TONES, tone) || typeof showTips !== "boolean") throw new AppError(400, "请选择有效的语气和 tips 设置。");
-  if (!isLocale(language)) throw new AppError(400, "请选择中文、日语或英语作为面试语言。");
+  if (!selectedVoice) throw new AppError(400, formatMessage('zh', "ui.thisVoiceModelDoesNotSupportTheSelected"));
+  if (typeof tone !== "string" || !Object.hasOwn(VOICE_TONES, tone) || typeof showTips !== "boolean") throw new AppError(400, formatMessage('zh', "ui.pleaseChooseValidToneAndTipsSettings"));
+  if (!isLocale(language)) throw new AppError(400, formatMessage('zh', "ui.pleaseChooseChineseJapaneseOrEnglishAsThe"));
   return { model: model.id, voice: selectedVoice, tone: tone as VoiceTone, showTips, language };
 }

@@ -1,3 +1,4 @@
+import { formatMessage } from './generated/localizations.ts';
 import { createHash, randomUUID } from "node:crypto";
 import { AppError, object, statistics, text } from "./domain.ts";
 import { publicInterview } from "./interview.ts";
@@ -28,7 +29,7 @@ export class Chat {
     if (!this.store.snapshot().chats?.some(thread => thread.turns.some(turn => turn.status === "streaming"))) return;
     await this.store.update(state => {
       for (const thread of state.chats ?? []) for (const turn of thread.turns) if (turn.status === "streaming") {
-        turn.status = "aborted"; turn.error = "服务已重启，生成已中断；可以重试。";
+        turn.status = "aborted"; turn.error = formatMessage('zh', "chat.restarted");
         turn.updatedAt = thread.updatedAt = now();
       }
     });
@@ -41,13 +42,13 @@ export class Chat {
   }
   get(id: string) {
     const thread = this.store.snapshot().chats?.find(item => item.id === id);
-    if (!thread) throw new AppError(404, "对话不存在。");
+    if (!thread) throw new AppError(404, formatMessage('zh', "ui.theConversationDoesNotExist"));
     const live = this.live.get(id), turn = live && thread.turns.find(item => item.id === live.turnId);
     if (turn && live) turn.assistant = live.assistant;
     return thread;
   }
   async create() {
-    const thread: ChatThread = { id: randomUUID(), title: "新对话", createdAt: now(), updatedAt: now(), turns: [] };
+    const thread: ChatThread = { id: randomUUID(), title: formatMessage('zh', "chat.defaultTitle"), createdAt: now(), updatedAt: now(), turns: [] };
     await this.store.update(state => { (state.chats ??= []).push(thread); });
     return thread;
   }
@@ -66,25 +67,25 @@ export class Chat {
   }
   getTeacher(id: string) {
     const thread = this.get(id);
-    if (thread.mode !== "teacher" || !thread.problemId) throw new AppError(404, "教师记录不存在。");
+    if (thread.mode !== "teacher" || !thread.problemId) throw new AppError(404, formatMessage('zh', "ui.theTeacherRecordDoesNotExist"));
     this.store.problem(thread.problemId);
     return thread;
   }
   prepareTeacher(id: string, value: unknown): ChatTurn {
     const thread = this.getTeacher(id), input = object(value), problem = this.store.problem(thread.problemId!);
     const turnId = text(input.id, 100);
-    if (!/^[\w-]+$/.test(turnId)) throw new AppError(400, "消息编号无效。");
-    if (thread.turns.some(turn => turn.id === turnId)) throw new AppError(409, "这条教师请求已经发送。");
-    if (thread.turns.at(-1)?.status === "streaming") throw new AppError(409, "请先停止当前引导。");
-    if (typeof input.code !== "string" || input.code.length > 100000) throw new AppError(400, "答题代码格式无效或过长。");
-    if (!["observe", "check", "question"].includes(input.trigger as string)) throw new AppError(400, "教师请求类型无效。");
-    if (!Number.isSafeInteger(input.revision) || Number(input.revision) < 0) throw new AppError(400, "代码版本无效。");
+    if (!/^[\w-]+$/.test(turnId)) throw new AppError(400, formatMessage('zh', "ui.invalidMessageNumber"));
+    if (thread.turns.some(turn => turn.id === turnId)) throw new AppError(409, formatMessage('zh', "ui.thisTeacherRequestHasAlreadyBeenSent"));
+    if (thread.turns.at(-1)?.status === "streaming") throw new AppError(409, formatMessage('zh', "ui.pleaseStopTheCurrentGuideFirst"));
+    if (typeof input.code !== "string" || input.code.length > 100000) throw new AppError(400, formatMessage('zh', "ui.answerCodeFormatIsInvalidOrTooLong"));
+    if (!["observe", "check", "question"].includes(input.trigger as string)) throw new AppError(400, formatMessage('zh', "ui.invalidTeacherRequestType"));
+    if (!Number.isSafeInteger(input.revision) || Number(input.revision) < 0) throw new AppError(400, formatMessage('zh', "ui.invalidCodeVersion"));
     const trigger = input.trigger as NonNullable<ChatTurn["teacher"]>["trigger"];
     const codeHash = createHash("sha256").update(input.code).digest("hex");
     const last = thread.turns.at(-1);
-    if (trigger === "observe" && last?.status === "done" && last.teacher?.codeHash === codeHash) throw new AppError(409, "当前代码已有引导，修改后会继续观察。");
+    if (trigger === "observe" && last?.status === "done" && last.teacher?.codeHash === codeHash) throw new AppError(409, formatMessage('zh', "ui.theCurrentCodeAlreadyIncludesGuidanceContinueObserving"));
     const user = trigger === "question" ? text(input.message, 4000).trim() : "看看当前代码，给我下一步的思考提示。";
-    if (!user) throw new AppError(400, "请写下要追问的问题。");
+    if (!user) throw new AppError(400, formatMessage('zh', "ui.pleaseWriteTheFollowUpQuestion"));
     const context: PageContext = {
       route: `#practice/${problem.id}`, title: problem.title, visibleText: problem.description,
       selectedText: "", fields: [], editor: input.code, capturedAt: now(),
@@ -105,24 +106,24 @@ export class Chat {
   }
   context(value: unknown): PageContext {
     const input = object(value), route = text(input.route, 160);
-    if (!/^#(?:practice|history|analysis|language|interview|library|training|study|breadth|entertainment|voice|settings)(?:\/[\w-]+)?$/.test(route)) throw new AppError(400, "页面上下文地址无效。");
+    if (!/^#(?:practice|history|analysis|language|interview|library|training|study|breadth|entertainment|voice|settings)(?:\/[\w-]+)?$/.test(route)) throw new AppError(400, formatMessage('zh', "ui.thePageContextURLIsInvalid"));
     function optional(value: unknown, max: number) {
       if (value === undefined) return "";
-      if (typeof value !== "string" || value.length > max) throw new AppError(400, "页面上下文过长或格式不正确。");
+      if (typeof value !== "string" || value.length > max) throw new AppError(400, formatMessage('zh', "ui.thePageContextIsTooLongOrHas"));
       return value;
     }
-    if (!Array.isArray(input.fields) || input.fields.length > 50) throw new AppError(400, "页面输入上下文无效。");
+    if (!Array.isArray(input.fields) || input.fields.length > 50) throw new AppError(400, formatMessage('zh', "ui.thePageInputContextIsInvalid"));
     const fields = input.fields.map(value => {
       const field = object(value);
       return { label: text(field.label, 160), value: optional(field.value, 20000) };
     });
-    if (fields.reduce((n, field) => n + field.value.length, 0) > 40000) throw new AppError(400, "页面输入上下文过长。");
+    if (fields.reduce((n, field) => n + field.value.length, 0) > 40000) throw new AppError(400, formatMessage('zh', "ui.thePageInputContextIsTooLong"));
     const context: PageContext = { route, title: text(input.title, 250),
       visibleText: optional(input.visibleText, 30000), selectedText: optional(input.selectedText, 6000),
       fields, capturedAt: now(), ...(input.editor === undefined ? {} : { editor: optional(input.editor, 100000) }),
     };
     if (input.pdfPage !== undefined) {
-      if (!Number.isInteger(input.pdfPage) || Number(input.pdfPage) < 1 || Number(input.pdfPage) > 200) throw new AppError(400, "PDF 页码无效。");
+      if (!Number.isInteger(input.pdfPage) || Number(input.pdfPage) < 1 || Number(input.pdfPage) > 200) throw new AppError(400, formatMessage('zh', "ui.invalidPDFPageNumber"));
       context.pdfPage = Number(input.pdfPage);
     }
     // Rehydrate only the current record; never expose hidden references or unrelated personal data.
@@ -139,12 +140,12 @@ export class Chat {
       if (page === "training") record = publicTraining(this.store.training(id));
       if (page === "study" || page === "breadth") {
         const batch = state.studyBatches?.find(item => item.id === id);
-        if (!batch) throw new AppError(404, "短测不存在。");
+        if (!batch) throw new AppError(404, formatMessage('zh', "ui.quickQuizNotFound"));
         record = publicBatch(batch);
       }
       if (page === "library") {
         const item = state.library?.find(item => item.id === id);
-        if (!item) throw new AppError(404, "资料不存在。");
+        if (!item) throw new AppError(404, formatMessage('zh', "ui.materialNotFound"));
         const page = context.pdfPage && item.pages?.find(page => page.number === context.pdfPage);
         record = { ...librarySummary(item), extractedText: excerpt(page ? page.text : item.extractedText, 45000) };
       }
@@ -154,16 +155,16 @@ export class Chat {
   }
   prepare(id: string, value: unknown, retry = false) {
     const thread = this.get(id), input = object(value);
-    if (thread.mode === "teacher") throw new AppError(400, "请使用实时教师入口。");
+    if (thread.mode === "teacher") throw new AppError(400, formatMessage('zh', "ui.pleaseUseTheRealTimeTeacherEntryPoint"));
     if (retry) {
       const turn = thread.turns.at(-1);
-      if (!turn || turn.id !== input.turnId || !["error", "aborted"].includes(turn.status)) throw new AppError(400, "只能重试最后一条失败或中断的回复。");
+      if (!turn || turn.id !== input.turnId || !["error", "aborted"].includes(turn.status)) throw new AppError(400, formatMessage('zh', "ui.youCanOnlyRetryTheLastFailedOr"));
       return { ...turn, assistant: "", status: "streaming" as const, error: undefined, updatedAt: now() };
     }
     const turnId = text(input.id, 100);
-    if (!/^[\w-]+$/.test(turnId)) throw new AppError(400, "消息编号无效。");
-    if (thread.turns.some(turn => turn.id === turnId)) throw new AppError(409, "这条消息已经发送，请刷新对话查看。");
-    if (thread.turns.at(-1)?.status === "streaming") throw new AppError(409, "请先等待或停止当前回复。");
+    if (!/^[\w-]+$/.test(turnId)) throw new AppError(400, formatMessage('zh', "ui.invalidMessageNumber"));
+    if (thread.turns.some(turn => turn.id === turnId)) throw new AppError(409, formatMessage('zh', "ui.thisMessageHasAlreadyBeenSentPleaseRefresh"));
+    if (thread.turns.at(-1)?.status === "streaming") throw new AppError(409, formatMessage('zh', "ui.pleaseWaitForOrStopTheCurrentReply"));
     return { id: turnId, user: text(input.message, 20000).trim(), assistant: "", model: "",
       context: this.context(input.context), status: "streaming" as const, createdAt: now(), updatedAt: now() };
   }
@@ -175,7 +176,7 @@ export class Chat {
         record: item.context.record ? excerpt(item.context.record, 8000) : undefined, editor: item.context.editor ? excerpt(item.context.editor, 8000) : undefined },
     }));
     const prompt = `以下是连续对话历史（较早页面的长内容可能截取）：${JSON.stringify(history)}\n最新一轮：${JSON.stringify({ user: turn.user, page: turn.context })}\n直接回答最新一轮问题，使用 Markdown。`;
-    if (prompt.length > 350000) throw new AppError(400, "这段对话已很长，请新建对话继续；已有历史仍然保留。");
+    if (prompt.length > 350000) throw new AppError(400, formatMessage('zh', "ui.thisConversationIsVeryLongPleaseCreateA"));
     return prompt;
   }
   async begin(id: string, turn: ChatTurn, retry: boolean) {

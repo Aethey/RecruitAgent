@@ -59,10 +59,10 @@ test('valid checksum cannot bypass nested backup schema validation', async t => 
 });
 
 test('server rejects malformed JSON contracts before invoking AI or writing data', async t => {
-  const dir = await directory(t), ai = new FakeAI();
+  const dir = await mkdtemp(join(tmpdir(),'contracts-http-test-')), ai = new FakeAI();
   const app = await createApp({ dataDir:dir, ai, sourceDir:null, interviewSources:fakeInterviewSources });
   await new Promise<void>(resolve => app.server.listen(0, '127.0.0.1', resolve));
-  t.after(() => app.close());
+  t.after(async () => { await app.close(); await rm(dir,{recursive:true,force:true}); });
   const address = app.server.address(); assert(address && typeof address !== 'string');
   const response = await fetch(`http://127.0.0.1:${address.port}/api/problems`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ topic:'array', difficulty:'easy', language:123 }) });
   assert.equal(response.status, 400); assert.equal(ai.prompts.length, 0);

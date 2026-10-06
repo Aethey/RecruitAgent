@@ -30,7 +30,10 @@ test('text requests record correlated success, failures and cancellation without
   const starts = lines.filter(line => line.event === 'request'); assert.equal(starts.length,3);
   for (const [index,event] of ['completed','failed','cancelled'].entries()) assert(lines.some(line => line.requestId === starts[index].requestId && line.event === event && typeof line.durationMs === 'number'));
   assert.equal(lines.find(line => line.event === 'completed').httpRequestId,'http-text-request');
-  assert.equal((await stat(log.path)).mode & 0o777,0o600);
+  const mode = (await stat(log.path)).mode;
+  // Windows exposes read/write bits, without POSIX owner/group/others permissions.
+  assert.equal(mode & 0o600,0o600);
+  if (process.platform !== 'win32') assert.equal(mode & 0o777,0o600);
 });
 
 test('diagnostics redact credential fields, bearer/API keys, emails and tokens in errors',async t => {

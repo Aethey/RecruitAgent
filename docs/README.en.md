@@ -114,5 +114,3 @@ Existing `data/state.json` and document folders remain compatible. Once you save
 ## Data backup
 
 Download a `.json.gz` file from Settings → Data backup to save your learning records and documents. Login credentials are excluded.
-
-See [Source structure](architecture.md) for the code layout and change locations.

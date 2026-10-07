@@ -10,9 +10,7 @@ data/
 /backups/
 /release/
 /design/
-/docs/*.local.md
-/docs/code-generation.md
-/docs/release-checklist.md
-/docs/voice-naturalness-followup.md
+/docs/**/*.md
+!/docs/README*.md
 *.log
 .DS_Store

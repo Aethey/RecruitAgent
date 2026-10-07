@@ -2,7 +2,7 @@
 import zh from '../../public/locales/zh.json' with { type: 'json' };
 import ja from '../../public/locales/ja.json' with { type: 'json' };
 import en from '../../public/locales/en.json' with { type: 'json' };
-import type { Locale } from '../locales.ts';
+import type { Locale } from '../shared/i18n/locales.ts';
 
 export type MessageKey = keyof typeof zh;
 export type MessageParameters = {

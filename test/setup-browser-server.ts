@@ -1,6 +1,6 @@
 // Synthetic account and isolated persistent data for UI acceptance, never production auth.
-import { createApp } from '../src/server.ts';
-import { AppError } from '../src/domain.ts';
+import { createApp } from '../src/app/http.ts';
+import { AppError } from '../src/shared/errors.ts';
 import { FakeAI } from './fixtures.ts';
 class SetupAI extends FakeAI { override async login() { this.authenticated = true; } }
 const ai = new SetupAI(); ai.authenticated = process.env.FIXTURE_CONNECTED === '1';

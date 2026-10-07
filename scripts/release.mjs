@@ -4,7 +4,7 @@ import { dirname, join, resolve, relative, sep } from 'node:path';
 import { root } from './runtime.mjs';
 
 // Only application code, synthetic fixtures and public documentation enter a release.
-const entries = ['src', 'scripts', 'test', 'public', 'examples', '.github', 'docs/images/interview-practice.jpg', 'docs/images/algorithm-practice.jpg', 'docs/images/technical-breadth.jpg', 'docs/images/knowledge-cards.jpg', 'docs/images/voice-interview.png', 'README.md', 'README.en.md', 'README.zh-CN.md', 'LICENSE', 'CHANGELOG.md', 'package.json', 'package-lock.json', 'tsconfig.json', 'tsconfig.web.json', '.gitignore', '.gitattributes', '.env.example', 'start.command', 'start.sh', 'start.cmd'];
+const entries = ['src', 'scripts', 'test', 'public', 'examples', '.github', 'docs/images/interview-practice.jpg', 'docs/images/algorithm-practice.jpg', 'docs/images/technical-breadth.jpg', 'docs/images/knowledge-cards.jpg', 'docs/images/voice-interview.png', 'README.md', 'docs/README.en.md', 'docs/README.zh-CN.md', 'docs/architecture.md', 'LICENSE', 'CHANGELOG.md', 'package.json', 'package-lock.json', 'tsconfig.json', 'tsconfig.web.json', '.gitignore', '.gitattributes', '.env.example', 'start.command', 'start.sh', 'start.cmd'];
 const files = [];
 async function visit(path) {
   const name = relative(root, path).split(sep).join('/');

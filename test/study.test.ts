@@ -3,12 +3,12 @@ import {test} from 'node:test';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {createApp} from '../src/server.ts';
-import {Store} from '../src/store.ts';
-import {advanceSchedule,initialSchedule,BUILTIN_POINTS,quizContent,quizFeedback,studySelection} from '../src/study.ts';
-import {LANGUAGES} from '../src/domain.ts';
+import {createApp} from '../src/app/http.ts';
+import {Store} from '../src/shared/persistence/store.ts';
+import {advanceSchedule,initialSchedule,BUILTIN_POINTS,quizContent,quizFeedback,studySelection} from '../src/features/study/service.ts';
+import { LANGUAGES } from '../src/shared/programming.ts';
 import {FakeAI,fakeInterviewSources,fakeJobReader} from './fixtures.ts';
-import {BREADTH_DOMAINS,BREADTH_GROUPS,BREADTH_POINTS} from '../src/breadth.ts';
+import {BREADTH_DOMAINS,BREADTH_GROUPS,BREADTH_POINTS} from '../src/features/study/breadth.ts';
 const selection={category:'all',language:'dart',count:5,facet:'auto',weakOnly:false};
 async function setup(t:{after(fn:()=>Promise<void>):void}) {
  const dataDir=await mkdtemp(join(tmpdir(),'study-test-')),ai=new FakeAI();let now=new Date('2026-10-02T00:00:00Z');

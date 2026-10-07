@@ -3,10 +3,10 @@ import {test} from 'node:test';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {createApp} from '../src/server.ts';
-import {Store} from '../src/store.ts';
+import {createApp} from '../src/app/http.ts';
+import {Store} from '../src/shared/persistence/store.ts';
 import {FakeAI,fakeInterviewSources,fakeJobReader,sampleCompression} from './fixtures.ts';
-import {compressionResult,debriefResult,followupResult,trainingRecord,draftInput} from '../src/training.ts';
+import {compressionResult,debriefResult,followupResult,trainingRecord,draftInput} from '../src/features/training/domain.ts';
 
 async function setup(t:{after(fn:()=>Promise<void>):void}){
  const dataDir=await mkdtemp(join(tmpdir(),'training-test-')),ai=new FakeAI(),app=await createApp({dataDir,ai,interviewSources:fakeInterviewSources,jobReader:fakeJobReader,sourceDir:null});

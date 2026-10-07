@@ -1,7 +1,7 @@
 {
-  "$ref": "#/definitions/src.contracts.ContractBundle",
+  "$ref": "#/definitions/src.contracts.api.ContractBundle",
   "definitions": {
-    "src.contracts.ContractBundle": {
+    "src.contracts.api.ContractBundle": {
       "type": "object",
       "properties": {
         "state": {
@@ -42,13 +42,13 @@
             "problems": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/src.domain.Problem"
+                "$ref": "#/definitions/src.features.algorithm.domain.Problem"
               }
             },
             "languageDrills": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/src.language.LanguageDrill"
+                "$ref": "#/definitions/src.features.language.domain.LanguageDrill"
               }
             },
             "interviewJobs": {
@@ -68,7 +68,7 @@
                   "sources": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/definitions/src.interview.JobSource"
+                      "$ref": "#/definitions/src.features.interview.domain.JobSource"
                     }
                   },
                   "warnings": {
@@ -90,7 +90,7 @@
             "interviews": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/src.interview.InterviewSet"
+                "$ref": "#/definitions/src.features.interview.domain.InterviewSet"
               }
             },
             "library": {
@@ -259,7 +259,7 @@
                     "type": "string"
                   },
                   "draft": {
-                    "$ref": "#/definitions/src.training.Draft"
+                    "$ref": "#/definitions/src.features.training.domain.Draft"
                   },
                   "sources": {
                     "type": "array",
@@ -311,7 +311,7 @@
                           "type": "string"
                         },
                         "input": {
-                          "$ref": "#/definitions/src.training.Draft"
+                          "$ref": "#/definitions/src.features.training.domain.Draft"
                         },
                         "result": {
                           "anyOf": [
@@ -637,7 +637,7 @@
                   "turns": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/definitions/src.training.Turn"
+                      "$ref": "#/definitions/src.features.training.domain.Turn"
                     }
                   },
                   "finished": {
@@ -1346,7 +1346,7 @@
               }
             },
             "analysis": {
-              "$ref": "#/definitions/src.domain.Analysis"
+              "$ref": "#/definitions/src.features.algorithm.domain.Analysis"
             },
             "settings": {
               "type": "object",
@@ -1458,13 +1458,13 @@
                 "problems": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.domain.Problem"
+                    "$ref": "#/definitions/src.features.algorithm.domain.Problem"
                   }
                 },
                 "languageDrills": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.language.LanguageDrill"
+                    "$ref": "#/definitions/src.features.language.domain.LanguageDrill"
                   }
                 },
                 "interviewJobs": {
@@ -1484,7 +1484,7 @@
                       "sources": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/definitions/src.interview.JobSource"
+                          "$ref": "#/definitions/src.features.interview.domain.JobSource"
                         }
                       },
                       "warnings": {
@@ -1506,7 +1506,7 @@
                 "interviews": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.interview.InterviewSet"
+                    "$ref": "#/definitions/src.features.interview.domain.InterviewSet"
                   }
                 },
                 "library": {
@@ -1675,7 +1675,7 @@
                         "type": "string"
                       },
                       "draft": {
-                        "$ref": "#/definitions/src.training.Draft"
+                        "$ref": "#/definitions/src.features.training.domain.Draft"
                       },
                       "sources": {
                         "type": "array",
@@ -1727,7 +1727,7 @@
                               "type": "string"
                             },
                             "input": {
-                              "$ref": "#/definitions/src.training.Draft"
+                              "$ref": "#/definitions/src.features.training.domain.Draft"
                             },
                             "result": {
                               "anyOf": [
@@ -2053,7 +2053,7 @@
                       "turns": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/definitions/src.training.Turn"
+                          "$ref": "#/definitions/src.features.training.domain.Turn"
                         }
                       },
                       "finished": {
@@ -2762,7 +2762,7 @@
                   }
                 },
                 "analysis": {
-                  "$ref": "#/definitions/src.domain.Analysis"
+                  "$ref": "#/definitions/src.features.algorithm.domain.Analysis"
                 },
                 "settings": {
                   "type": "object",
@@ -2858,16 +2858,16 @@
           ]
         },
         "api": {
-          "$ref": "#/definitions/src.contracts.ApiEndpoints"
+          "$ref": "#/definitions/src.contracts.api.ApiEndpoints"
         },
         "models": {
-          "$ref": "#/definitions/src.contracts.ModelOutputs"
+          "$ref": "#/definitions/src.contracts.api.ModelOutputs"
         },
         "events": {
-          "$ref": "#/definitions/src.contracts.EventPayloads"
+          "$ref": "#/definitions/src.contracts.api.EventPayloads"
         },
         "native": {
-          "$ref": "#/definitions/src.codex-protocol.NativeContracts"
+          "$ref": "#/definitions/src.integrations.codex.protocol.NativeContracts"
         }
       },
       "required": [
@@ -2879,7 +2879,7 @@
         "state"
       ]
     },
-    "src.domain.Problem": {
+    "src.features.algorithm.domain.Problem": {
       "allOf": [
         {
           "type": "object",
@@ -3001,7 +3001,7 @@
             "reviews": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/src.domain.Review"
+                "$ref": "#/definitions/src.features.algorithm.domain.Review"
               }
             },
             "teacherHints": {
@@ -3055,7 +3055,7 @@
       ],
       "type": "string"
     },
-    "src.domain.Review": {
+    "src.features.algorithm.domain.Review": {
       "allOf": [
         {
           "type": "object",
@@ -3151,7 +3151,7 @@
         }
       ]
     },
-    "src.language.LanguageDrill": {
+    "src.features.language.domain.LanguageDrill": {
       "allOf": [
         {
           "type": "object",
@@ -3280,7 +3280,7 @@
         }
       ]
     },
-    "src.interview.JobSource": {
+    "src.features.interview.domain.JobSource": {
       "allOf": [
         {
           "type": "object",
@@ -3327,7 +3327,7 @@
         }
       ]
     },
-    "src.interview.InterviewSet": {
+    "src.features.interview.domain.InterviewSet": {
       "allOf": [
         {
           "type": "object",
@@ -3460,7 +3460,7 @@
             "reviews": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/src.interview.InterviewReview"
+                "$ref": "#/definitions/src.features.interview.domain.InterviewReview"
               }
             },
             "sources": {
@@ -3498,7 +3498,7 @@
             "voiceSettings": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b"
+                  "$ref": "#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"
                 },
                 {
                   "type": "object",
@@ -3535,7 +3535,7 @@
                   "settings": {
                     "allOf": [
                       {
-                        "$ref": "#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b"
+                        "$ref": "#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"
                       },
                       {
                         "type": "object",
@@ -3610,7 +3610,7 @@
               }
             },
             "voiceContents": {
-              "$ref": "#/definitions/Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd"
+              "$ref": "#/definitions/Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a"
             }
           },
           "required": [
@@ -3635,7 +3635,7 @@
     "Record_string_string__14902eed9d": {
       "type": "object"
     },
-    "src.interview.InterviewReview": {
+    "src.features.interview.domain.InterviewReview": {
       "allOf": [
         {
           "type": "object",
@@ -3753,7 +3753,7 @@
         }
       ]
     },
-    "Omit_src.voice-options.VoiceSettings__language___cfad402f1b": {
+    "Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961": {
       "type": "object",
       "properties": {
         "model": {
@@ -3809,7 +3809,7 @@
       ],
       "type": "string"
     },
-    "Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd": {
+    "Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a": {
       "type": "object",
       "properties": {
         "zh": {
@@ -3963,10 +3963,10 @@
       ],
       "type": "string"
     },
-    "src.training.Draft": {
+    "src.features.training.domain.Draft": {
       "type": "object"
     },
-    "src.training.Turn": {
+    "src.features.training.domain.Turn": {
       "allOf": [
         {
           "type": "object",
@@ -4123,7 +4123,7 @@
       ],
       "type": "string"
     },
-    "src.domain.Analysis": {
+    "src.features.algorithm.domain.Analysis": {
       "allOf": [
         {
           "type": "object",
@@ -4178,7 +4178,7 @@
         }
       ]
     },
-    "src.contracts.ApiEndpoints": {
+    "src.contracts.api.ApiEndpoints": {
       "description": "Method + path is the authority for both runtime matching and OpenAPI generation.",
       "type": "object",
       "properties": {
@@ -4209,7 +4209,7 @@
           "type": "object",
           "properties": {
             "response": {
-              "$ref": "#/definitions/src.contracts.PublicState"
+              "$ref": "#/definitions/src.contracts.api.PublicState"
             }
           },
           "required": [
@@ -6821,7 +6821,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/Partial_Omit_src.contracts.Settings__model____a19a961ecc"
+              "$ref": "#/definitions/Partial_Omit_src.contracts.api.Settings__model____0c1f599b99"
             },
             "response": {
               "type": "object",
@@ -6945,7 +6945,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -6968,7 +6968,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -7226,7 +7226,7 @@
                   }
                 },
                 "activeJob": {
-                  "$ref": "#/definitions/src.contracts.ActiveJob"
+                  "$ref": "#/definitions/src.contracts.api.ActiveJob"
                 }
               },
               "required": [
@@ -7243,7 +7243,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -7609,7 +7609,7 @@
                 "context": {
                   "allOf": [
                     {
-                      "$ref": "#/definitions/Omit_src.chat.PageContext__record___capturedAt___9144430f49"
+                      "$ref": "#/definitions/Omit_src.features.chat.service.PageContext__record___capturedAt___51115b8517"
                     },
                     {
                       "type": "object",
@@ -7686,7 +7686,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -8118,7 +8118,7 @@
           "type": "object",
           "properties": {
             "response": {
-              "$ref": "#/definitions/src.domain.Problem"
+              "$ref": "#/definitions/src.features.algorithm.domain.Problem"
             }
           },
           "required": [
@@ -8266,7 +8266,7 @@
           "type": "object",
           "properties": {
             "response": {
-              "$ref": "#/definitions/src.language.LanguageDrill"
+              "$ref": "#/definitions/src.features.language.domain.LanguageDrill"
             }
           },
           "required": [
@@ -8308,7 +8308,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -8366,7 +8366,7 @@
                 "sources": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.interview.JobSource"
+                    "$ref": "#/definitions/src.features.interview.domain.JobSource"
                   }
                 },
                 "warnings": {
@@ -8577,13 +8577,13 @@
                 "reviews": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.interview.InterviewReview"
+                    "$ref": "#/definitions/src.features.interview.domain.InterviewReview"
                   }
                 },
                 "voiceSettings": {
                   "allOf": [
                     {
-                      "$ref": "#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b"
+                      "$ref": "#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"
                     },
                     {
                       "type": "object",
@@ -8620,7 +8620,7 @@
                       "settings": {
                         "allOf": [
                           {
-                            "$ref": "#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b"
+                            "$ref": "#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"
                           },
                           {
                             "type": "object",
@@ -8695,7 +8695,7 @@
                   }
                 },
                 "voiceContents": {
-                  "$ref": "#/definitions/Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd"
+                  "$ref": "#/definitions/Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a"
                 }
               },
               "required": [
@@ -8787,7 +8787,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/Partial_src.voice-options.VoiceSettings__1a12d658f9"
+              "$ref": "#/definitions/Partial_src.integrations.codex.options.VoiceSettings__9516919640"
             },
             "response": {
               "type": "object",
@@ -9603,7 +9603,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.VoiceStartInput"
+              "$ref": "#/definitions/src.contracts.api.VoiceStartInput"
             },
             "response": {
               "type": "object",
@@ -10149,7 +10149,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -10589,10 +10589,10 @@
             "body": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"
+                  "$ref": "#/definitions/Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557"
                 },
                 {
-                  "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"
+                  "$ref": "#/definitions/Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc"
                 }
               ]
             },
@@ -10760,10 +10760,10 @@
             "body": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/Pick_src.study.StudySelection__count___59db79ec8e"
+                  "$ref": "#/definitions/Pick_src.features.study.service.StudySelection__count___1b25f81097"
                 },
                 {
-                  "$ref": "#/definitions/Partial_Omit_src.study.StudySelection__count____a8e03d19a8"
+                  "$ref": "#/definitions/Partial_Omit_src.features.study.service.StudySelection__count____7318a27389"
                 }
               ]
             },
@@ -11201,7 +11201,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -11550,7 +11550,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -12172,7 +12172,7 @@
           "type": "object",
           "properties": {
             "response": {
-              "$ref": "#/definitions/src.contracts.LibraryDetail"
+              "$ref": "#/definitions/src.contracts.api.LibraryDetail"
             }
           },
           "required": [
@@ -12484,7 +12484,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -12681,7 +12681,7 @@
                   "type": "string"
                 },
                 "draft": {
-                  "$ref": "#/definitions/src.training.Draft"
+                  "$ref": "#/definitions/src.features.training.domain.Draft"
                 },
                 "reviews": {
                   "type": "array",
@@ -12701,7 +12701,7 @@
                         "type": "string"
                       },
                       "input": {
-                        "$ref": "#/definitions/src.training.Draft"
+                        "$ref": "#/definitions/src.features.training.domain.Draft"
                       },
                       "result": {
                         "anyOf": [
@@ -12948,7 +12948,7 @@
                 "turns": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.training.Turn"
+                    "$ref": "#/definitions/src.features.training.domain.Turn"
                   }
                 },
                 "finished": {
@@ -13131,7 +13131,7 @@
                   "type": "string"
                 },
                 "draft": {
-                  "$ref": "#/definitions/src.training.Draft"
+                  "$ref": "#/definitions/src.features.training.domain.Draft"
                 },
                 "reviews": {
                   "type": "array",
@@ -13151,7 +13151,7 @@
                         "type": "string"
                       },
                       "input": {
-                        "$ref": "#/definitions/src.training.Draft"
+                        "$ref": "#/definitions/src.features.training.domain.Draft"
                       },
                       "result": {
                         "anyOf": [
@@ -13398,7 +13398,7 @@
                 "turns": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.training.Turn"
+                    "$ref": "#/definitions/src.features.training.domain.Turn"
                   }
                 },
                 "finished": {
@@ -13605,7 +13605,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -13706,7 +13706,7 @@
                   "type": "string"
                 },
                 "draft": {
-                  "$ref": "#/definitions/src.training.Draft"
+                  "$ref": "#/definitions/src.features.training.domain.Draft"
                 },
                 "reviews": {
                   "type": "array",
@@ -13726,7 +13726,7 @@
                         "type": "string"
                       },
                       "input": {
-                        "$ref": "#/definitions/src.training.Draft"
+                        "$ref": "#/definitions/src.features.training.domain.Draft"
                       },
                       "result": {
                         "anyOf": [
@@ -13973,7 +13973,7 @@
                 "turns": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.training.Turn"
+                    "$ref": "#/definitions/src.features.training.domain.Turn"
                   }
                 },
                 "finished": {
@@ -14010,7 +14010,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -14036,7 +14036,7 @@
           "type": "object",
           "properties": {
             "response": {
-              "$ref": "#/definitions/src.contracts.JobInfo"
+              "$ref": "#/definitions/src.contracts.api.JobInfo"
             }
           },
           "required": [
@@ -14047,7 +14047,7 @@
           "type": "object",
           "properties": {
             "body": {
-              "$ref": "#/definitions/src.contracts.EmptyInput"
+              "$ref": "#/definitions/src.contracts.api.EmptyInput"
             },
             "response": {
               "type": "object",
@@ -14145,10 +14145,10 @@
         "PUT /api/trainings/{id}"
       ]
     },
-    "src.contracts.PublicState": {
+    "src.contracts.api.PublicState": {
       "allOf": [
         {
-          "$ref": "#/definitions/Omit_src.domain.State__chats___interviews___library___trainings___studyBatches___e082b86c3c"
+          "$ref": "#/definitions/Omit_src.shared.persistence.state.State__chats___interviews___library___trainings___studyBatches___1c5f41c5dc"
         },
         {
           "type": "object",
@@ -14294,13 +14294,13 @@
                   "reviews": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/definitions/src.interview.InterviewReview"
+                      "$ref": "#/definitions/src.features.interview.domain.InterviewReview"
                     }
                   },
                   "voiceSettings": {
                     "allOf": [
                       {
-                        "$ref": "#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b"
+                        "$ref": "#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"
                       },
                       {
                         "type": "object",
@@ -14337,7 +14337,7 @@
                         "settings": {
                           "allOf": [
                             {
-                              "$ref": "#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b"
+                              "$ref": "#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"
                             },
                             {
                               "type": "object",
@@ -14412,7 +14412,7 @@
                     }
                   },
                   "voiceContents": {
-                    "$ref": "#/definitions/Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd"
+                    "$ref": "#/definitions/Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a"
                   }
                 },
                 "required": [
@@ -14652,7 +14652,7 @@
                     "type": "string"
                   },
                   "draft": {
-                    "$ref": "#/definitions/src.training.Draft"
+                    "$ref": "#/definitions/src.features.training.domain.Draft"
                   },
                   "reviews": {
                     "type": "array",
@@ -14672,7 +14672,7 @@
                           "type": "string"
                         },
                         "input": {
-                          "$ref": "#/definitions/src.training.Draft"
+                          "$ref": "#/definitions/src.features.training.domain.Draft"
                         },
                         "result": {
                           "anyOf": [
@@ -14919,7 +14919,7 @@
                   "turns": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/definitions/src.training.Turn"
+                      "$ref": "#/definitions/src.features.training.domain.Turn"
                     }
                   },
                   "finished": {
@@ -15290,7 +15290,7 @@
             "languageDrills": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/src.language.LanguageDrill"
+                "$ref": "#/definitions/src.features.language.domain.LanguageDrill"
               }
             },
             "interviewJobs": {
@@ -15310,7 +15310,7 @@
                   "sources": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/definitions/src.interview.JobSource"
+                      "$ref": "#/definitions/src.features.interview.domain.JobSource"
                     }
                   },
                   "warnings": {
@@ -15630,7 +15630,7 @@
               "type": "boolean"
             },
             "activeJob": {
-              "$ref": "#/definitions/src.contracts.ActiveJob"
+              "$ref": "#/definitions/src.contracts.api.ActiveJob"
             },
             "reviewLabel": {
               "type": "string"
@@ -15652,13 +15652,13 @@
         }
       ]
     },
-    "Omit_src.domain.State__chats___interviews___library___trainings___studyBatches___e082b86c3c": {
+    "Omit_src.shared.persistence.state.State__chats___interviews___library___trainings___studyBatches___1c5f41c5dc": {
       "type": "object",
       "properties": {
         "problems": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/src.domain.Problem"
+            "$ref": "#/definitions/src.features.algorithm.domain.Problem"
           }
         },
         "interviewMaterials": {
@@ -15696,7 +15696,7 @@
         "languageDrills": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/src.language.LanguageDrill"
+            "$ref": "#/definitions/src.features.language.domain.LanguageDrill"
           }
         },
         "interviewJobs": {
@@ -15716,7 +15716,7 @@
               "sources": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/definitions/src.interview.JobSource"
+                  "$ref": "#/definitions/src.features.interview.domain.JobSource"
                 }
               },
               "warnings": {
@@ -15914,7 +15914,7 @@
           }
         },
         "analysis": {
-          "$ref": "#/definitions/src.domain.Analysis"
+          "$ref": "#/definitions/src.features.algorithm.domain.Analysis"
         },
         "settings": {
           "type": "object",
@@ -15974,24 +15974,24 @@
         "version"
       ]
     },
-    "src.contracts.ActiveJob": {
+    "src.contracts.api.ActiveJob": {
       "anyOf": [
         {
-          "$ref": "#/definitions/Pick_src.tasks.Job__id___kind___chatId___9b6b5c21a3"
+          "$ref": "#/definitions/Pick_src.shared.tasks.executor.Job__id___kind___chatId___f86dfb3c57"
         },
         {
           "type": "null"
         }
       ]
     },
-    "Pick_src.tasks.Job__id___kind___chatId___9b6b5c21a3": {
+    "Pick_src.shared.tasks.executor.Job__id___kind___chatId___f86dfb3c57": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string"
         },
         "kind": {
-          "$ref": "#/definitions/Kind"
+          "$ref": "#/definitions/TaskKind"
         },
         "chatId": {
           "type": "string"
@@ -16002,7 +16002,7 @@
         "kind"
       ]
     },
-    "Kind": {
+    "TaskKind": {
       "enum": [
         "analysis",
         "chat",
@@ -16021,7 +16021,7 @@
       ],
       "type": "string"
     },
-    "Partial_Omit_src.contracts.Settings__model____a19a961ecc": {
+    "Partial_Omit_src.contracts.api.Settings__model____0c1f599b99": {
       "type": "object",
       "properties": {
         "visibleModels": {
@@ -16067,10 +16067,10 @@
         }
       }
     },
-    "src.contracts.EmptyInput": {
+    "src.contracts.api.EmptyInput": {
       "type": "object"
     },
-    "Omit_src.chat.PageContext__record___capturedAt___9144430f49": {
+    "Omit_src.features.chat.service.PageContext__record___capturedAt___51115b8517": {
       "type": "object",
       "properties": {
         "editor": {
@@ -16118,7 +16118,7 @@
         "visibleText"
       ]
     },
-    "Partial_src.voice-options.VoiceSettings__1a12d658f9": {
+    "Partial_src.integrations.codex.options.VoiceSettings__9516919640": {
       "type": "object",
       "properties": {
         "model": {
@@ -16193,10 +16193,10 @@
         "strict"
       ]
     },
-    "src.contracts.VoiceStartInput": {
+    "src.contracts.api.VoiceStartInput": {
       "allOf": [
         {
-          "$ref": "#/definitions/Partial_src.voice-options.VoiceSettings__1a12d658f9"
+          "$ref": "#/definitions/Partial_src.integrations.codex.options.VoiceSettings__9516919640"
         },
         {
           "type": "object",
@@ -16224,7 +16224,7 @@
         }
       ]
     },
-    "Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a": {
+    "Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557": {
       "type": "object",
       "properties": {
         "title": {
@@ -16252,7 +16252,7 @@
         "title"
       ]
     },
-    "Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925": {
+    "Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc": {
       "type": "object",
       "properties": {
         "topic": {
@@ -16276,7 +16276,7 @@
         }
       }
     },
-    "Pick_src.study.StudySelection__count___59db79ec8e": {
+    "Pick_src.features.study.service.StudySelection__count___1b25f81097": {
       "type": "object",
       "properties": {
         "count": {
@@ -16287,7 +16287,7 @@
         "count"
       ]
     },
-    "Partial_Omit_src.study.StudySelection__count____a8e03d19a8": {
+    "Partial_Omit_src.features.study.service.StudySelection__count____7318a27389": {
       "type": "object",
       "properties": {
         "category": {
@@ -16371,7 +16371,7 @@
         }
       }
     },
-    "src.contracts.LibraryDetail": {
+    "src.contracts.api.LibraryDetail": {
       "allOf": [
         {
           "type": "object",
@@ -16499,7 +16499,7 @@
             "pages": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Omit_src.library.LibraryPage__text___46a9f73794"
+                "$ref": "#/definitions/Omit_src.features.library.service.LibraryPage__text___194334aba3"
               }
             }
           },
@@ -16509,7 +16509,7 @@
         }
       ]
     },
-    "Omit_src.library.LibraryPage__text___46a9f73794": {
+    "Omit_src.features.library.service.LibraryPage__text___194334aba3": {
       "type": "object",
       "properties": {
         "number": {
@@ -16535,10 +16535,10 @@
       ],
       "type": "string"
     },
-    "src.contracts.JobInfo": {
+    "src.contracts.api.JobInfo": {
       "allOf": [
         {
-          "$ref": "#/definitions/Pick_src.tasks.Job__id___error___status___kind___5cd003bd99"
+          "$ref": "#/definitions/Pick_src.shared.tasks.executor.Job__id___error___kind___status___017af27d93"
         },
         {
           "type": "object",
@@ -16609,7 +16609,7 @@
         }
       ]
     },
-    "Pick_src.tasks.Job__id___error___status___kind___5cd003bd99": {
+    "Pick_src.shared.tasks.executor.Job__id___error___kind___status___017af27d93": {
       "type": "object",
       "properties": {
         "id": {
@@ -16617,6 +16617,9 @@
         },
         "error": {
           "type": "string"
+        },
+        "kind": {
+          "$ref": "#/definitions/TaskKind"
         },
         "status": {
           "enum": [
@@ -16626,9 +16629,6 @@
             "running"
           ],
           "type": "string"
-        },
-        "kind": {
-          "$ref": "#/definitions/Kind"
         }
       },
       "required": [
@@ -16637,7 +16637,7 @@
         "status"
       ]
     },
-    "src.contracts.ModelOutputs": {
+    "src.contracts.api.ModelOutputs": {
       "type": "object",
       "properties": {
         "problem": {
@@ -16690,7 +16690,7 @@
           ]
         },
         "hint": {
-          "$ref": "#/definitions/Pick_src.domain.Hint__question___observation___checkpoint___2c32215352"
+          "$ref": "#/definitions/Pick_src.features.algorithm.domain.Hint__question___observation___checkpoint___358e6a619d"
         },
         "review": {
           "type": "object",
@@ -16870,7 +16870,7 @@
         "interview": {
           "allOf": [
             {
-              "$ref": "#/definitions/Omit_src.interview.InterviewContent__questions___82cad7f866"
+              "$ref": "#/definitions/Omit_src.features.interview.domain.InterviewContent__questions___1752d60a19"
             },
             {
               "type": "object",
@@ -16878,7 +16878,7 @@
                 "questions": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/src.contracts.ModelQuestion"
+                    "$ref": "#/definitions/src.contracts.api.ModelQuestion"
                   }
                 }
               },
@@ -17162,7 +17162,7 @@
         "followup": {
           "allOf": [
             {
-              "$ref": "#/definitions/Omit_src.training.FollowupResult__stopReason___next___39cb115409"
+              "$ref": "#/definitions/Omit_src.features.training.domain.FollowupResult__stopReason___next___9c74a1d19c"
             },
             {
               "type": "object",
@@ -17170,7 +17170,7 @@
                 "next": {
                   "anyOf": [
                     {
-                      "$ref": "#/definitions/src.contracts.ModelQuestion"
+                      "$ref": "#/definitions/src.contracts.api.ModelQuestion"
                     },
                     {
                       "type": "null"
@@ -17405,7 +17405,7 @@
                   "reference": {
                     "allOf": [
                       {
-                        "$ref": "#/definitions/Omit_src.study.Reference__code___6b3a4e6104"
+                        "$ref": "#/definitions/Omit_src.features.study.service.Reference__code___ff2ec56fef"
                       },
                       {
                         "type": "object",
@@ -17481,10 +17481,10 @@
               "items": {
                 "allOf": [
                   {
-                    "$ref": "#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"
+                    "$ref": "#/definitions/Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557"
                   },
                   {
-                    "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"
+                    "$ref": "#/definitions/Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc"
                   }
                 ]
               }
@@ -17550,7 +17550,7 @@
         "voiceTranslation"
       ]
     },
-    "Pick_src.domain.Hint__question___observation___checkpoint___2c32215352": {
+    "Pick_src.features.algorithm.domain.Hint__question___observation___checkpoint___358e6a619d": {
       "type": "object",
       "properties": {
         "question": {
@@ -17569,7 +17569,7 @@
         "question"
       ]
     },
-    "Omit_src.interview.InterviewContent__questions___82cad7f866": {
+    "Omit_src.features.interview.domain.InterviewContent__questions___1752d60a19": {
       "type": "object",
       "properties": {
         "title": {
@@ -17584,7 +17584,7 @@
         "title"
       ]
     },
-    "src.contracts.ModelQuestion": {
+    "src.contracts.api.ModelQuestion": {
       "type": "object",
       "properties": {
         "question": {
@@ -17641,7 +17641,7 @@
         "sourceIds"
       ]
     },
-    "Omit_src.training.FollowupResult__stopReason___next___39cb115409": {
+    "Omit_src.features.training.domain.FollowupResult__stopReason___next___9c74a1d19c": {
       "type": "object",
       "properties": {
         "feedback": {
@@ -17686,17 +17686,17 @@
         "feedback"
       ]
     },
-    "Omit_src.study.Reference__code___6b3a4e6104": {
+    "Omit_src.features.study.service.Reference__code___ff2ec56fef": {
       "type": "object",
       "properties": {
+        "explanation": {
+          "type": "string"
+        },
         "requirements": {
           "type": "array",
           "items": {
             "type": "string"
           }
-        },
-        "explanation": {
-          "type": "string"
         },
         "keywords": {
           "type": "array",
@@ -17711,7 +17711,7 @@
         "requirements"
       ]
     },
-    "src.contracts.EventPayloads": {
+    "src.contracts.api.EventPayloads": {
       "type": "object",
       "properties": {
         "progress": {
@@ -18291,7 +18291,7 @@
           ]
         },
         "ended": {
-          "$ref": "#/definitions/src.contracts.EmptyInput"
+          "$ref": "#/definitions/src.contracts.api.EmptyInput"
         }
       },
       "required": [
@@ -18314,7 +18314,7 @@
         "voice-error"
       ]
     },
-    "src.codex-protocol.NativeContracts": {
+    "src.integrations.codex.protocol.NativeContracts": {
       "type": "object",
       "properties": {
         "requests": {
@@ -18324,7 +18324,7 @@
           "$ref": "#/definitions/_initialize_src.generated.codex.InitializeResponse.InitializeResponse__thread_start__src.generated.codex.v2.ThreadStartResponse.ThreadStartR_e261e5037f"
         },
         "notification": {
-          "$ref": "#/definitions/src.codex-protocol.NativeNotification"
+          "$ref": "#/definitions/src.integrations.codex.protocol.NativeNotification"
         }
       },
       "required": [
@@ -22204,7 +22204,7 @@
       ],
       "type": "string"
     },
-    "src.codex-protocol.NativeNotification": {
+    "src.integrations.codex.protocol.NativeNotification": {
       "anyOf": [
         {
           "type": "object",

@@ -9,6 +9,7 @@ data/
 /screenshots/
 /backups/
 /release/
+/design/
 /docs/*.local.md
 /docs/code-generation.md
 /docs/release-checklist.md

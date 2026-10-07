@@ -5,11 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
-import { createApp } from '../src/server.ts';
-import { Store } from '../src/store.ts';
-import { Library } from '../src/library.ts';
-import { FileInterviewSources, LibraryInterviewSources } from '../src/interview-sources.ts';
-import { exportBackup, restoreBackup } from '../src/backup.ts';
+import { createApp } from '../src/app/http.ts';
+import { Store } from '../src/shared/persistence/store.ts';
+import { Library } from '../src/features/library/service.ts';
+import { FileInterviewSources, LibraryInterviewSources } from '../src/features/interview/sources.ts';
+import { exportBackup, restoreBackup } from '../src/shared/persistence/backup.ts';
 import { assertNodeVersion, serverPort } from '../scripts/runtime.mjs';
 import { FakeAI } from './fixtures.ts';
 

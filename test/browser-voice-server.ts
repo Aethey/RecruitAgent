@@ -1,8 +1,8 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createApp } from '../src/server.ts';
-import { Store } from '../src/store.ts';
+import { createApp } from '../src/app/http.ts';
+import { Store } from '../src/shared/persistence/store.ts';
 import { FakeAI, fakeInterviewSources } from './fixtures.ts';
 import { interviewFixture } from './interview-fixture.ts';
 

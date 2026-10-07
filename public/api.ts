@@ -1,8 +1,8 @@
 import { formatMessage } from '../src/generated/localizations.ts';
 import type { ApiClient, TaskPath } from '../src/generated/api-client.js';
-import type { ApiEndpoints, EventPayloads, TaskStarted } from '../src/contracts.ts';
+import type { ApiEndpoints, EventPayloads, TaskStarted } from '../src/contracts/api.ts';
 import { routes } from '../src/generated/registry.mjs';
-import { apiContract, validateApiValue, validateEvent } from '../src/wire-validation.ts';
+import { apiContract, validateApiValue, validateEvent } from '../src/contracts/wire-validation.ts';
 
 async function checkedResponse(contract: { response: string }, response: Response, translateError: (message: string) => string): Promise<unknown> {
   const data: unknown = await response.json();

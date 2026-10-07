@@ -13,7 +13,7 @@ function apply() {
   const toggle = (/** @type {HTMLButtonElement} */ (document.querySelector('#theme-toggle')));
   if (toggle) {
     toggle.setAttribute('aria-checked', String(theme === 'dark'));
-    const locale = /** @type {import('../src/locales.ts').Locale} */ (document.documentElement.dataset.uiLanguage || 'zh');
+    const locale = /** @type {import('../src/shared/i18n/locales.ts').Locale} */ (document.documentElement.dataset.uiLanguage || 'zh');
     toggle.title = formatMessage(locale, theme === 'dark' ? 'theme.switchToLight' : 'ui.switchToDarkTheme');
   }
   window.dispatchEvent(new CustomEvent('app-theme-change', { detail: { theme } }));

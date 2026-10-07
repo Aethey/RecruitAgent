@@ -16,11 +16,15 @@ const schema6 = {
     version: { type: 'number', const: 1 },
     problems: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.domain.Problem' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.algorithm.domain.Problem',
+      },
     },
     languageDrills: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.language.LanguageDrill' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.language.domain.LanguageDrill',
+      },
     },
     interviewJobs: {
       type: 'array',
@@ -32,7 +36,9 @@ const schema6 = {
           createdAt: { type: 'string' },
           sources: {
             type: 'array',
-            items: { $ref: 'contracts#/definitions/src.interview.JobSource' },
+            items: {
+              $ref: 'contracts#/definitions/src.features.interview.domain.JobSource',
+            },
           },
           warnings: { type: 'array', items: { type: 'string' } },
         },
@@ -41,7 +47,9 @@ const schema6 = {
     },
     interviews: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.interview.InterviewSet' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.interview.domain.InterviewSet',
+      },
     },
     library: {
       type: 'array',
@@ -120,7 +128,9 @@ const schema6 = {
           title: { type: 'string' },
           createdAt: { type: 'string' },
           updatedAt: { type: 'string' },
-          draft: { $ref: 'contracts#/definitions/src.training.Draft' },
+          draft: {
+            $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+          },
           sources: {
             type: 'array',
             items: {
@@ -146,7 +156,9 @@ const schema6 = {
                 at: { type: 'string' },
                 action: { type: 'string' },
                 model: { type: 'string' },
-                input: { $ref: 'contracts#/definitions/src.training.Draft' },
+                input: {
+                  $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+                },
                 result: {
                   anyOf: [
                     {
@@ -326,7 +338,9 @@ const schema6 = {
           revealedAt: { type: 'string' },
           turns: {
             type: 'array',
-            items: { $ref: 'contracts#/definitions/src.training.Turn' },
+            items: {
+              $ref: 'contracts#/definitions/src.features.training.domain.Turn',
+            },
           },
           finished: { type: 'boolean' },
           stopReason: { type: 'string' },
@@ -742,7 +756,9 @@ const schema6 = {
         required: ['createdAt', 'id', 'title', 'turns', 'updatedAt'],
       },
     },
-    analysis: { $ref: 'contracts#/definitions/src.domain.Analysis' },
+    analysis: {
+      $ref: 'contracts#/definitions/src.features.algorithm.domain.Analysis',
+    },
     settings: {
       type: 'object',
       properties: {
@@ -834,7 +850,7 @@ const schema9 = {
         },
         reviews: {
           type: 'array',
-          items: { $ref: '#/definitions/src.domain.Review' },
+          items: { $ref: '#/definitions/src.features.algorithm.domain.Review' },
         },
         teacherHints: { type: 'number' },
       },
@@ -3780,7 +3796,9 @@ const schema16 = {
         answers: { $ref: '#/definitions/Record_string_string__14902eed9d' },
         reviews: {
           type: 'array',
-          items: { $ref: '#/definitions/src.interview.InterviewReview' },
+          items: {
+            $ref: '#/definitions/src.features.interview.domain.InterviewReview',
+          },
         },
         sources: {
           type: 'array',
@@ -3801,7 +3819,7 @@ const schema16 = {
         voiceSettings: {
           allOf: [
             {
-              $ref: '#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b',
+              $ref: '#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961',
             },
             {
               type: 'object',
@@ -3823,7 +3841,7 @@ const schema16 = {
               settings: {
                 allOf: [
                   {
-                    $ref: '#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b',
+                    $ref: '#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961',
                   },
                   {
                     type: 'object',
@@ -3871,7 +3889,7 @@ const schema16 = {
           },
         },
         voiceContents: {
-          $ref: '#/definitions/Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd',
+          $ref: '#/definitions/Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a',
         },
       },
       required: [
@@ -20695,11 +20713,15 @@ const schema132 = {
         version: { type: 'number', const: 1 },
         problems: {
           type: 'array',
-          items: { $ref: 'contracts#/definitions/src.domain.Problem' },
+          items: {
+            $ref: 'contracts#/definitions/src.features.algorithm.domain.Problem',
+          },
         },
         languageDrills: {
           type: 'array',
-          items: { $ref: 'contracts#/definitions/src.language.LanguageDrill' },
+          items: {
+            $ref: 'contracts#/definitions/src.features.language.domain.LanguageDrill',
+          },
         },
         interviewJobs: {
           type: 'array',
@@ -20712,7 +20734,7 @@ const schema132 = {
               sources: {
                 type: 'array',
                 items: {
-                  $ref: 'contracts#/definitions/src.interview.JobSource',
+                  $ref: 'contracts#/definitions/src.features.interview.domain.JobSource',
                 },
               },
               warnings: { type: 'array', items: { type: 'string' } },
@@ -20722,7 +20744,9 @@ const schema132 = {
         },
         interviews: {
           type: 'array',
-          items: { $ref: 'contracts#/definitions/src.interview.InterviewSet' },
+          items: {
+            $ref: 'contracts#/definitions/src.features.interview.domain.InterviewSet',
+          },
         },
         library: {
           type: 'array',
@@ -20801,7 +20825,9 @@ const schema132 = {
               title: { type: 'string' },
               createdAt: { type: 'string' },
               updatedAt: { type: 'string' },
-              draft: { $ref: 'contracts#/definitions/src.training.Draft' },
+              draft: {
+                $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+              },
               sources: {
                 type: 'array',
                 items: {
@@ -20828,7 +20854,7 @@ const schema132 = {
                     action: { type: 'string' },
                     model: { type: 'string' },
                     input: {
-                      $ref: 'contracts#/definitions/src.training.Draft',
+                      $ref: 'contracts#/definitions/src.features.training.domain.Draft',
                     },
                     result: {
                       anyOf: [
@@ -21039,7 +21065,9 @@ const schema132 = {
               revealedAt: { type: 'string' },
               turns: {
                 type: 'array',
-                items: { $ref: 'contracts#/definitions/src.training.Turn' },
+                items: {
+                  $ref: 'contracts#/definitions/src.features.training.domain.Turn',
+                },
               },
               finished: { type: 'boolean' },
               stopReason: { type: 'string' },
@@ -21479,7 +21507,9 @@ const schema132 = {
             required: ['createdAt', 'id', 'title', 'turns', 'updatedAt'],
           },
         },
-        analysis: { $ref: 'contracts#/definitions/src.domain.Analysis' },
+        analysis: {
+          $ref: 'contracts#/definitions/src.features.algorithm.domain.Analysis',
+        },
         settings: {
           type: 'object',
           properties: {
@@ -39258,7 +39288,7 @@ function validate513(
 }
 export const model_hint = validate514;
 const schema149 = {
-  $ref: 'contracts#/definitions/Pick_src.domain.Hint__question___observation___checkpoint___2c32215352',
+  $ref: 'contracts#/definitions/Pick_src.features.algorithm.domain.Hint__question___observation___checkpoint___358e6a619d',
 };
 const schema56 = {
   type: 'object',
@@ -40697,14 +40727,16 @@ export const model_interview = validate520;
 const schema154 = {
   allOf: [
     {
-      $ref: 'contracts#/definitions/Omit_src.interview.InterviewContent__questions___82cad7f866',
+      $ref: 'contracts#/definitions/Omit_src.features.interview.domain.InterviewContent__questions___1752d60a19',
     },
     {
       type: 'object',
       properties: {
         questions: {
           type: 'array',
-          items: { $ref: 'contracts#/definitions/src.contracts.ModelQuestion' },
+          items: {
+            $ref: 'contracts#/definitions/src.contracts.api.ModelQuestion',
+          },
         },
       },
       required: ['questions'],
@@ -43137,14 +43169,14 @@ export const model_followup = validate530;
 const schema162 = {
   allOf: [
     {
-      $ref: 'contracts#/definitions/Omit_src.training.FollowupResult__stopReason___next___39cb115409',
+      $ref: 'contracts#/definitions/Omit_src.features.training.domain.FollowupResult__stopReason___next___9c74a1d19c',
     },
     {
       type: 'object',
       properties: {
         next: {
           anyOf: [
-            { $ref: 'contracts#/definitions/src.contracts.ModelQuestion' },
+            { $ref: 'contracts#/definitions/src.contracts.api.ModelQuestion' },
             { type: 'null' },
           ],
         },
@@ -45412,7 +45444,7 @@ const schema168 = {
           reference: {
             allOf: [
               {
-                $ref: 'contracts#/definitions/Omit_src.study.Reference__code___6b3a4e6104',
+                $ref: 'contracts#/definitions/Omit_src.features.study.service.Reference__code___ff2ec56fef',
               },
               { type: 'object', properties: { code: { type: 'string' } } },
             ],
@@ -45471,8 +45503,8 @@ function validate539(
 const schema60 = {
   type: 'object',
   properties: {
-    requirements: { type: 'array', items: { type: 'string' } },
     explanation: { type: 'string' },
+    requirements: { type: 'array', items: { type: 'string' } },
     keywords: { type: 'array', items: { type: 'string' } },
   },
   required: ['explanation', 'keywords', 'requirements'],
@@ -45529,13 +45561,30 @@ function validate541(
       }
       errors++;
     }
+    if (data.explanation !== undefined) {
+      if (typeof data.explanation !== 'string') {
+        const err3 = {
+          instancePath: instancePath + '/explanation',
+          schemaPath: '#/properties/explanation/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        };
+        if (vErrors === null) {
+          vErrors = [err3];
+        } else {
+          vErrors.push(err3);
+        }
+        errors++;
+      }
+    }
     if (data.requirements !== undefined) {
-      let data0 = data.requirements;
-      if (Array.isArray(data0)) {
-        const len0 = data0.length;
+      let data1 = data.requirements;
+      if (Array.isArray(data1)) {
+        const len0 = data1.length;
         for (let i0 = 0; i0 < len0; i0++) {
-          if (typeof data0[i0] !== 'string') {
-            const err3 = {
+          if (typeof data1[i0] !== 'string') {
+            const err4 = {
               instancePath: instancePath + '/requirements/' + i0,
               schemaPath: '#/properties/requirements/items/type',
               keyword: 'type',
@@ -45543,37 +45592,20 @@ function validate541(
               message: 'must be string',
             };
             if (vErrors === null) {
-              vErrors = [err3];
+              vErrors = [err4];
             } else {
-              vErrors.push(err3);
+              vErrors.push(err4);
             }
             errors++;
           }
         }
       } else {
-        const err4 = {
+        const err5 = {
           instancePath: instancePath + '/requirements',
           schemaPath: '#/properties/requirements/type',
           keyword: 'type',
           params: { type: 'array' },
           message: 'must be array',
-        };
-        if (vErrors === null) {
-          vErrors = [err4];
-        } else {
-          vErrors.push(err4);
-        }
-        errors++;
-      }
-    }
-    if (data.explanation !== undefined) {
-      if (typeof data.explanation !== 'string') {
-        const err5 = {
-          instancePath: instancePath + '/explanation',
-          schemaPath: '#/properties/explanation/type',
-          keyword: 'type',
-          params: { type: 'string' },
-          message: 'must be string',
         };
         if (vErrors === null) {
           vErrors = [err5];
@@ -46203,10 +46235,10 @@ const schema172 = {
       items: {
         allOf: [
           {
-            $ref: 'contracts#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a',
+            $ref: 'contracts#/definitions/Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557',
           },
           {
-            $ref: 'contracts#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925',
+            $ref: 'contracts#/definitions/Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc',
           },
         ],
       },
@@ -50763,7 +50795,9 @@ function validate572(
   return errors === 0;
 }
 export const event_ended = validate573;
-const schema195 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema195 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 const schema41 = { type: 'object' };
 function validate574(
   data,
@@ -75949,7 +75983,7 @@ function validate677(
 }
 export const native_notification = validate680;
 const schema245 = {
-  $ref: 'contracts#/definitions/src.codex-protocol.NativeNotification',
+  $ref: 'contracts#/definitions/src.integrations.codex.protocol.NativeNotification',
 };
 const schema112 = {
   anyOf: [
@@ -91796,11 +91830,13 @@ function validate695(
   return errors === 0;
 }
 export const response_1 = validate696;
-const schema248 = { $ref: 'contracts#/definitions/src.contracts.PublicState' };
+const schema248 = {
+  $ref: 'contracts#/definitions/src.contracts.api.PublicState',
+};
 const schema35 = {
   allOf: [
     {
-      $ref: '#/definitions/Omit_src.domain.State__chats___interviews___library___trainings___studyBatches___e082b86c3c',
+      $ref: '#/definitions/Omit_src.shared.persistence.state.State__chats___interviews___library___trainings___studyBatches___1c5f41c5dc',
     },
     {
       type: 'object',
@@ -91874,12 +91910,14 @@ const schema35 = {
               },
               reviews: {
                 type: 'array',
-                items: { $ref: '#/definitions/src.interview.InterviewReview' },
+                items: {
+                  $ref: '#/definitions/src.features.interview.domain.InterviewReview',
+                },
               },
               voiceSettings: {
                 allOf: [
                   {
-                    $ref: '#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b',
+                    $ref: '#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961',
                   },
                   {
                     type: 'object',
@@ -91901,7 +91939,7 @@ const schema35 = {
                     settings: {
                       allOf: [
                         {
-                          $ref: '#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b',
+                          $ref: '#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961',
                         },
                         {
                           type: 'object',
@@ -91952,7 +91990,7 @@ const schema35 = {
                 },
               },
               voiceContents: {
-                $ref: '#/definitions/Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd',
+                $ref: '#/definitions/Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a',
               },
             },
             required: [
@@ -92079,7 +92117,9 @@ const schema35 = {
               title: { type: 'string' },
               createdAt: { type: 'string' },
               updatedAt: { type: 'string' },
-              draft: { $ref: '#/definitions/src.training.Draft' },
+              draft: {
+                $ref: '#/definitions/src.features.training.domain.Draft',
+              },
               reviews: {
                 type: 'array',
                 items: {
@@ -92089,7 +92129,9 @@ const schema35 = {
                     at: { type: 'string' },
                     action: { type: 'string' },
                     model: { type: 'string' },
-                    input: { $ref: '#/definitions/src.training.Draft' },
+                    input: {
+                      $ref: '#/definitions/src.features.training.domain.Draft',
+                    },
                     result: {
                       anyOf: [
                         {
@@ -92259,7 +92301,9 @@ const schema35 = {
               revealedAt: { type: 'string' },
               turns: {
                 type: 'array',
-                items: { $ref: '#/definitions/src.training.Turn' },
+                items: {
+                  $ref: '#/definitions/src.features.training.domain.Turn',
+                },
               },
               finished: { type: 'boolean' },
               stopReason: { type: 'string' },
@@ -92505,7 +92549,9 @@ const schema35 = {
         },
         languageDrills: {
           type: 'array',
-          items: { $ref: '#/definitions/src.language.LanguageDrill' },
+          items: {
+            $ref: '#/definitions/src.features.language.domain.LanguageDrill',
+          },
         },
         interviewJobs: {
           type: 'array',
@@ -92517,7 +92563,9 @@ const schema35 = {
               createdAt: { type: 'string' },
               sources: {
                 type: 'array',
-                items: { $ref: '#/definitions/src.interview.JobSource' },
+                items: {
+                  $ref: '#/definitions/src.features.interview.domain.JobSource',
+                },
               },
               warnings: { type: 'array', items: { type: 'string' } },
             },
@@ -92720,7 +92768,7 @@ const schema35 = {
           ],
         },
         analysisStale: { type: 'boolean' },
-        activeJob: { $ref: '#/definitions/src.contracts.ActiveJob' },
+        activeJob: { $ref: '#/definitions/src.contracts.api.ActiveJob' },
         reviewLabel: { type: 'string' },
       },
       required: [
@@ -92744,7 +92792,7 @@ const schema36 = {
   properties: {
     problems: {
       type: 'array',
-      items: { $ref: '#/definitions/src.domain.Problem' },
+      items: { $ref: '#/definitions/src.features.algorithm.domain.Problem' },
     },
     interviewMaterials: {
       type: 'object',
@@ -92758,7 +92806,9 @@ const schema36 = {
     version: { type: 'number', const: 1 },
     languageDrills: {
       type: 'array',
-      items: { $ref: '#/definitions/src.language.LanguageDrill' },
+      items: {
+        $ref: '#/definitions/src.features.language.domain.LanguageDrill',
+      },
     },
     interviewJobs: {
       type: 'array',
@@ -92770,7 +92820,9 @@ const schema36 = {
           createdAt: { type: 'string' },
           sources: {
             type: 'array',
-            items: { $ref: '#/definitions/src.interview.JobSource' },
+            items: {
+              $ref: '#/definitions/src.features.interview.domain.JobSource',
+            },
           },
           warnings: { type: 'array', items: { type: 'string' } },
         },
@@ -92877,7 +92929,7 @@ const schema36 = {
         required: ['facet', 'id', 'pointId', 'schedule'],
       },
     },
-    analysis: { $ref: '#/definitions/src.domain.Analysis' },
+    analysis: { $ref: '#/definitions/src.features.algorithm.domain.Analysis' },
     settings: {
       type: 'object',
       properties: {
@@ -98246,7 +98298,7 @@ function validate68(
 const schema37 = {
   anyOf: [
     {
-      $ref: '#/definitions/Pick_src.tasks.Job__id___kind___chatId___9b6b5c21a3',
+      $ref: '#/definitions/Pick_src.shared.tasks.executor.Job__id___kind___chatId___f86dfb3c57',
     },
     { type: 'null' },
   ],
@@ -98255,7 +98307,7 @@ const schema38 = {
   type: 'object',
   properties: {
     id: { type: 'string' },
-    kind: { $ref: '#/definitions/Kind' },
+    kind: { $ref: '#/definitions/TaskKind' },
     chatId: { type: 'string' },
   },
   required: ['id', 'kind'],
@@ -131162,7 +131214,7 @@ function validate724(
 }
 export const request_4 = validate728;
 const schema255 = {
-  $ref: 'contracts#/definitions/Partial_Omit_src.contracts.Settings__model____a19a961ecc',
+  $ref: 'contracts#/definitions/Partial_Omit_src.contracts.api.Settings__model____0c1f599b99',
 };
 const schema40 = {
   type: 'object',
@@ -131822,7 +131874,9 @@ function validate734(
   return errors === 0;
 }
 export const request_7 = validate735;
-const schema261 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema261 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate736(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -131934,7 +131988,9 @@ function validate738(
   return errors === 0;
 }
 export const request_8 = validate739;
-const schema264 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema264 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate740(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -133011,7 +133067,7 @@ const schema271 = {
         ],
       },
     },
-    activeJob: { $ref: 'contracts#/definitions/src.contracts.ActiveJob' },
+    activeJob: { $ref: 'contracts#/definitions/src.contracts.api.ActiveJob' },
   },
   required: ['activeJob', 'threads'],
 };
@@ -134722,7 +134778,9 @@ function validate751(
   return errors === 0;
 }
 export const request_13 = validate752;
-const schema274 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema274 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate753(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -136121,7 +136179,7 @@ const schema279 = {
     context: {
       allOf: [
         {
-          $ref: 'contracts#/definitions/Omit_src.chat.PageContext__record___capturedAt___9144430f49',
+          $ref: 'contracts#/definitions/Omit_src.features.chat.service.PageContext__record___capturedAt___51115b8517',
         },
         { type: 'object', properties: { capturedAt: { type: 'string' } } },
       ],
@@ -137952,7 +138010,9 @@ function validate763(
   return errors === 0;
 }
 export const request_18 = validate764;
-const schema284 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema284 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate765(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -139823,7 +139883,9 @@ function validate771(
   return errors === 0;
 }
 export const response_22 = validate778;
-const schema294 = { $ref: 'contracts#/definitions/src.domain.Problem' };
+const schema294 = {
+  $ref: 'contracts#/definitions/src.features.algorithm.domain.Problem',
+};
 function validate779(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -141385,7 +141447,9 @@ function validate792(
   return errors === 0;
 }
 export const response_27 = validate795;
-const schema305 = { $ref: 'contracts#/definitions/src.language.LanguageDrill' };
+const schema305 = {
+  $ref: 'contracts#/definitions/src.features.language.domain.LanguageDrill',
+};
 function validate796(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -142433,7 +142497,9 @@ function validate801(
   return errors === 0;
 }
 export const request_29 = validate802;
-const schema310 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema310 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate803(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -142490,7 +142556,9 @@ const schema312 = {
     createdAt: { type: 'string' },
     sources: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.interview.JobSource' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.interview.domain.JobSource',
+      },
     },
     warnings: { type: 'array', items: { type: 'string' } },
   },
@@ -143430,12 +143498,14 @@ const schema318 = {
     },
     reviews: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.interview.InterviewReview' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.interview.domain.InterviewReview',
+      },
     },
     voiceSettings: {
       allOf: [
         {
-          $ref: 'contracts#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b',
+          $ref: 'contracts#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961',
         },
         {
           type: 'object',
@@ -143457,7 +143527,7 @@ const schema318 = {
           settings: {
             allOf: [
               {
-                $ref: 'contracts#/definitions/Omit_src.voice-options.VoiceSettings__language___cfad402f1b',
+                $ref: 'contracts#/definitions/Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961',
               },
               {
                 type: 'object',
@@ -143499,7 +143569,7 @@ const schema318 = {
       },
     },
     voiceContents: {
-      $ref: 'contracts#/definitions/Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd',
+      $ref: 'contracts#/definitions/Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a',
     },
   },
   required: [
@@ -147830,7 +147900,7 @@ function validate839(
 }
 export const request_35 = validate846;
 const schema334 = {
-  $ref: 'contracts#/definitions/Partial_src.voice-options.VoiceSettings__1a12d658f9',
+  $ref: 'contracts#/definitions/Partial_src.integrations.codex.options.VoiceSettings__9516919640',
 };
 const schema43 = {
   type: 'object',
@@ -155764,12 +155834,12 @@ function validate869(
 }
 export const request_39 = validate876;
 const schema350 = {
-  $ref: 'contracts#/definitions/src.contracts.VoiceStartInput',
+  $ref: 'contracts#/definitions/src.contracts.api.VoiceStartInput',
 };
 const schema45 = {
   allOf: [
     {
-      $ref: '#/definitions/Partial_src.voice-options.VoiceSettings__1a12d658f9',
+      $ref: '#/definitions/Partial_src.integrations.codex.options.VoiceSettings__9516919640',
     },
     {
       type: 'object',
@@ -158378,7 +158448,9 @@ function validate895(
   return errors === 0;
 }
 export const request_45 = validate896;
-const schema365 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema365 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate897(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -162404,10 +162476,10 @@ export const request_48 = validate920;
 const schema379 = {
   allOf: [
     {
-      $ref: 'contracts#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a',
+      $ref: 'contracts#/definitions/Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557',
     },
     {
-      $ref: 'contracts#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925',
+      $ref: 'contracts#/definitions/Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc',
     },
   ],
 };
@@ -162969,10 +163041,10 @@ export const request_50 = validate929;
 const schema385 = {
   allOf: [
     {
-      $ref: 'contracts#/definitions/Pick_src.study.StudySelection__count___59db79ec8e',
+      $ref: 'contracts#/definitions/Pick_src.features.study.service.StudySelection__count___1b25f81097',
     },
     {
-      $ref: 'contracts#/definitions/Partial_Omit_src.study.StudySelection__count____a8e03d19a8',
+      $ref: 'contracts#/definitions/Partial_Omit_src.features.study.service.StudySelection__count____7318a27389',
     },
   ],
 };
@@ -168958,7 +169030,9 @@ function validate951(
   return errors === 0;
 }
 export const request_54 = validate960;
-const schema404 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema404 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate961(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -171593,7 +171667,9 @@ function validate963(
   return errors === 0;
 }
 export const request_55 = validate972;
-const schema411 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema411 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate973(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -173629,7 +173705,7 @@ function validate978(
 }
 export const response_58 = validate981;
 const schema417 = {
-  $ref: 'contracts#/definitions/src.contracts.LibraryDetail',
+  $ref: 'contracts#/definitions/src.contracts.api.LibraryDetail',
 };
 const schema50 = {
   allOf: [
@@ -173691,7 +173767,7 @@ const schema50 = {
         pages: {
           type: 'array',
           items: {
-            $ref: '#/definitions/Omit_src.library.LibraryPage__text___46a9f73794',
+            $ref: '#/definitions/Omit_src.features.library.service.LibraryPage__text___194334aba3',
           },
         },
       },
@@ -176983,7 +177059,9 @@ function validate994(
   return errors === 0;
 }
 export const request_61 = validate995;
-const schema426 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema426 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate996(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -177247,7 +177325,9 @@ const schema430 = {
     title: { type: 'string' },
     createdAt: { type: 'string' },
     updatedAt: { type: 'string' },
-    draft: { $ref: 'contracts#/definitions/src.training.Draft' },
+    draft: {
+      $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+    },
     reviews: {
       type: 'array',
       items: {
@@ -177257,7 +177337,9 @@ const schema430 = {
           at: { type: 'string' },
           action: { type: 'string' },
           model: { type: 'string' },
-          input: { $ref: 'contracts#/definitions/src.training.Draft' },
+          input: {
+            $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+          },
           result: {
             anyOf: [
               {
@@ -177394,7 +177476,9 @@ const schema430 = {
     revealedAt: { type: 'string' },
     turns: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.training.Turn' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.training.domain.Turn',
+      },
     },
     finished: { type: 'boolean' },
     stopReason: { type: 'string' },
@@ -181629,7 +181713,9 @@ const schema439 = {
     title: { type: 'string' },
     createdAt: { type: 'string' },
     updatedAt: { type: 'string' },
-    draft: { $ref: 'contracts#/definitions/src.training.Draft' },
+    draft: {
+      $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+    },
     reviews: {
       type: 'array',
       items: {
@@ -181639,7 +181725,9 @@ const schema439 = {
           at: { type: 'string' },
           action: { type: 'string' },
           model: { type: 'string' },
-          input: { $ref: 'contracts#/definitions/src.training.Draft' },
+          input: {
+            $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+          },
           result: {
             anyOf: [
               {
@@ -181776,7 +181864,9 @@ const schema439 = {
     revealedAt: { type: 'string' },
     turns: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.training.Turn' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.training.domain.Turn',
+      },
     },
     finished: { type: 'boolean' },
     stopReason: { type: 'string' },
@@ -186340,7 +186430,9 @@ const schema457 = {
     title: { type: 'string' },
     createdAt: { type: 'string' },
     updatedAt: { type: 'string' },
-    draft: { $ref: 'contracts#/definitions/src.training.Draft' },
+    draft: {
+      $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+    },
     reviews: {
       type: 'array',
       items: {
@@ -186350,7 +186442,9 @@ const schema457 = {
           at: { type: 'string' },
           action: { type: 'string' },
           model: { type: 'string' },
-          input: { $ref: 'contracts#/definitions/src.training.Draft' },
+          input: {
+            $ref: 'contracts#/definitions/src.features.training.domain.Draft',
+          },
           result: {
             anyOf: [
               {
@@ -186487,7 +186581,9 @@ const schema457 = {
     revealedAt: { type: 'string' },
     turns: {
       type: 'array',
-      items: { $ref: 'contracts#/definitions/src.training.Turn' },
+      items: {
+        $ref: 'contracts#/definitions/src.features.training.domain.Turn',
+      },
     },
     finished: { type: 'boolean' },
     stopReason: { type: 'string' },
@@ -190169,7 +190265,9 @@ function validate1041(
   return errors === 0;
 }
 export const request_71 = validate1049;
-const schema461 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema461 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate1050(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -190298,7 +190396,9 @@ function validate1052(
   return errors === 0;
 }
 export const request_72 = validate1053;
-const schema464 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema464 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate1054(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},
@@ -190347,11 +190447,11 @@ function validate1053(
   return errors === 0;
 }
 export const response_73 = validate1056;
-const schema466 = { $ref: 'contracts#/definitions/src.contracts.JobInfo' };
+const schema466 = { $ref: 'contracts#/definitions/src.contracts.api.JobInfo' };
 const schema53 = {
   allOf: [
     {
-      $ref: '#/definitions/Pick_src.tasks.Job__id___error___status___kind___5cd003bd99',
+      $ref: '#/definitions/Pick_src.shared.tasks.executor.Job__id___error___kind___status___017af27d93',
     },
     {
       type: 'object',
@@ -190386,8 +190486,8 @@ const schema54 = {
   properties: {
     id: { type: 'string' },
     error: { type: 'string' },
+    kind: { $ref: '#/definitions/TaskKind' },
     status: { enum: ['aborted', 'done', 'error', 'running'], type: 'string' },
-    kind: { $ref: '#/definitions/Kind' },
   },
   required: ['id', 'kind', 'status'],
 };
@@ -190477,9 +190577,25 @@ function validate262(
         errors++;
       }
     }
+    if (data.kind !== undefined) {
+      if (
+        !validate134(data.kind, {
+          instancePath: instancePath + '/kind',
+          parentData: data,
+          parentDataProperty: 'kind',
+          rootData,
+        })
+      ) {
+        vErrors =
+          vErrors === null
+            ? validate134.errors
+            : vErrors.concat(validate134.errors);
+        errors = vErrors.length;
+      }
+    }
     if (data.status !== undefined) {
-      let data2 = data.status;
-      if (typeof data2 !== 'string') {
+      let data3 = data.status;
+      if (typeof data3 !== 'string') {
         const err5 = {
           instancePath: instancePath + '/status',
           schemaPath: '#/properties/status/type',
@@ -190495,10 +190611,10 @@ function validate262(
         errors++;
       }
       if (!(
-        data2 === 'aborted' ||
-        data2 === 'done' ||
-        data2 === 'error' ||
-        data2 === 'running'
+        data3 === 'aborted' ||
+        data3 === 'done' ||
+        data3 === 'error' ||
+        data3 === 'running'
       )) {
         const err6 = {
           instancePath: instancePath + '/status',
@@ -190513,22 +190629,6 @@ function validate262(
           vErrors.push(err6);
         }
         errors++;
-      }
-    }
-    if (data.kind !== undefined) {
-      if (
-        !validate134(data.kind, {
-          instancePath: instancePath + '/kind',
-          parentData: data,
-          parentDataProperty: 'kind',
-          rootData,
-        })
-      ) {
-        vErrors =
-          vErrors === null
-            ? validate134.errors
-            : vErrors.concat(validate134.errors);
-        errors = vErrors.length;
       }
     }
   } else {
@@ -191038,7 +191138,9 @@ function validate1060(
   return errors === 0;
 }
 export const request_74 = validate1061;
-const schema469 = { $ref: 'contracts#/definitions/src.contracts.EmptyInput' };
+const schema469 = {
+  $ref: 'contracts#/definitions/src.contracts.api.EmptyInput',
+};
 function validate1062(
   data,
   { instancePath = '', parentData, parentDataProperty, rootData = data } = {},

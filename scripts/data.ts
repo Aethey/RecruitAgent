@@ -1,8 +1,8 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { loadConfig, root } from './runtime.mjs';
-import { Store } from '../src/store.ts';
-import { exportBackup, restoreBackup } from '../src/backup.ts';
+import { Store } from '../src/shared/persistence/store.ts';
+import { exportBackup, restoreBackup } from '../src/shared/persistence/backup.ts';
 
 try {
   loadConfig();

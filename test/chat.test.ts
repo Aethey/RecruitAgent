@@ -3,9 +3,9 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { Chat, type ChatThread } from "../src/chat.ts";
-import { createApp } from "../src/server.ts";
-import { Store } from "../src/store.ts";
+import { Chat, type ChatThread } from "../src/features/chat/service.ts";
+import { createApp } from "../src/app/http.ts";
+import { Store } from "../src/shared/persistence/store.ts";
 import { FakeAI, fakeInterviewSources } from "./fixtures.ts";
 
 const page = (route = "#practice", title = "当前题目") => ({ route, title, visibleText: "页面里的问题与讲解", selectedText: "这段没有理解", fields: [{ label: "我的回答", value: "仍在编辑的答案" }], editor: "// 未保存代码" });

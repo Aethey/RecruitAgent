@@ -87,14 +87,14 @@ test('voice controls and dynamic activity follow interface language independentl
 });
 
 test('all API-authored labels and derived syllabus concepts are covered by resources',async()=>{
-  const {TOPICS,DIFFICULTIES,REVIEW_LABEL}=await import('../src/domain.ts');
-  const {LANGUAGE_SYLLABUS}=await import('../src/language.ts');
-  const {INTERVIEW_TYPES,INTERVIEW_TOPICS}=await import('../src/interview.ts');
-  const {TRAINING_KINDS,DIAGNOSIS_TOPICS}=await import('../src/training.ts');
-  const {BUILTIN_POINTS,STUDY_CATEGORIES,STUDY_FACETS,Study}=await import('../src/study.ts');
-  const {BREADTH_DOMAINS,BREADTH_GROUPS,BREADTH_POINTS}=await import('../src/breadth.ts');
-  const {VOICE_TONES,VOICE_MODELS}=await import('../src/voice-options.ts');
-  const {Store}=await import('../src/store.ts');
+  const {TOPICS,DIFFICULTIES,REVIEW_LABEL}=await import('../src/features/algorithm/domain.ts');
+  const {LANGUAGE_SYLLABUS}=await import('../src/features/language/domain.ts');
+  const {INTERVIEW_TYPES,INTERVIEW_TOPICS}=await import('../src/features/interview/domain.ts');
+  const {TRAINING_KINDS,DIAGNOSIS_TOPICS}=await import('../src/features/training/domain.ts');
+  const {BUILTIN_POINTS,STUDY_CATEGORIES,STUDY_FACETS,Study}=await import('../src/features/study/service.ts');
+  const {BREADTH_DOMAINS,BREADTH_GROUPS,BREADTH_POINTS}=await import('../src/features/study/breadth.ts');
+  const {VOICE_TONES,VOICE_MODELS}=await import('../src/integrations/codex/options.ts');
+  const {Store}=await import('../src/shared/persistence/store.ts');
   const labels=[REVIEW_LABEL,...Object.values(TOPICS),...Object.values(DIFFICULTIES),...Object.values(INTERVIEW_TYPES),...Object.values(INTERVIEW_TOPICS).flatMap(Object.values),...Object.values(TRAINING_KINDS),...Object.values(DIAGNOSIS_TOPICS),...Object.values(STUDY_CATEGORIES),...Object.values(STUDY_FACETS),...Object.values(BREADTH_DOMAINS),...Object.values(BREADTH_GROUPS),...Object.values(VOICE_TONES).map(t=>t.label),...VOICE_MODELS.map(m=>m.label),...Object.values(LANGUAGE_SYLLABUS).flatMap(topics=>Object.values(topics).flatMap(spec=>[spec.label,...spec.concepts])),...[...BUILTIN_POINTS,...BREADTH_POINTS].flatMap(p=>[p.title,p.topic]),new Study(new Store('/unused-i18n-fixture.json')).overview().rule];
   for(const label of labels){
     // Names composed entirely of English/code identifiers can remain identical in every locale.

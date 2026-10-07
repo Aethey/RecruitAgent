@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CodexVoice, voiceError } from "../src/codex-voice.ts";
-import { createApp } from "../src/server.ts";
+import { CodexVoice, voiceError } from "../src/integrations/codex/voice.ts";
+import { createApp } from "../src/app/http.ts";
 import { FakeAI, fakeInterviewSources } from "./fixtures.ts";
 import { FakeVoiceRpc } from "./voice-fixtures.ts";
-import { VOICE_PREVIEW_TEXT } from "../src/voice-options.ts";
-import type { VoiceTranscript } from "../src/codex-voice.ts";
+import { VOICE_PREVIEW_TEXT } from "../src/integrations/codex/options.ts";
+import type { VoiceTranscript } from "../src/integrations/codex/voice.ts";
 
 const offer = "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n";
 async function fixture(t: test.TestContext) {

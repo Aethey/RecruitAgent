@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = resolve(root, 'src/generated');
 const checking = process.argv.includes('--check');
-const program = programFromConfig(resolve(root, 'tsconfig.json'), [resolve(root, 'src/contracts.ts')]);
+const program = programFromConfig(resolve(root, 'tsconfig.json'), [resolve(root, 'src/contracts/api.ts')]);
 // Computed initializers have no serializable default. TJS warns for each one;
 // retain other diagnostics and keep generation output usable.
 const warn = console.warn;
@@ -64,20 +64,20 @@ function validator(name, pointer, type) {
   validators[name] = name;
   declarations.push(`export const ${name}: import('ajv').ValidateFunction<${type}>;`);
 }
-validator('validateState', 'state', "import('../domain.ts').State");
-validator('validateArchive', 'archive', "import('../contracts.ts').BackupArchive");
+validator('validateState', 'state', "import('../shared/persistence/state.ts').State");
+validator('validateArchive', 'archive', "import('../contracts/api.ts').BackupArchive");
 for (const name of Object.keys(models)) {
-  validator(`model_${name}`, `models/properties/${name}`, `import('../contracts.ts').ModelOutputs[${JSON.stringify(name)}]`);
+  validator(`model_${name}`, `models/properties/${name}`, `import('../contracts/api.ts').ModelOutputs[${JSON.stringify(name)}]`);
 }
 for (const name of Object.keys(events)) {
-  validator(`event_${name.replaceAll('-', '_')}`, `events/properties/${name}`, `import('../contracts.ts').EventPayloads[${JSON.stringify(name)}]`);
+  validator(`event_${name.replaceAll('-', '_')}`, `events/properties/${name}`, `import('../contracts/api.ts').EventPayloads[${JSON.stringify(name)}]`);
 }
 const native = deref(bundle.properties.native).properties;
 for (const direction of ['requests', 'responses']) for (const method of Object.keys(deref(native[direction]).properties)) {
   const escaped = method.replaceAll('/', '~1');
-  validator(`native_${direction}_${method.replaceAll('/', '_')}`, `native/properties/${direction}/properties/${escaped}`, `import('../codex-protocol.ts').NativeContracts[${JSON.stringify(direction)}][${JSON.stringify(method)}]`);
+  validator(`native_${direction}_${method.replaceAll('/', '_')}`, `native/properties/${direction}/properties/${escaped}`, `import('../integrations/codex/protocol.ts').NativeContracts[${JSON.stringify(direction)}][${JSON.stringify(method)}]`);
 }
-validator('native_notification', 'native/properties/notification', "import('../codex-protocol.ts').NativeNotification");
+validator('native_notification', 'native/properties/notification', "import('../integrations/codex/protocol.ts').NativeNotification");
 const openapi = { openapi: '3.1.0', info: { title: 'RecruitAgent', version: '1' }, paths: {}, components: { schemas: {} } };
 function toOpenapi(node) {
   if (Array.isArray(node)) return node.map(toOpenapi);
@@ -93,8 +93,8 @@ for (const [index, [key, node]] of Object.entries(apis).entries()) {
   const [method, path] = key.split(' '), endpoint = deref(node);
   const pointer = `api/properties/${key.replaceAll('~', '~0').replaceAll('/', '~1')}/properties/`;
   const response = `response_${index}`, request = endpoint.properties.body ? `request_${index}` : undefined;
-  validator(response, pointer + 'response', `import('../contracts.ts').ApiEndpoints[${JSON.stringify(key)}]['response']`);
-  if (request) validator(request, pointer + 'body', `import('../contracts.ts').ApiEndpoints[${JSON.stringify(key)}]['body']`);
+  validator(response, pointer + 'response', `import('../contracts/api.ts').ApiEndpoints[${JSON.stringify(key)}]['response']`);
+  if (request) validator(request, pointer + 'body', `import('../contracts/api.ts').ApiEndpoints[${JSON.stringify(key)}]['body']`);
   registry[key] = { method, path, response, ...(request ? { request } : {}) };
   const parameters = [...path.matchAll(/\{([^}]+)\}/g)].map(([, name]) => ({ name, in: 'path', required: true, schema: { type: 'string' } }));
   const operation = { operationId: `operation_${index}`, ...(parameters.length ? { parameters } : {}), responses: {
@@ -132,9 +132,9 @@ const files = {
   'validators.mjs': header + await format(standaloneCode(ajv, validators), { parser: 'babel', singleQuote: true }),
   'validators.d.mts': header + declarations.join('\n') + '\n',
   'registry.mjs': header + `export const routes = ${JSON.stringify(registry, null, 2)};\nexport const modelNames = ${JSON.stringify(Object.keys(models))};\nexport const eventNames = ${JSON.stringify(Object.keys(events))};\n`,
-  'registry.d.mts': header + "export const routes: Record<string, {method: string; path: string; response: string; request?: string}>;\nexport const modelNames: (keyof import('../contracts.ts').ModelOutputs)[];\nexport const eventNames: (keyof import('../contracts.ts').EventPayloads)[];\n",
+  'registry.d.mts': header + "export const routes: Record<string, {method: string; path: string; response: string; request?: string}>;\nexport const modelNames: (keyof import('../contracts/api.ts').ModelOutputs)[];\nexport const eventNames: (keyof import('../contracts/api.ts').EventPayloads)[];\n",
   'model-schemas.mjs': header + `export const schemas = ${JSON.stringify(modelSchemas, null, 2)};\n`,
-  'model-schemas.d.mts': header + "export const schemas: Record<keyof import('../contracts.ts').ModelOutputs, object>;\n",
+  'model-schemas.d.mts': header + "export const schemas: Record<keyof import('../contracts/api.ts').ModelOutputs, object>;\n",
   'wire-validators.mjs': header + `export { ${Object.keys(validators).filter(name => /^(request_|response_|event_)/.test(name)).join(', ')} } from './validators.mjs';\n`,
   'wire-validators.d.mts': header + `export { ${Object.keys(validators).filter(name => /^(request_|response_|event_)/.test(name)).join(', ')} } from './validators.mjs';\n`,
 };

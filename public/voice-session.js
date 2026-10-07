@@ -10,7 +10,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
   let state = initial();
   let inputRevision = 0, activeResponseRevision = null, activeResponseId = null;
   const responseRevisions = new Map();
-  /** @param {import('../src/contracts.ts').VoiceDiagnosticInput['event']} event */
+  /** @param {import('../src/contracts/api.ts').VoiceDiagnosticInput['event']} event */
   function diagnostic(event, detail = {}, id = state.id) {
     if (id && diagnosticsReady) void api(`/api/voice/sessions/${id}/diagnostics`,'POST',{event,...detail}).catch(() => {});
   }

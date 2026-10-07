@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createApp } from "../src/server.ts";
+import { createApp } from "../src/app/http.ts";
 import { FakeAI, fakeInterviewSources, fakeJobReader } from "./fixtures.ts";
 const dataDir = await mkdtemp(join(tmpdir(), "algo-browser-test-"));
 const ai = new FakeAI(); ai.delay = 500;

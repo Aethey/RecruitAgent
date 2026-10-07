@@ -46,7 +46,7 @@ export function createPageContext({ hasEditor, editorValue, editorSelection }) {
       value = clip(String(value), Math.min(19900, Math.max(0, budget))); budget -= value.length;
       return { label: clip(label.trim() || t("ui.pageInput"), 160), value };
     });
-    /** @type {Omit<import('../src/chat.ts').PageContext, 'capturedAt' | 'record'>} */
+    /** @type {Omit<import('../src/features/chat/service.ts').PageContext, 'capturedAt' | 'record'>} */
     const context = { ...meta, visibleText: clip(visibleText(page), 29000),
       selectedText: clip(editorSelection() || (selectedRoute === meta.route ? selectedText : ''), 6000), fields,
       ...(hasEditor() ? { editor: clip(editorValue(), 99000) } : {}),

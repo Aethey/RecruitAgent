@@ -1,4 +1,4 @@
-import type { VoiceRpc } from "../src/codex-voice.ts";
+import type { VoiceRpc } from "../src/integrations/codex/voice.ts";
 
 type Notification = Parameters<VoiceRpc["subscribe"]>[0] extends (event: infer N) => void ? N : never;
 export class FakeVoiceRpc implements VoiceRpc {

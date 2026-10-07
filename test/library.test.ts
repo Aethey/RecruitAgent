@@ -4,9 +4,9 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { libraryImage, scannedPDF } from "./library-fixtures.ts";
-import { createApp } from "../src/server.ts";
-import { Store } from "../src/store.ts";
-import { Library, fileType, type PublicResourceReader } from "../src/library.ts";
+import { createApp } from "../src/app/http.ts";
+import { Store } from "../src/shared/persistence/store.ts";
+import { Library, fileType, type PublicResourceReader } from "../src/features/library/service.ts";
 import { FakeAI, fakeInterviewSources } from "./fixtures.ts";
 
 async function setup(t:{after(fn:()=>Promise<void>):void},reader?:PublicResourceReader){

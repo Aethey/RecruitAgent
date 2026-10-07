@@ -3,17 +3,17 @@ import assert from 'node:assert/strict';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CodexVoice } from '../src/codex-voice.ts';
-import { VoiceInterviews, answerTips } from '../src/voice-interview.ts';
-import { Store } from '../src/store.ts';
-import { interviewContent } from '../src/interview.ts';
+import { CodexVoice } from '../src/integrations/codex/voice.ts';
+import { VoiceInterviews, answerTips } from '../src/features/interview/voice.ts';
+import { Store } from '../src/shared/persistence/store.ts';
+import { interviewContent } from '../src/features/interview/domain.ts';
 import { interviewFixture } from './interview-fixture.ts';
-import { createApp } from '../src/server.ts';
+import { createApp } from '../src/app/http.ts';
 import { FakeAI, fakeInterviewSources } from './fixtures.ts';
 import { FakeVoiceRpc } from './voice-fixtures.ts';
-import { DEFAULT_VOICE_SETTINGS } from '../src/voice-options.ts';
-import type { AI } from '../src/pi.ts';
-import { classifyVoiceIntent, hasAnswerContent } from '../src/voice-intent.ts';
+import { DEFAULT_VOICE_SETTINGS } from '../src/integrations/codex/options.ts';
+import type { AI } from '../src/shared/ai/types.ts';
+import { classifyVoiceIntent, hasAnswerContent } from '../src/integrations/codex/intent.ts';
 
 class TranslationAI extends FakeAI {
   invalid = false;

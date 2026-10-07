@@ -1,6 +1,6 @@
-import type { AI, AIImage, AIMode, LoginInteraction } from "../src/pi.ts";
-import type { InterviewSources } from "../src/interview-sources.ts";
-import type { JobReader } from "../src/job-import.ts";
+import type { AI, AIImage, AIMode, LoginInteraction } from '../src/shared/ai/types.ts';
+import type { InterviewSources } from "../src/features/interview/sources.ts";
+import type { JobReader } from "../src/features/interview/job-import.ts";
 
 export const fakeInterviewSources: InterviewSources = {
   async status() { return { available: true, files: ["测试简历.pdf", "questions/通用技术.md"] }; },

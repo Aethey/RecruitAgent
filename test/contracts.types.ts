@@ -1,7 +1,7 @@
 // Compile-only regression cases. These expectations must fail if codegen loses precision.
 import type { ApiClient } from '../src/generated/api-client.js';
-import type { VoiceRpc } from '../src/codex-voice.ts';
-import { Events } from '../src/events.ts';
+import type { VoiceRpc } from '../src/integrations/codex/voice.ts';
+import { Events } from '../src/shared/events.ts';
 
 export async function contractTypeChecks(api: ApiClient, rpc: VoiceRpc, events: Events) {
   const settings = await api('/api/settings');

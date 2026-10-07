@@ -1,6 +1,6 @@
 # RecruitAgent
 
-[日本語](README.md) | [English](README.en.md) | [简体中文](README.zh-CN.md)
+[日本語](README.md) | [English](docs/README.en.md) | [简体中文](docs/README.zh-CN.md)
 
 日本での転職活動に向けて作った、ローカルで動く AI 面接・学習ツールです。職務経験の整理、日本語での面接練習、技術知識の復習を一つの環境で進められます。音声面接と音声 Demo は任意の機能です。
 
@@ -114,3 +114,5 @@ codex login
 ## データのバックアップ
 
 「設定 → データのバックアップ」から、学習記録と資料を `.json.gz` ファイルとしてダウンロードできます。ログイン情報はバックアップに含まれません。
+
+開発時のディレクトリ構成と変更箇所は [ソースコード構成](docs/architecture.md) を参照してください。

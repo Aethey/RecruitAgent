@@ -3,13 +3,14 @@ import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { createApp } from "../src/server.ts";
-import { Store } from "../src/store.ts";
+import { createApp } from "../src/app/http.ts";
+import { Store } from "../src/shared/persistence/store.ts";
 import { FakeAI, sampleProblem, fakeInterviewSources, fakeJobReader } from "./fixtures.ts";
-import { DEFAULT_TEACHER_SETTINGS, LANGUAGES, type Language } from "../src/domain.ts";
-import { LANGUAGE_SYLLABUS, languageFocus, type LanguageDrill } from "../src/language.ts";
-import { interviewContent, interviewReviewContent } from "../src/interview.ts";
-import { extractJobHtml, importJob, jobUrl, publicIPv4 } from "../src/job-import.ts";
+import { DEFAULT_TEACHER_SETTINGS } from '../src/features/chat/settings.ts';
+import { LANGUAGES, type Language } from '../src/shared/programming.ts';
+import { LANGUAGE_SYLLABUS, languageFocus, type LanguageDrill } from "../src/features/language/domain.ts";
+import { interviewContent, interviewReviewContent } from "../src/features/interview/domain.ts";
+import { extractJobHtml, importJob, jobUrl, publicIPv4 } from "../src/features/interview/job-import.ts";
 
 async function setup(t: { after(fn: () => Promise<void>): void }) {
   const dataDir = await mkdtemp(join(tmpdir(), "algo-test-"));

@@ -3,9 +3,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { Chat } from "../src/chat.ts";
-import { Store } from "../src/store.ts";
-import { createApp } from "../src/server.ts";
+import { Chat } from "../src/features/chat/service.ts";
+import { Store } from "../src/shared/persistence/store.ts";
+import { createApp } from "../src/app/http.ts";
 import { FakeAI, fakeInterviewSources, sampleProblem } from "./fixtures.ts";
 
 async function setup(t: { after(fn: () => Promise<void>): void }) {

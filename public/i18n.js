@@ -1,4 +1,4 @@
-import { LOCALES, LOCALE_TAGS, isLocale } from '../src/locales.ts';
+import { LOCALES, LOCALE_TAGS, isLocale } from '../src/shared/i18n/locales.ts';
 import { formatMessage, authoredMessageKey } from '../src/generated/localizations.ts';
 export { LOCALES };
 const initialInterface = globalThis.document?.documentElement.dataset.uiLanguage;
@@ -14,7 +14,7 @@ export const languageTag = () => LOCALE_TAGS[interfaceLanguage];
  * @param {import('../src/generated/localizations.ts').BrowserMessageArgs<K>} args
  */
 export function t(key, ...args) {
-  const [params, locale = interfaceLanguage] = /** @type {[Record<string, string | number> | undefined, import('../src/locales.ts').Locale?]} */ (/** @type {unknown} */ (args));
+  const [params, locale = interfaceLanguage] = /** @type {[Record<string, string | number> | undefined, import('../src/shared/i18n/locales.ts').Locale?]} */ (/** @type {unknown} */ (args));
   return formatMessage(locale, key, .../** @type {import('../src/generated/localizations.ts').MessageArgs<K>} */ ([params]));
 }
 /** @type {typeof t} */

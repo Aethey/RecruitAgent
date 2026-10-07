@@ -5,16 +5,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
-import { createApp } from '../src/server.ts';
-import { Store } from '../src/store.ts';
-import { restoreBackup } from '../src/backup.ts';
-import { modelValue, nativeParams, nativeResult, nativeNotification } from '../src/contract-validation.ts';
-import { modelInstruction } from '../src/model-contracts.ts';
+import { createApp } from '../src/app/http.ts';
+import { Store } from '../src/shared/persistence/store.ts';
+import { restoreBackup } from '../src/shared/persistence/backup.ts';
+import { modelValue, nativeParams, nativeResult, nativeNotification } from '../src/contracts/validation.ts';
+import { modelInstruction } from '../src/shared/ai/model-output.ts';
 import { createApiClient, eventData, readApiResponse } from '../public/api.ts';
-import { Events } from '../src/events.ts';
+import { Events } from '../src/shared/events.ts';
 import { FakeAI, fakeInterviewSources } from './fixtures.ts';
 import { interviewFixture } from './interview-fixture.ts';
-import { DEFAULT_VOICE_SETTINGS } from '../src/voice-options.ts';
+import { DEFAULT_VOICE_SETTINGS } from '../src/integrations/codex/options.ts';
 
 async function directory(t: { after(fn: () => Promise<void>): void }) {
   const dir = await mkdtemp(join(tmpdir(), 'contracts-test-'));

@@ -1044,7 +1044,7 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        "src.contracts.ContractBundle": {
+        "src.contracts.api.ContractBundle": {
             state: {
                 interviewMaterials?: {
                     resume: string[];
@@ -1053,16 +1053,16 @@ export interface components {
                 };
                 /** @constant */
                 version: 1;
-                problems: components["schemas"]["src.domain.Problem"][];
-                languageDrills?: components["schemas"]["src.language.LanguageDrill"][];
+                problems: components["schemas"]["src.features.algorithm.domain.Problem"][];
+                languageDrills?: components["schemas"]["src.features.language.domain.LanguageDrill"][];
                 interviewJobs?: {
                     id: string;
                     title: string;
                     createdAt: string;
-                    sources: components["schemas"]["src.interview.JobSource"][];
+                    sources: components["schemas"]["src.features.interview.domain.JobSource"][];
                     warnings: string[];
                 }[];
-                interviews?: components["schemas"]["src.interview.InterviewSet"][];
+                interviews?: components["schemas"]["src.features.interview.domain.InterviewSet"][];
                 library?: {
                     id: string;
                     title: string;
@@ -1104,7 +1104,7 @@ export interface components {
                     title: string;
                     createdAt: string;
                     updatedAt: string;
-                    draft: components["schemas"]["src.training.Draft"];
+                    draft: components["schemas"]["src.features.training.domain.Draft"];
                     sources: {
                         id: string;
                         title: string;
@@ -1117,7 +1117,7 @@ export interface components {
                         at: string;
                         action: string;
                         model: string;
-                        input: components["schemas"]["src.training.Draft"];
+                        input: components["schemas"]["src.features.training.domain.Draft"];
                         result: {
                             summary: string;
                             relevance: string;
@@ -1183,7 +1183,7 @@ export interface components {
                         };
                     };
                     revealedAt?: string;
-                    turns?: components["schemas"]["src.training.Turn"][];
+                    turns?: components["schemas"]["src.features.training.domain.Turn"][];
                     finished?: boolean;
                     stopReason?: string;
                     debriefId?: string;
@@ -1344,7 +1344,7 @@ export interface components {
                     mode?: "teacher";
                     problemId?: string;
                 }[];
-                analysis?: components["schemas"]["src.domain.Analysis"];
+                analysis?: components["schemas"]["src.features.algorithm.domain.Analysis"];
                 settings?: {
                     model: string;
                     visibleModels?: string[];
@@ -1373,16 +1373,16 @@ export interface components {
                     };
                     /** @constant */
                     version: 1;
-                    problems: components["schemas"]["src.domain.Problem"][];
-                    languageDrills?: components["schemas"]["src.language.LanguageDrill"][];
+                    problems: components["schemas"]["src.features.algorithm.domain.Problem"][];
+                    languageDrills?: components["schemas"]["src.features.language.domain.LanguageDrill"][];
                     interviewJobs?: {
                         id: string;
                         title: string;
                         createdAt: string;
-                        sources: components["schemas"]["src.interview.JobSource"][];
+                        sources: components["schemas"]["src.features.interview.domain.JobSource"][];
                         warnings: string[];
                     }[];
-                    interviews?: components["schemas"]["src.interview.InterviewSet"][];
+                    interviews?: components["schemas"]["src.features.interview.domain.InterviewSet"][];
                     library?: {
                         id: string;
                         title: string;
@@ -1424,7 +1424,7 @@ export interface components {
                         title: string;
                         createdAt: string;
                         updatedAt: string;
-                        draft: components["schemas"]["src.training.Draft"];
+                        draft: components["schemas"]["src.features.training.domain.Draft"];
                         sources: {
                             id: string;
                             title: string;
@@ -1437,7 +1437,7 @@ export interface components {
                             at: string;
                             action: string;
                             model: string;
-                            input: components["schemas"]["src.training.Draft"];
+                            input: components["schemas"]["src.features.training.domain.Draft"];
                             result: {
                                 summary: string;
                                 relevance: string;
@@ -1503,7 +1503,7 @@ export interface components {
                             };
                         };
                         revealedAt?: string;
-                        turns?: components["schemas"]["src.training.Turn"][];
+                        turns?: components["schemas"]["src.features.training.domain.Turn"][];
                         finished?: boolean;
                         stopReason?: string;
                         debriefId?: string;
@@ -1664,7 +1664,7 @@ export interface components {
                         mode?: "teacher";
                         problemId?: string;
                     }[];
-                    analysis?: components["schemas"]["src.domain.Analysis"];
+                    analysis?: components["schemas"]["src.features.algorithm.domain.Analysis"];
                     settings?: {
                         model: string;
                         visibleModels?: string[];
@@ -1686,12 +1686,12 @@ export interface components {
                     data: string;
                 }[];
             };
-            api: components["schemas"]["src.contracts.ApiEndpoints"];
-            models: components["schemas"]["src.contracts.ModelOutputs"];
-            events: components["schemas"]["src.contracts.EventPayloads"];
-            native: components["schemas"]["src.codex-protocol.NativeContracts"];
+            api: components["schemas"]["src.contracts.api.ApiEndpoints"];
+            models: components["schemas"]["src.contracts.api.ModelOutputs"];
+            events: components["schemas"]["src.contracts.api.EventPayloads"];
+            native: components["schemas"]["src.integrations.codex.protocol.NativeContracts"];
         };
-        "src.domain.Problem": {
+        "src.features.algorithm.domain.Problem": {
             topic: components["schemas"]["Topic"];
             difficulty: components["schemas"]["Difficulty"];
             language: components["schemas"]["Language"];
@@ -1718,7 +1718,7 @@ export interface components {
                 question: string;
                 checkpoint: string;
             }[];
-            reviews: components["schemas"]["src.domain.Review"][];
+            reviews: components["schemas"]["src.features.algorithm.domain.Review"][];
             teacherHints?: number;
         };
         /** @enum {string} */
@@ -1727,7 +1727,7 @@ export interface components {
         Difficulty: "easy" | "hard" | "medium";
         /** @enum {string} */
         Language: "dart" | "go" | "java" | "javascript" | "kotlin" | "python" | "swift" | "typescript";
-        "src.domain.Review": {
+        "src.features.algorithm.domain.Review": {
             /** @enum {string} */
             verdict: "needs-work" | "promising" | "solid";
             score: number;
@@ -1747,7 +1747,7 @@ export interface components {
             code: string;
             hintsUsed: number;
         };
-        "src.language.LanguageDrill": {
+        "src.features.language.domain.LanguageDrill": {
             title: string;
             introduction: string;
             starterCode: string;
@@ -1773,7 +1773,7 @@ export interface components {
             revealedAt?: string;
             selectionTopic?: string;
         };
-        "src.interview.JobSource": {
+        "src.features.interview.domain.JobSource": {
             id: string;
             title: string;
             /** @enum {string} */
@@ -1783,7 +1783,7 @@ export interface components {
             url?: string;
             fetchedAt: string;
         };
-        "src.interview.InterviewSet": {
+        "src.features.interview.domain.InterviewSet": {
             type: components["schemas"]["InterviewType"];
             topic: string;
             count: number;
@@ -1812,7 +1812,7 @@ export interface components {
             /** @enum {string} */
             language?: "en" | "ja" | "zh";
             answers: components["schemas"]["Record_string_string__14902eed9d"];
-            reviews: components["schemas"]["src.interview.InterviewReview"][];
+            reviews: components["schemas"]["src.features.interview.domain.InterviewReview"][];
             sources: {
                 id: string;
                 title: string;
@@ -1820,7 +1820,7 @@ export interface components {
                 kind: "job" | "personal" | "resume" | "study";
                 content: string;
             }[];
-            voiceSettings?: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+            voiceSettings?: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                 /** @enum {string} */
                 language?: "en" | "ja" | "zh";
             };
@@ -1829,7 +1829,7 @@ export interface components {
                 at: string;
                 endedAt?: string;
                 synthetic?: boolean;
-                settings: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+                settings: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                     /** @enum {string} */
                     language?: "en" | "ja" | "zh";
                 };
@@ -1845,12 +1845,12 @@ export interface components {
                     completedAt?: string;
                 }[];
             }[];
-            voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd"];
+            voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a"];
         };
         /** @enum {string} */
         InterviewType: "common" | "position" | "technical";
         Record_string_string__14902eed9d: Record<string, never>;
-        "src.interview.InterviewReview": {
+        "src.features.interview.domain.InterviewReview": {
             summary: string;
             items: {
                 questionId: string;
@@ -1874,7 +1874,7 @@ export interface components {
             at: string;
             answers: components["schemas"]["Record_string_string__14902eed9d"];
         };
-        "Omit_src.voice-options.VoiceSettings__language___cfad402f1b": {
+        "Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961": {
             model: string;
             voice: components["schemas"]["RealtimeVoice"];
             tone: components["schemas"]["VoiceTone"];
@@ -1884,7 +1884,7 @@ export interface components {
         RealtimeVoice: "alloy" | "arbor" | "ash" | "ballad" | "breeze" | "cedar" | "coral" | "cove" | "echo" | "ember" | "juniper" | "maple" | "marin" | "sage" | "shimmer" | "sol" | "spruce" | "vale" | "verse";
         /** @enum {string} */
         VoiceTone: "gentle" | "lively" | "natural" | "strict";
-        "Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd": {
+        "Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a": {
             zh?: {
                 language: components["schemas"]["Locale"];
                 basis: string;
@@ -1919,8 +1919,8 @@ export interface components {
         LibraryKind: "image" | "markdown" | "pdf" | "url";
         /** @enum {string} */
         TrainingKind: "compression" | "debrief" | "diagnosis" | "followup";
-        "src.training.Draft": Record<string, never>;
-        "src.training.Turn": {
+        "src.features.training.domain.Draft": Record<string, never>;
+        "src.features.training.domain.Turn": {
             id: string;
             question: string;
             /** @enum {string} */
@@ -1951,7 +1951,7 @@ export interface components {
         Exclude_1: "data" | "delivery" | "design" | "generation" | "integration" | "operations" | "security" | "testing";
         /** @enum {string} */
         Facet: "apply" | "explain" | "recall" | "write";
-        "src.domain.Analysis": {
+        "src.features.algorithm.domain.Analysis": {
             summary: string;
             strengths: string[];
             gaps: string[];
@@ -1962,7 +1962,7 @@ export interface components {
             reviewedProblems: number;
         };
         /** @description Method + path is the authority for both runtime matching and OpenAPI generation. */
-        "src.contracts.ApiEndpoints": {
+        "src.contracts.api.ApiEndpoints": {
             "GET /api/health": {
                 response: {
                     ok: boolean;
@@ -1970,7 +1970,7 @@ export interface components {
                 };
             };
             "GET /api/state": {
-                response: components["schemas"]["src.contracts.PublicState"];
+                response: components["schemas"]["src.contracts.api.PublicState"];
             };
             "GET /api/config": {
                 response: {
@@ -2582,7 +2582,7 @@ export interface components {
                 };
             };
             "PUT /api/settings": {
-                body: components["schemas"]["Partial_Omit_src.contracts.Settings__model____a19a961ecc"];
+                body: components["schemas"]["Partial_Omit_src.contracts.api.Settings__model____0c1f599b99"];
                 response: {
                     model: string;
                     visibleModels: string[];
@@ -2613,13 +2613,13 @@ export interface components {
                 };
             };
             "POST /api/auth/login": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     id: string;
                 };
             };
             "POST /api/auth/cancel": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     ok: boolean;
                 };
@@ -2678,11 +2678,11 @@ export interface components {
                         mode?: "teacher";
                         problemId?: string;
                     }[];
-                    activeJob: components["schemas"]["src.contracts.ActiveJob"];
+                    activeJob: components["schemas"]["src.contracts.api.ActiveJob"];
                 };
             };
             "POST /api/chats": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     id: string;
                     title: string;
@@ -2775,7 +2775,7 @@ export interface components {
                 body: {
                     id: string;
                     message: string;
-                    context: components["schemas"]["Omit_src.chat.PageContext__record___capturedAt___9144430f49"] & {
+                    context: components["schemas"]["Omit_src.features.chat.service.PageContext__record___capturedAt___51115b8517"] & {
                         capturedAt?: string;
                     };
                 };
@@ -2794,7 +2794,7 @@ export interface components {
                 };
             };
             "POST /api/problems/{id}/teacher": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     id: string;
                     title: string;
@@ -2904,7 +2904,7 @@ export interface components {
                 };
             };
             "GET /api/problems/{id}": {
-                response: components["schemas"]["src.domain.Problem"];
+                response: components["schemas"]["src.features.algorithm.domain.Problem"];
             };
             "PUT /api/problems/{id}": {
                 body: {
@@ -2943,7 +2943,7 @@ export interface components {
                 };
             };
             "GET /api/language-drills/{id}": {
-                response: components["schemas"]["src.language.LanguageDrill"];
+                response: components["schemas"]["src.features.language.domain.LanguageDrill"];
             };
             "PUT /api/language-drills/{id}": {
                 body: {
@@ -2954,7 +2954,7 @@ export interface components {
                 };
             };
             "POST /api/language-drills/{id}/reveal": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     revealedAt: string;
                 };
@@ -2969,7 +2969,7 @@ export interface components {
                     id: string;
                     title: string;
                     createdAt: string;
-                    sources: components["schemas"]["src.interview.JobSource"][];
+                    sources: components["schemas"]["src.features.interview.domain.JobSource"][];
                     warnings: string[];
                 };
             };
@@ -3019,8 +3019,8 @@ export interface components {
                     /** @enum {string} */
                     language?: "en" | "ja" | "zh";
                     answers: components["schemas"]["Record_string_string__14902eed9d"];
-                    reviews: components["schemas"]["src.interview.InterviewReview"][];
-                    voiceSettings?: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+                    reviews: components["schemas"]["src.features.interview.domain.InterviewReview"][];
+                    voiceSettings?: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                         /** @enum {string} */
                         language?: "en" | "ja" | "zh";
                     };
@@ -3029,7 +3029,7 @@ export interface components {
                         at: string;
                         endedAt?: string;
                         synthetic?: boolean;
-                        settings: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+                        settings: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                             /** @enum {string} */
                             language?: "en" | "ja" | "zh";
                         };
@@ -3045,7 +3045,7 @@ export interface components {
                             completedAt?: string;
                         }[];
                     }[];
-                    voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd"];
+                    voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a"];
                 };
             };
             "PUT /api/interviews/{id}": {
@@ -3066,7 +3066,7 @@ export interface components {
                 };
             };
             "PUT /api/interviews/{id}/voice-settings": {
-                body: components["schemas"]["Partial_src.voice-options.VoiceSettings__1a12d658f9"];
+                body: components["schemas"]["Partial_src.integrations.codex.options.VoiceSettings__9516919640"];
                 response: {
                     model: string;
                     voice: components["schemas"]["RealtimeVoice"];
@@ -3282,7 +3282,7 @@ export interface components {
                 };
             };
             "POST /api/voice/sessions": {
-                body: components["schemas"]["src.contracts.VoiceStartInput"];
+                body: components["schemas"]["src.contracts.api.VoiceStartInput"];
                 response: {
                     id: string;
                     sdp: string;
@@ -3412,7 +3412,7 @@ export interface components {
                 };
             };
             "POST /api/voice/sessions/{id}/preview": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     started: boolean;
                 };
@@ -3516,7 +3516,7 @@ export interface components {
                 };
             };
             "POST /api/study/points": {
-                body: components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"];
+                body: components["schemas"]["Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557"] & components["schemas"]["Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc"];
                 response: {
                     id: string;
                     title: string;
@@ -3554,7 +3554,7 @@ export interface components {
                 };
             };
             "POST /api/study/batches": {
-                body: components["schemas"]["Pick_src.study.StudySelection__count___59db79ec8e"] & components["schemas"]["Partial_Omit_src.study.StudySelection__count____a8e03d19a8"];
+                body: components["schemas"]["Pick_src.features.study.service.StudySelection__count___1b25f81097"] & components["schemas"]["Partial_Omit_src.features.study.service.StudySelection__count____7318a27389"];
                 response: {
                     jobId: string;
                     chatId?: string;
@@ -3655,7 +3655,7 @@ export interface components {
                 };
             };
             "POST /api/study/batches/{id}/close": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     items: {
                         reference?: {
@@ -3733,7 +3733,7 @@ export interface components {
                 };
             };
             "POST /api/study/batches/{id}/items/{itemId}/reveal": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     items: {
                         reference?: {
@@ -3878,7 +3878,7 @@ export interface components {
                 };
             };
             "GET /api/library/{id}": {
-                response: components["schemas"]["src.contracts.LibraryDetail"];
+                response: components["schemas"]["src.contracts.api.LibraryDetail"];
             };
             "PUT /api/library/{id}": {
                 body: {
@@ -3955,7 +3955,7 @@ export interface components {
                 };
             };
             "POST /api/library/import-existing": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     imported: number;
                     ids: string[];
@@ -4004,13 +4004,13 @@ export interface components {
                     title: string;
                     createdAt: string;
                     updatedAt: string;
-                    draft: components["schemas"]["src.training.Draft"];
+                    draft: components["schemas"]["src.features.training.domain.Draft"];
                     reviews: {
                         id: string;
                         at: string;
                         action: string;
                         model: string;
-                        input: components["schemas"]["src.training.Draft"];
+                        input: components["schemas"]["src.features.training.domain.Draft"];
                         result: {
                             summary: string;
                             relevance: string;
@@ -4059,7 +4059,7 @@ export interface components {
                     /** @enum {string} */
                     topic?: "async" | "collections" | "requests" | "resources" | "state";
                     revealedAt?: string;
-                    turns?: components["schemas"]["src.training.Turn"][];
+                    turns?: components["schemas"]["src.features.training.domain.Turn"][];
                     finished?: boolean;
                     stopReason?: string;
                     debriefId?: string;
@@ -4102,13 +4102,13 @@ export interface components {
                     title: string;
                     createdAt: string;
                     updatedAt: string;
-                    draft: components["schemas"]["src.training.Draft"];
+                    draft: components["schemas"]["src.features.training.domain.Draft"];
                     reviews: {
                         id: string;
                         at: string;
                         action: string;
                         model: string;
-                        input: components["schemas"]["src.training.Draft"];
+                        input: components["schemas"]["src.features.training.domain.Draft"];
                         result: {
                             summary: string;
                             relevance: string;
@@ -4157,7 +4157,7 @@ export interface components {
                     /** @enum {string} */
                     topic?: "async" | "collections" | "requests" | "resources" | "state";
                     revealedAt?: string;
-                    turns?: components["schemas"]["src.training.Turn"][];
+                    turns?: components["schemas"]["src.features.training.domain.Turn"][];
                     finished?: boolean;
                     stopReason?: string;
                     debriefId?: string;
@@ -4210,7 +4210,7 @@ export interface components {
                 };
             };
             "POST /api/trainings/{id}/reveal": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     scenario?: {
                         description: string;
@@ -4234,13 +4234,13 @@ export interface components {
                     title: string;
                     createdAt: string;
                     updatedAt: string;
-                    draft: components["schemas"]["src.training.Draft"];
+                    draft: components["schemas"]["src.features.training.domain.Draft"];
                     reviews: {
                         id: string;
                         at: string;
                         action: string;
                         model: string;
-                        input: components["schemas"]["src.training.Draft"];
+                        input: components["schemas"]["src.features.training.domain.Draft"];
                         result: {
                             summary: string;
                             relevance: string;
@@ -4289,7 +4289,7 @@ export interface components {
                     /** @enum {string} */
                     topic?: "async" | "collections" | "requests" | "resources" | "state";
                     revealedAt?: string;
-                    turns?: components["schemas"]["src.training.Turn"][];
+                    turns?: components["schemas"]["src.features.training.domain.Turn"][];
                     finished?: boolean;
                     stopReason?: string;
                     debriefId?: string;
@@ -4297,23 +4297,23 @@ export interface components {
                 };
             };
             "POST /api/analysis": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     jobId: string;
                     chatId?: string;
                 };
             };
             "GET /api/jobs/{id}": {
-                response: components["schemas"]["src.contracts.JobInfo"];
+                response: components["schemas"]["src.contracts.api.JobInfo"];
             };
             "POST /api/jobs/{id}/abort": {
-                body: components["schemas"]["src.contracts.EmptyInput"];
+                body: components["schemas"]["src.contracts.api.EmptyInput"];
                 response: {
                     ok: boolean;
                 };
             };
         };
-        "src.contracts.PublicState": components["schemas"]["Omit_src.domain.State__chats___interviews___library___trainings___studyBatches___e082b86c3c"] & {
+        "src.contracts.api.PublicState": components["schemas"]["Omit_src.shared.persistence.state.State__chats___interviews___library___trainings___studyBatches___1c5f41c5dc"] & {
             interviews: {
                 sources: {
                     id: string;
@@ -4347,8 +4347,8 @@ export interface components {
                 /** @enum {string} */
                 language?: "en" | "ja" | "zh";
                 answers: components["schemas"]["Record_string_string__14902eed9d"];
-                reviews: components["schemas"]["src.interview.InterviewReview"][];
-                voiceSettings?: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+                reviews: components["schemas"]["src.features.interview.domain.InterviewReview"][];
+                voiceSettings?: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                     /** @enum {string} */
                     language?: "en" | "ja" | "zh";
                 };
@@ -4357,7 +4357,7 @@ export interface components {
                     at: string;
                     endedAt?: string;
                     synthetic?: boolean;
-                    settings: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+                    settings: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                         /** @enum {string} */
                         language?: "en" | "ja" | "zh";
                     };
@@ -4373,7 +4373,7 @@ export interface components {
                         completedAt?: string;
                     }[];
                 }[];
-                voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd"];
+                voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a"];
             }[];
             library: {
                 pageCount: number;
@@ -4427,13 +4427,13 @@ export interface components {
                 title: string;
                 createdAt: string;
                 updatedAt: string;
-                draft: components["schemas"]["src.training.Draft"];
+                draft: components["schemas"]["src.features.training.domain.Draft"];
                 reviews: {
                     id: string;
                     at: string;
                     action: string;
                     model: string;
-                    input: components["schemas"]["src.training.Draft"];
+                    input: components["schemas"]["src.features.training.domain.Draft"];
                     result: {
                         summary: string;
                         relevance: string;
@@ -4482,7 +4482,7 @@ export interface components {
                 /** @enum {string} */
                 topic?: "async" | "collections" | "requests" | "resources" | "state";
                 revealedAt?: string;
-                turns?: components["schemas"]["src.training.Turn"][];
+                turns?: components["schemas"]["src.features.training.domain.Turn"][];
                 finished?: boolean;
                 stopReason?: string;
                 debriefId?: string;
@@ -4563,12 +4563,12 @@ export interface components {
                 };
                 drafts: components["schemas"]["Record_string_string__14902eed9d"];
             }[];
-            languageDrills: components["schemas"]["src.language.LanguageDrill"][];
+            languageDrills: components["schemas"]["src.features.language.domain.LanguageDrill"][];
             interviewJobs: {
                 id: string;
                 title: string;
                 createdAt: string;
-                sources: components["schemas"]["src.interview.JobSource"][];
+                sources: components["schemas"]["src.features.interview.domain.JobSource"][];
                 warnings: string[];
             }[];
             study: {
@@ -4637,11 +4637,11 @@ export interface components {
                 }[];
             };
             analysisStale: boolean;
-            activeJob: components["schemas"]["src.contracts.ActiveJob"];
+            activeJob: components["schemas"]["src.contracts.api.ActiveJob"];
             reviewLabel: string;
         };
-        "Omit_src.domain.State__chats___interviews___library___trainings___studyBatches___e082b86c3c": {
-            problems: components["schemas"]["src.domain.Problem"][];
+        "Omit_src.shared.persistence.state.State__chats___interviews___library___trainings___studyBatches___1c5f41c5dc": {
+            problems: components["schemas"]["src.features.algorithm.domain.Problem"][];
             interviewMaterials?: {
                 resume: string[];
                 personal: string[];
@@ -4649,12 +4649,12 @@ export interface components {
             };
             /** @constant */
             version: 1;
-            languageDrills?: components["schemas"]["src.language.LanguageDrill"][];
+            languageDrills?: components["schemas"]["src.features.language.domain.LanguageDrill"][];
             interviewJobs?: {
                 id: string;
                 title: string;
                 createdAt: string;
-                sources: components["schemas"]["src.interview.JobSource"][];
+                sources: components["schemas"]["src.features.interview.domain.JobSource"][];
                 warnings: string[];
             }[];
             studyPoints?: {
@@ -4697,7 +4697,7 @@ export interface components {
                     lapses: number;
                 };
             }[];
-            analysis?: components["schemas"]["src.domain.Analysis"];
+            analysis?: components["schemas"]["src.features.algorithm.domain.Analysis"];
             settings?: {
                 model: string;
                 visibleModels?: string[];
@@ -4712,15 +4712,15 @@ export interface components {
                 userLanguage?: "en" | "ja" | "zh";
             };
         };
-        "src.contracts.ActiveJob": components["schemas"]["Pick_src.tasks.Job__id___kind___chatId___9b6b5c21a3"] | null;
-        "Pick_src.tasks.Job__id___kind___chatId___9b6b5c21a3": {
+        "src.contracts.api.ActiveJob": components["schemas"]["Pick_src.shared.tasks.executor.Job__id___kind___chatId___f86dfb3c57"] | null;
+        "Pick_src.shared.tasks.executor.Job__id___kind___chatId___f86dfb3c57": {
             id: string;
-            kind: components["schemas"]["Kind"];
+            kind: components["schemas"]["TaskKind"];
             chatId?: string;
         };
         /** @enum {string} */
-        Kind: "analysis" | "chat" | "generate" | "hint" | "interview" | "interview-review" | "language" | "library" | "review" | "study" | "study-import" | "study-review" | "teacher" | "training";
-        "Partial_Omit_src.contracts.Settings__model____a19a961ecc": {
+        TaskKind: "analysis" | "chat" | "generate" | "hint" | "interview" | "interview-review" | "language" | "library" | "review" | "study" | "study-import" | "study-review" | "teacher" | "training";
+        "Partial_Omit_src.contracts.api.Settings__model____0c1f599b99": {
             visibleModels?: string[];
             teacher?: {
                 /** @enum {string} */
@@ -4732,8 +4732,8 @@ export interface components {
             /** @enum {string} */
             userLanguage?: "en" | "ja" | "zh";
         };
-        "src.contracts.EmptyInput": Record<string, never>;
-        "Omit_src.chat.PageContext__record___capturedAt___9144430f49": {
+        "src.contracts.api.EmptyInput": Record<string, never>;
+        "Omit_src.features.chat.service.PageContext__record___capturedAt___51115b8517": {
             editor?: string;
             selectedText: string;
             title: string;
@@ -4745,7 +4745,7 @@ export interface components {
             visibleText: string;
             pdfPage?: number;
         };
-        "Partial_src.voice-options.VoiceSettings__1a12d658f9": {
+        "Partial_src.integrations.codex.options.VoiceSettings__9516919640": {
             model?: string;
             /** @enum {string} */
             voice?: "alloy" | "arbor" | "ash" | "ballad" | "breeze" | "cedar" | "coral" | "cove" | "echo" | "ember" | "juniper" | "maple" | "marin" | "sage" | "shimmer" | "sol" | "spruce" | "vale" | "verse";
@@ -4761,28 +4761,28 @@ export interface components {
             strict: string;
             lively: string;
         };
-        "src.contracts.VoiceStartInput": components["schemas"]["Partial_src.voice-options.VoiceSettings__1a12d658f9"] & {
+        "src.contracts.api.VoiceStartInput": components["schemas"]["Partial_src.integrations.codex.options.VoiceSettings__9516919640"] & {
             id: string;
             sdp: string;
             interviewId?: string;
             preview?: boolean;
             synthetic?: boolean;
         };
-        "Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a": {
+        "Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557": {
             title: string;
             category: components["schemas"]["Category"];
             facets: ("apply" | "explain" | "recall" | "write")[];
         };
-        "Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925": {
+        "Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc": {
             topic?: string;
             /** @enum {string} */
             language?: "dart" | "go" | "java" | "javascript" | "kotlin" | "python" | "swift" | "typescript";
             description?: string;
         };
-        "Pick_src.study.StudySelection__count___59db79ec8e": {
+        "Pick_src.features.study.service.StudySelection__count___1b25f81097": {
             count: number;
         };
-        "Partial_Omit_src.study.StudySelection__count____a8e03d19a8": {
+        "Partial_Omit_src.features.study.service.StudySelection__count____7318a27389": {
             /** @enum {string} */
             category?: "algorithm" | "all" | "concept" | "expression" | "language" | "tools";
             /** @enum {string} */
@@ -4798,7 +4798,7 @@ export interface components {
                 group: "all" | "data" | "delivery" | "design" | "generation" | "integration" | "operations" | "security" | "testing";
             };
         };
-        "src.contracts.LibraryDetail": {
+        "src.contracts.api.LibraryDetail": {
             pageCount: number;
             visionPages: number;
             textLength: number;
@@ -4828,16 +4828,16 @@ export interface components {
             revision: number;
         } & {
             extractedText: string;
-            pages?: components["schemas"]["Omit_src.library.LibraryPage__text___46a9f73794"][];
+            pages?: components["schemas"]["Omit_src.features.library.service.LibraryPage__text___194334aba3"][];
         };
-        "Omit_src.library.LibraryPage__text___46a9f73794": {
+        "Omit_src.features.library.service.LibraryPage__text___194334aba3": {
             number: number;
             vision: boolean;
             recognized?: boolean;
         };
         /** @enum {string} */
         Exclude_2: "compression" | "debrief" | "followup";
-        "src.contracts.JobInfo": components["schemas"]["Pick_src.tasks.Job__id___error___status___kind___5cd003bd99"] & {
+        "src.contracts.api.JobInfo": components["schemas"]["Pick_src.shared.tasks.executor.Job__id___error___kind___status___017af27d93"] & {
             result?: {
                 problemId?: string;
                 drillId?: string;
@@ -4857,14 +4857,14 @@ export interface components {
                 analysis?: boolean;
             };
         };
-        "Pick_src.tasks.Job__id___error___status___kind___5cd003bd99": {
+        "Pick_src.shared.tasks.executor.Job__id___error___kind___status___017af27d93": {
             id: string;
             error?: string;
+            kind: components["schemas"]["TaskKind"];
             /** @enum {string} */
             status: "aborted" | "done" | "error" | "running";
-            kind: components["schemas"]["Kind"];
         };
-        "src.contracts.ModelOutputs": {
+        "src.contracts.api.ModelOutputs": {
             problem: {
                 title: string;
                 description: string;
@@ -4876,7 +4876,7 @@ export interface components {
                 constraints: string[];
                 starterCode: string;
             };
-            hint: components["schemas"]["Pick_src.domain.Hint__question___observation___checkpoint___2c32215352"];
+            hint: components["schemas"]["Pick_src.features.algorithm.domain.Hint__question___observation___checkpoint___358e6a619d"];
             review: {
                 /** @enum {string} */
                 verdict: "needs-work" | "promising" | "solid";
@@ -4913,8 +4913,8 @@ export interface components {
                     pitfalls: string[];
                 }[];
             };
-            interview: components["schemas"]["Omit_src.interview.InterviewContent__questions___82cad7f866"] & {
-                questions: components["schemas"]["src.contracts.ModelQuestion"][];
+            interview: components["schemas"]["Omit_src.features.interview.domain.InterviewContent__questions___1752d60a19"] & {
+                questions: components["schemas"]["src.contracts.api.ModelQuestion"][];
             };
             interviewReview: {
                 summary: string;
@@ -4973,8 +4973,8 @@ export interface components {
             } & {
                 title: string;
             };
-            followup: components["schemas"]["Omit_src.training.FollowupResult__stopReason___next___39cb115409"] & {
-                next: components["schemas"]["src.contracts.ModelQuestion"] | null;
+            followup: components["schemas"]["Omit_src.features.training.domain.FollowupResult__stopReason___next___9c74a1d19c"] & {
+                next: components["schemas"]["src.contracts.api.ModelQuestion"] | null;
                 stopReason?: string;
             };
             compression: {
@@ -5025,7 +5025,7 @@ export interface components {
                     title?: string;
                     prompt: string;
                     starterCode?: string;
-                    reference: components["schemas"]["Omit_src.study.Reference__code___6b3a4e6104"] & {
+                    reference: components["schemas"]["Omit_src.features.study.service.Reference__code___ff2ec56fef"] & {
                         code?: string;
                     };
                 }[];
@@ -5040,7 +5040,7 @@ export interface components {
                 }[];
             };
             studyImport: {
-                points: (components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"])[];
+                points: (components["schemas"]["Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557"] & components["schemas"]["Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc"])[];
             };
             voiceTranslation: {
                 questions: {
@@ -5050,16 +5050,16 @@ export interface components {
                 }[];
             };
         };
-        "Pick_src.domain.Hint__question___observation___checkpoint___2c32215352": {
+        "Pick_src.features.algorithm.domain.Hint__question___observation___checkpoint___358e6a619d": {
             question: string;
             observation: string;
             checkpoint: string;
         };
-        "Omit_src.interview.InterviewContent__questions___82cad7f866": {
+        "Omit_src.features.interview.domain.InterviewContent__questions___1752d60a19": {
             title: string;
             introduction: string;
         };
-        "src.contracts.ModelQuestion": {
+        "src.contracts.api.ModelQuestion": {
             question: string;
             tips?: string[];
             /** @enum {string} */
@@ -5071,7 +5071,7 @@ export interface components {
             evidenceNote: string;
             sourceIds: string[];
         };
-        "Omit_src.training.FollowupResult__stopReason___next___39cb115409": {
+        "Omit_src.features.training.domain.FollowupResult__stopReason___next___9c74a1d19c": {
             feedback: {
                 summary: string;
                 technical: string;
@@ -5081,12 +5081,12 @@ export interface components {
                 keywords: string[];
             };
         };
-        "Omit_src.study.Reference__code___6b3a4e6104": {
-            requirements: string[];
+        "Omit_src.features.study.service.Reference__code___ff2ec56fef": {
             explanation: string;
+            requirements: string[];
             keywords: string[];
         };
-        "src.contracts.EventPayloads": {
+        "src.contracts.api.EventPayloads": {
             progress: {
                 message: string;
             };
@@ -5230,12 +5230,12 @@ export interface components {
             "interview-notice": {
                 message: string;
             };
-            ended: components["schemas"]["src.contracts.EmptyInput"];
+            ended: components["schemas"]["src.contracts.api.EmptyInput"];
         };
-        "src.codex-protocol.NativeContracts": {
+        "src.integrations.codex.protocol.NativeContracts": {
             requests: components["schemas"]["_initialize_src.generated.codex.InitializeParams.InitializeParams__thread_start__src.generated.codex.v2.ThreadStartParams.ThreadStartParams__09060cc6c3"];
             responses: components["schemas"]["_initialize_src.generated.codex.InitializeResponse.InitializeResponse__thread_start__src.generated.codex.v2.ThreadStartResponse.ThreadStartR_e261e5037f"];
-            notification: components["schemas"]["src.codex-protocol.NativeNotification"];
+            notification: components["schemas"]["src.integrations.codex.protocol.NativeNotification"];
         };
         "_initialize_src.generated.codex.InitializeParams.InitializeParams__thread_start__src.generated.codex.v2.ThreadStartParams.ThreadStartParams__09060cc6c3": {
             initialize: {
@@ -6322,7 +6322,7 @@ export interface components {
         "src.generated.codex.v2.ThreadRealtimeStopResponse.ThreadRealtimeStopResponse": Record<string, never>;
         /** @enum {string} */
         PlanType: "business" | "edu" | "edu_plus" | "edu_pro" | "ent26" | "enterprise" | "enterprise_cbp_automation" | "enterprise_cbp_usage_based" | "free" | "go" | "plus" | "pro" | "prolite" | "self_serve_business_prolite" | "self_serve_business_usage_based" | "team" | "unknown";
-        "src.codex-protocol.NativeNotification": {
+        "src.integrations.codex.protocol.NativeNotification": {
             /** @constant */
             method: "error";
             params: {
@@ -6672,7 +6672,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["src.contracts.PublicState"];
+                    "application/json": components["schemas"]["src.contracts.api.PublicState"];
                 };
             };
             /** @description Error */
@@ -7362,7 +7362,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Partial_Omit_src.contracts.Settings__model____a19a961ecc"];
+                "application/json": components["schemas"]["Partial_Omit_src.contracts.api.Settings__model____0c1f599b99"];
             };
         };
         responses: {
@@ -7483,7 +7483,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -7520,7 +7520,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -7708,7 +7708,7 @@ export interface operations {
                             mode?: "teacher";
                             problemId?: string;
                         }[];
-                        activeJob: components["schemas"]["src.contracts.ActiveJob"];
+                        activeJob: components["schemas"]["src.contracts.api.ActiveJob"];
                     };
                 };
             };
@@ -7734,7 +7734,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -7920,7 +7920,7 @@ export interface operations {
                 "application/json": {
                     id: string;
                     message: string;
-                    context: components["schemas"]["Omit_src.chat.PageContext__record___capturedAt___9144430f49"] & {
+                    context: components["schemas"]["Omit_src.features.chat.service.PageContext__record___capturedAt___51115b8517"] & {
                         capturedAt?: string;
                     };
                 };
@@ -8005,7 +8005,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -8248,7 +8248,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["src.domain.Problem"];
+                    "application/json": components["schemas"]["src.features.algorithm.domain.Problem"];
                 };
             };
             /** @description Error */
@@ -8447,7 +8447,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["src.language.LanguageDrill"];
+                    "application/json": components["schemas"]["src.features.language.domain.LanguageDrill"];
                 };
             };
             /** @description Error */
@@ -8515,7 +8515,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -8570,7 +8570,7 @@ export interface operations {
                         id: string;
                         title: string;
                         createdAt: string;
-                        sources: components["schemas"]["src.interview.JobSource"][];
+                        sources: components["schemas"]["src.features.interview.domain.JobSource"][];
                         warnings: string[];
                     };
                 };
@@ -8681,8 +8681,8 @@ export interface operations {
                         /** @enum {string} */
                         language?: "en" | "ja" | "zh";
                         answers: components["schemas"]["Record_string_string__14902eed9d"];
-                        reviews: components["schemas"]["src.interview.InterviewReview"][];
-                        voiceSettings?: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+                        reviews: components["schemas"]["src.features.interview.domain.InterviewReview"][];
+                        voiceSettings?: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                             /** @enum {string} */
                             language?: "en" | "ja" | "zh";
                         };
@@ -8691,7 +8691,7 @@ export interface operations {
                             at: string;
                             endedAt?: string;
                             synthetic?: boolean;
-                            settings: components["schemas"]["Omit_src.voice-options.VoiceSettings__language___cfad402f1b"] & {
+                            settings: components["schemas"]["Omit_src.integrations.codex.options.VoiceSettings__language___30d439c961"] & {
                                 /** @enum {string} */
                                 language?: "en" | "ja" | "zh";
                             };
@@ -8707,7 +8707,7 @@ export interface operations {
                                 completedAt?: string;
                             }[];
                         }[];
-                        voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.interview.VoiceContent___58a194fbbd"];
+                        voiceContents?: components["schemas"]["Partial_Record__zh___en___ja__src.features.interview.domain.VoiceContent___235edb4c7a"];
                     };
                 };
             };
@@ -8818,7 +8818,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Partial_src.voice-options.VoiceSettings__1a12d658f9"];
+                "application/json": components["schemas"]["Partial_src.integrations.codex.options.VoiceSettings__9516919640"];
             };
         };
         responses: {
@@ -9154,7 +9154,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.VoiceStartInput"];
+                "application/json": components["schemas"]["src.contracts.api.VoiceStartInput"];
             };
         };
         responses: {
@@ -9479,7 +9479,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -9670,7 +9670,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"] & components["schemas"]["Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"];
+                "application/json": components["schemas"]["Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557"] & components["schemas"]["Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc"];
             };
         };
         responses: {
@@ -9770,7 +9770,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Pick_src.study.StudySelection__count___59db79ec8e"] & components["schemas"]["Partial_Omit_src.study.StudySelection__count____a8e03d19a8"];
+                "application/json": components["schemas"]["Pick_src.features.study.service.StudySelection__count___1b25f81097"] & components["schemas"]["Partial_Omit_src.features.study.service.StudySelection__count____7318a27389"];
             };
         };
         responses: {
@@ -10000,7 +10000,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -10112,7 +10112,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -10352,7 +10352,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["src.contracts.LibraryDetail"];
+                    "application/json": components["schemas"]["src.contracts.api.LibraryDetail"];
                 };
             };
             /** @description Error */
@@ -10515,7 +10515,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -10635,13 +10635,13 @@ export interface operations {
                         title: string;
                         createdAt: string;
                         updatedAt: string;
-                        draft: components["schemas"]["src.training.Draft"];
+                        draft: components["schemas"]["src.features.training.domain.Draft"];
                         reviews: {
                             id: string;
                             at: string;
                             action: string;
                             model: string;
-                            input: components["schemas"]["src.training.Draft"];
+                            input: components["schemas"]["src.features.training.domain.Draft"];
                             result: {
                                 summary: string;
                                 relevance: string;
@@ -10690,7 +10690,7 @@ export interface operations {
                         /** @enum {string} */
                         topic?: "async" | "collections" | "requests" | "resources" | "state";
                         revealedAt?: string;
-                        turns?: components["schemas"]["src.training.Turn"][];
+                        turns?: components["schemas"]["src.features.training.domain.Turn"][];
                         finished?: boolean;
                         stopReason?: string;
                         debriefId?: string;
@@ -10794,13 +10794,13 @@ export interface operations {
                         title: string;
                         createdAt: string;
                         updatedAt: string;
-                        draft: components["schemas"]["src.training.Draft"];
+                        draft: components["schemas"]["src.features.training.domain.Draft"];
                         reviews: {
                             id: string;
                             at: string;
                             action: string;
                             model: string;
-                            input: components["schemas"]["src.training.Draft"];
+                            input: components["schemas"]["src.features.training.domain.Draft"];
                             result: {
                                 summary: string;
                                 relevance: string;
@@ -10849,7 +10849,7 @@ export interface operations {
                         /** @enum {string} */
                         topic?: "async" | "collections" | "requests" | "resources" | "state";
                         revealedAt?: string;
-                        turns?: components["schemas"]["src.training.Turn"][];
+                        turns?: components["schemas"]["src.features.training.domain.Turn"][];
                         finished?: boolean;
                         stopReason?: string;
                         debriefId?: string;
@@ -11091,7 +11091,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -11124,13 +11124,13 @@ export interface operations {
                         title: string;
                         createdAt: string;
                         updatedAt: string;
-                        draft: components["schemas"]["src.training.Draft"];
+                        draft: components["schemas"]["src.features.training.domain.Draft"];
                         reviews: {
                             id: string;
                             at: string;
                             action: string;
                             model: string;
-                            input: components["schemas"]["src.training.Draft"];
+                            input: components["schemas"]["src.features.training.domain.Draft"];
                             result: {
                                 summary: string;
                                 relevance: string;
@@ -11179,7 +11179,7 @@ export interface operations {
                         /** @enum {string} */
                         topic?: "async" | "collections" | "requests" | "resources" | "state";
                         revealedAt?: string;
-                        turns?: components["schemas"]["src.training.Turn"][];
+                        turns?: components["schemas"]["src.features.training.domain.Turn"][];
                         finished?: boolean;
                         stopReason?: string;
                         debriefId?: string;
@@ -11209,7 +11209,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {
@@ -11255,7 +11255,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["src.contracts.JobInfo"];
+                    "application/json": components["schemas"]["src.contracts.api.JobInfo"];
                 };
             };
             /** @description Error */
@@ -11282,7 +11282,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["src.contracts.EmptyInput"];
+                "application/json": components["schemas"]["src.contracts.api.EmptyInput"];
             };
         };
         responses: {

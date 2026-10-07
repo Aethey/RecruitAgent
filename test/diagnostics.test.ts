@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Diagnostics, diagnosticError, loggedAI } from '../src/diagnostics.ts';
+import { Diagnostics, diagnosticError, loggedAI } from '../src/shared/diagnostics.ts';
 import { FakeAI, fakeInterviewSources } from './fixtures.ts';
 import { FakeVoiceRpc } from './voice-fixtures.ts';
-import { createApp } from '../src/server.ts';
+import { createApp } from '../src/app/http.ts';
 
 async function fixture(t: test.TestContext, maxBytes?: number) {
   const dir = await mkdtemp(join(tmpdir(),'codex-diagnostics-test-'));

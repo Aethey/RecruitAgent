@@ -50,9 +50,9 @@ export const schemas = {
     ]
   },
   "hint": {
-    "$ref": "#/definitions/Pick_src.domain.Hint__question___observation___checkpoint___2c32215352",
+    "$ref": "#/definitions/Pick_src.features.algorithm.domain.Hint__question___observation___checkpoint___358e6a619d",
     "definitions": {
-      "Pick_src.domain.Hint__question___observation___checkpoint___2c32215352": {
+      "Pick_src.features.algorithm.domain.Hint__question___observation___checkpoint___358e6a619d": {
         "type": "object",
         "properties": {
           "question": {
@@ -251,7 +251,7 @@ export const schemas = {
   "interview": {
     "allOf": [
       {
-        "$ref": "#/definitions/Omit_src.interview.InterviewContent__questions___82cad7f866"
+        "$ref": "#/definitions/Omit_src.features.interview.domain.InterviewContent__questions___1752d60a19"
       },
       {
         "type": "object",
@@ -259,7 +259,7 @@ export const schemas = {
           "questions": {
             "type": "array",
             "items": {
-              "$ref": "#/definitions/src.contracts.ModelQuestion"
+              "$ref": "#/definitions/src.contracts.api.ModelQuestion"
             }
           }
         },
@@ -269,7 +269,7 @@ export const schemas = {
       }
     ],
     "definitions": {
-      "Omit_src.interview.InterviewContent__questions___82cad7f866": {
+      "Omit_src.features.interview.domain.InterviewContent__questions___1752d60a19": {
         "type": "object",
         "properties": {
           "title": {
@@ -284,7 +284,7 @@ export const schemas = {
           "title"
         ]
       },
-      "src.contracts.ModelQuestion": {
+      "src.contracts.api.ModelQuestion": {
         "type": "object",
         "properties": {
           "question": {
@@ -617,7 +617,7 @@ export const schemas = {
   "followup": {
     "allOf": [
       {
-        "$ref": "#/definitions/Omit_src.training.FollowupResult__stopReason___next___39cb115409"
+        "$ref": "#/definitions/Omit_src.features.training.domain.FollowupResult__stopReason___next___9c74a1d19c"
       },
       {
         "type": "object",
@@ -625,7 +625,7 @@ export const schemas = {
           "next": {
             "anyOf": [
               {
-                "$ref": "#/definitions/src.contracts.ModelQuestion"
+                "$ref": "#/definitions/src.contracts.api.ModelQuestion"
               },
               {
                 "type": "null"
@@ -642,7 +642,7 @@ export const schemas = {
       }
     ],
     "definitions": {
-      "Omit_src.training.FollowupResult__stopReason___next___39cb115409": {
+      "Omit_src.features.training.domain.FollowupResult__stopReason___next___9c74a1d19c": {
         "type": "object",
         "properties": {
           "feedback": {
@@ -687,7 +687,7 @@ export const schemas = {
           "feedback"
         ]
       },
-      "src.contracts.ModelQuestion": {
+      "src.contracts.api.ModelQuestion": {
         "type": "object",
         "properties": {
           "question": {
@@ -964,7 +964,7 @@ export const schemas = {
             "reference": {
               "allOf": [
                 {
-                  "$ref": "#/definitions/Omit_src.study.Reference__code___6b3a4e6104"
+                  "$ref": "#/definitions/Omit_src.features.study.service.Reference__code___ff2ec56fef"
                 },
                 {
                   "type": "object",
@@ -999,17 +999,17 @@ export const schemas = {
         ],
         "type": "string"
       },
-      "Omit_src.study.Reference__code___6b3a4e6104": {
+      "Omit_src.features.study.service.Reference__code___ff2ec56fef": {
         "type": "object",
         "properties": {
+          "explanation": {
+            "type": "string"
+          },
           "requirements": {
             "type": "array",
             "items": {
               "type": "string"
             }
-          },
-          "explanation": {
-            "type": "string"
           },
           "keywords": {
             "type": "array",
@@ -1076,10 +1076,10 @@ export const schemas = {
         "items": {
           "allOf": [
             {
-              "$ref": "#/definitions/Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a"
+              "$ref": "#/definitions/Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557"
             },
             {
-              "$ref": "#/definitions/Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925"
+              "$ref": "#/definitions/Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc"
             }
           ]
         }
@@ -1089,7 +1089,7 @@ export const schemas = {
       "points"
     ],
     "definitions": {
-      "Pick_src.study.KnowledgePoint__title___category___facets___8bdac8147a": {
+      "Pick_src.features.study.service.KnowledgePoint__title___category___facets___7774a75557": {
         "type": "object",
         "properties": {
           "title": {
@@ -1127,7 +1127,7 @@ export const schemas = {
         ],
         "type": "string"
       },
-      "Partial_Pick_src.study.KnowledgePoint__topic___language___description____f271924925": {
+      "Partial_Pick_src.features.study.service.KnowledgePoint__topic___language___description____2e88e036dc": {
         "type": "object",
         "properties": {
           "topic": {

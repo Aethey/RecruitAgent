@@ -1,4 +1,4 @@
-import type { InterviewSet } from '../src/interview.ts';
+import type { InterviewSet } from '../src/features/interview/domain.ts';
 
 export const interviewFixture: InterviewSet = {
   id:'voice-interview-fixture',type:'technical',topic:'architecture',count:3,title:'支付状态重构 · 语音面试',introduction:'隔离测试问题',language:'zh',createdAt:'2026-10-04T00:00:00.000Z',updatedAt:'2026-10-04T00:00:00.000Z',

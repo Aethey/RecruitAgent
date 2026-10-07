@@ -4,7 +4,7 @@ import { dirname, join, resolve, relative, sep } from 'node:path';
 import { root } from './runtime.mjs';
 
 // Only application code, synthetic fixtures and public documentation enter a release.
-const entries = ['src', 'scripts', 'test', 'public', 'examples', '.github', 'docs/release-checklist.md', 'docs/code-generation.md', 'docs/images/interview-practice.jpg', 'docs/images/algorithm-practice.jpg', 'docs/images/technical-breadth.jpg', 'docs/images/knowledge-cards.jpg', 'docs/images/voice-interview.png', 'README.md', 'README.en.md', 'README.zh-CN.md', 'LICENSE', 'CHANGELOG.md', 'package.json', 'package-lock.json', 'tsconfig.json', 'tsconfig.web.json', '.gitignore', '.gitattributes', '.env.example', 'start.command', 'start.sh', 'start.cmd'];
+const entries = ['src', 'scripts', 'test', 'public', 'examples', '.github', 'docs/images/interview-practice.jpg', 'docs/images/algorithm-practice.jpg', 'docs/images/technical-breadth.jpg', 'docs/images/knowledge-cards.jpg', 'docs/images/voice-interview.png', 'README.md', 'README.en.md', 'README.zh-CN.md', 'LICENSE', 'CHANGELOG.md', 'package.json', 'package-lock.json', 'tsconfig.json', 'tsconfig.web.json', '.gitignore', '.gitattributes', '.env.example', 'start.command', 'start.sh', 'start.cmd'];
 const files = [];
 async function visit(path) {
   const name = relative(root, path).split(sep).join('/');
@@ -36,6 +36,6 @@ try {
       await cp(resolve(root, file.path), target);
     }
     await writeFile(resolve(output, 'release-manifest.json'), JSON.stringify({ version: pkg.version, files }, null, 2));
-    console.log(`可公开的项目目录：${output}\n${files.length} 个文件，内容校验已通过。上传此目录，或在原项目中依照 docs/release-checklist.md 检查待提交文件。`);
+    console.log(`可公开的项目目录：${output}\n${files.length} 个文件，内容校验已通过。上传此目录，或在原项目中检查待提交文件。`);
   }
 } catch (error) { console.error(error.message); process.exitCode = 1; }

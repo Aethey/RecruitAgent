@@ -10,5 +10,8 @@ data/
 /backups/
 /release/
 /docs/*.local.md
+/docs/code-generation.md
+/docs/release-checklist.md
+/docs/voice-naturalness-followup.md
 *.log
 .DS_Store

@@ -6,23 +6,61 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
   let epoch = 0, peer = null, channel = null, stream = null, context = null, destination = null, events = null, timer = null, source = null, silence = null, verified = false, ending = null;
   let verifying = false, verifyAfter = 0, lastDiagnostic = '', diagnosticsReady = false;
   let inputNode = null, outputNode = null, inputMeter = null, outputMeter = null, meterTimer = null, lastOutput = 0, lastInput = 0, outputQuietAt = 0, resumeAt = 0, protocol = 'live', controlQueue = /** @type {Promise<unknown>} */ (Promise.resolve());
-  const initial = () => ({phase:'idle',id:null,busy:false,muted:false,test:false,recording:false,audioVerified:false,inputLevel:0,outputLevel:0,outputSpeaking:false,inputSpeaking:false,processing:false,backendThinking:false,delegating:false,processingSince:0,processingElapsed:0,paused:false,stopped:false,resuming:false,controlBusy:false,playbackBlocked:false,revision:0,notice:'',error:'',elapsed:0,sent:0,received:0,energy:0,needsPlayback:false});
+  const initial = () => ({phase:'idle',interaction:'idle',id:null,busy:false,muted:false,test:false,recording:false,audioVerified:false,inputLevel:0,outputLevel:0,outputSpeaking:false,inputSpeaking:false,processing:false,backendThinking:false,delegating:false,processingSince:0,processingElapsed:0,paused:false,stopped:false,resuming:false,controlBusy:false,playbackBlocked:false,revision:0,notice:'',error:'',elapsed:0,sent:0,received:0,energy:0,needsPlayback:false});
   let state = initial();
-  let inputRevision = 0, activeResponseRevision = null, activeResponseId = null;
-  const responseRevisions = new Map();
+  let inputRevision = 0, activeInputId = null, inputEndedRevision = -1, awaitingReplyRevision = null, serviceVad = false;
+  /** @type {{id: string | null, revision: number, pending: boolean, speaking: boolean, completedAt: number, audioStarted: boolean, audioStopped: boolean} | null} */
+  let reply = null;
+  /** @type {{id: string | null, revision: number} | null} */
+  let backendTurn = null;
+  const responseRevisions = new Map(), inputRevisions = new Map(), retiredResponses = new Set(), retiredBackendTurns = new Set();
+  function remember(set, id) {
+    if (!id) return;
+    set.add(id); if (set.size > 100) set.delete(set.values().next().value);
+  }
+  function resetInteraction() {
+    for (const id of responseRevisions.keys()) remember(retiredResponses,id);
+    remember(retiredBackendTurns,backendTurn?.id);
+    responseRevisions.clear(); reply = null; backendTurn = null; activeInputId = null; awaitingReplyRevision = null;
+    inputEndedRevision = inputRevision;
+  }
+  function syncInteraction() {
+    const active = state.phase === 'connected' && !state.paused && !state.error;
+    if (state.inputSpeaking && awaitingReplyRevision != null && awaitingReplyRevision < inputRevision && !reply && !state.backendThinking && !state.delegating) awaitingReplyRevision = null;
+    const waiting = awaitingReplyRevision != null || reply?.pending || state.backendThinking || state.delegating;
+    const speaking = active && !state.playbackBlocked && !state.needsPlayback && (reply?.speaking || state.outputSpeaking);
+    const interaction = !active ? 'idle' : speaking ? 'speaking' : waiting || reply ? 'processing' : state.recording && !state.muted && !state.test ? 'recording' : 'idle';
+    state = {...state,interaction,processing:interaction === 'processing',processingSince:active && (waiting || reply) ? state.processingSince || Date.now() : 0};
+    if (!state.processingSince) state.processingElapsed = 0;
+  }
   /** @param {import('../src/contracts/api.ts').VoiceDiagnosticInput['event']} event */
   function diagnostic(event, detail = {}, id = state.id) {
     if (id && diagnosticsReady) void api(`/api/voice/sessions/${id}/diagnostics`,'POST',{event,...detail}).catch(() => {});
   }
   const notify = () => {
+    syncInteraction();
     const detail = {phase:state.phase,recording:state.recording,processing:state.processing,backendThinking:state.backendThinking,paused:state.paused,outputSpeaking:state.outputSpeaking,audioVerified:state.audioVerified,revision:state.revision,message:state.error || state.notice};
     const key = JSON.stringify(detail);
     if (state.id && key !== lastDiagnostic) { lastDiagnostic = key; diagnostic('state',detail); }
     onState({ ...state });
   };
-  const pending = (backendThinking = state.backendThinking) => {
-    state = {...state,inputSpeaking:false,processing:true,backendThinking,processingSince:state.processingSince || Date.now(),notice:''}; notify();
-  };
+  function finishInput() {
+    if (inputEndedRevision === inputRevision) return;
+    inputEndedRevision = inputRevision; awaitingReplyRevision = inputRevision;
+    state = {...state,inputSpeaking:false,notice:''}; notify();
+  }
+  function startInput(id = null) {
+    if (id && inputRevisions.has(id)) return;
+    // A VAD event and a native user turn can describe the same utterance.
+    if (!(id && state.inputSpeaking && !activeInputId)) {
+      inputRevision++; onEvent('input-started',{inputRevision});
+    }
+    activeInputId = id;
+    if (id) { inputRevisions.set(id,inputRevision); if (inputRevisions.size > 100) inputRevisions.delete(inputRevisions.keys().next().value); }
+    // Real new speech supersedes an unstarted reply, but cannot settle running work.
+    if (!reply && !state.backendThinking && !state.delegating) awaitingReplyRevision = null;
+    lastInput = Date.now(); state = {...state,inputSpeaking:true,notice:''}; notify();
+  }
   const cancelEvents = new Set();
   function send(type) {
     if (channel?.readyState !== 'open') return;
@@ -30,21 +68,39 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     channel.send(JSON.stringify({type,event_id}));
   }
   function receiveActivity(value) {
-    if (state.paused && !['failed','timeout'].includes(value.activity)) return;
-    if (value.activity === 'thinking') pending(true);
-    else if (value.activity === 'waiting') pending();
-    else if (value.activity === 'processing') { state = {...state,backendThinking:false,delegating:false,processingSince:0}; pending(false); }
-    else if (['failed','timeout'].includes(value.activity)) {
-      state = {...state,backendThinking:false,delegating:false,processing:false,processingSince:0,notice:errorText(value.message) || t("ui.thisTurnFailedYouCanStopThisTurn")}; notify();
-      if (value.activity === 'timeout' && !state.paused) void stopCurrent(value.message);
-    } else if (value.activity === 'listening') { state = {...state,backendThinking:false,notice:''}; notify(); }
+    if (state.paused || value.turnId && retiredBackendTurns.has(value.turnId)) return;
+    if (value.activity === 'thinking') {
+      if (backendTurn && backendTurn.id === (value.turnId ?? null)) return;
+      if (activeInputId || state.inputSpeaking) finishInput();
+      if (backendTurn && backendTurn.id !== value.turnId) remember(retiredBackendTurns,backendTurn.id);
+      backendTurn = {id:value.turnId ?? null,revision:inputRevision};
+      state = {...state,inputSpeaking:false,backendThinking:true,notice:''};
+    } else if (value.activity === 'waiting') {
+      awaitingReplyRevision = inputRevision; state = {...state,inputSpeaking:false,notice:''};
+    } else if (['processing','failed','timeout','stopped'].includes(value.activity)) {
+      if (value.turnId && value.turnId !== backendTurn?.id) return;
+      const revision = backendTurn?.revision ?? inputRevision;
+      remember(retiredBackendTurns,backendTurn?.id); backendTurn = null;
+      state = {...state,backendThinking:false,delegating:false};
+      if (value.activity === 'processing') {
+        // The backend result still needs a realtime reply; it is not a listening boundary.
+        if (!reply && revision === inputRevision) awaitingReplyRevision = revision;
+        state = {...state,...(revision === inputRevision ? {inputSpeaking:false} : {}),notice:''};
+      } else {
+        // A failed delegated task can be followed by another task in the same user turn.
+        if (!activeInputId && !reply && awaitingReplyRevision === revision) awaitingReplyRevision = null;
+        state = {...state,notice:value.activity === 'stopped' ? '' : errorText(value.message) || t("ui.thisTurnFailedYouCanStopThisTurn")};
+      }
+    } else if (value.activity === 'listening') {
+      // A control acknowledgement does not complete a response already in progress.
+      state = {...state,notice:''};
+    }
+    notify();
+    if (value.activity === 'timeout') void stopCurrent(value.message);
   }
   function receiveTranscript(line) {
-    if (!state.paused) {
-      if (line.role === 'assistant' && state.notice) { state = {...state,notice:''}; notify(); }
-      if (line.role === 'user' && line.done) pending();
-      if (line.role === 'assistant' && line.done && line.source !== 'segment' && !state.backendThinking && !state.delegating) { state = {...state,processing:false,processingSince:0,processingElapsed:0}; notify(); }
-    }
+    // Transcript parts can arrive after speech or playback has finished.
+    // They update text only and never start or complete a conversational turn.
     onTranscript(line);
   }
   function receiveMessage(message) {
@@ -57,30 +113,43 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     }
     if (state.paused) return;
     const type = message.type, role = message.turn?.role;
-    if (type === 'input_audio_buffer.speech_started' || type === 'turn.created' && role === 'user') {
-      inputRevision++; onEvent('input-started',{inputRevision});
-    }
     const responseId = message.response?.id ?? message.turn?.id ?? message.response_id;
+    if (type === 'input_audio_buffer.speech_started') { serviceVad = true; startInput(); return; }
+    if (type === 'turn.created' && role === 'user') { startInput(responseId); return; }
+    if (type === 'input_audio_buffer.speech_stopped') { serviceVad = true; finishInput(); return; }
+    if (type === 'turn.done' && role === 'user') {
+      if (responseId && inputRevisions.get(responseId) !== inputRevision) return;
+      activeInputId = null; finishInput(); return;
+    }
     if (type === 'response.created' || type === 'turn.created' && role === 'assistant') {
-      state = {...state,notice:''};
-      activeResponseRevision = inputRevision;
-      activeResponseId = responseId ?? null;
+      if (responseId && (retiredResponses.has(responseId) || responseRevisions.has(responseId))) return;
+      state = {...state,inputSpeaking:false,notice:''};
+      inputEndedRevision = inputRevision;
+      reply = {id:responseId ?? null,revision:inputRevision,pending:true,speaking:false,completedAt:0,audioStarted:false,audioStopped:false};
       if (responseId) responseRevisions.set(responseId,inputRevision);
+      if (awaitingReplyRevision === inputRevision) awaitingReplyRevision = null;
       onEvent('response-started',{inputRevision,...(responseId ? {responseId} : {})});
+      notify(); return;
     }
     if (type === 'response.done' || type === 'turn.done' && role === 'assistant') {
-      const revision = responseId ? responseRevisions.get(responseId) : activeResponseRevision;
+      const revision = responseId ? responseRevisions.get(responseId) : reply?.pending ? reply.revision : null;
       const status = message.response?.status ?? message.turn?.status ?? message.status;
       if (revision != null && !['cancelled','canceled','failed','error','incomplete'].includes(status) && !message.error) onEvent('response-ended',{inputRevision:revision,...(responseId ? {responseId} : {})});
-      if (responseId) responseRevisions.delete(responseId);
-      if (!responseId || responseId === activeResponseId) { activeResponseRevision = null; activeResponseId = null; }
+      if (responseId) { responseRevisions.delete(responseId); remember(retiredResponses,responseId); }
+      if (revision == null || !reply || responseId && responseId !== reply.id) return;
+      reply.pending = false; reply.completedAt = Date.now();
+      if (awaitingReplyRevision != null && awaitingReplyRevision <= revision) awaitingReplyRevision = null;
+      notify(); return;
     }
-    if (type === 'input_audio_buffer.speech_started' || type === 'input_transcript.added' || type === 'session.input_transcript.delta' || (type === 'turn.created' && role === 'user')) {
-      lastInput = Date.now(); state = {...state,inputSpeaking:true,processing:false,processingSince:state.delegating || state.backendThinking ? state.processingSince : 0,notice:''}; notify();
-    } else if (type === 'delegation.created' || type === 'session.delegation.created') { state = {...state,delegating:true}; pending(); }
-    else if (type === 'input_audio_buffer.speech_stopped' || type === 'response.created' || (type === 'turn.done' && role === 'user')) pending();
-    else if (type === 'output_audio_buffer.stopped' || type === 'output_audio_buffer.cleared' || type === 'response.done' || (type === 'turn.done' && role === 'assistant')) {
-      if (!state.backendThinking && !state.delegating) { state = {...state,processing:false,processingSince:0,processingElapsed:0}; notify(); }
+    if (type === 'delegation.created' || type === 'session.delegation.created') {
+      if (activeInputId || state.inputSpeaking) finishInput();
+      state = {...state,inputSpeaking:false,delegating:true,notice:''}; notify();
+    } else if (type === 'output_audio_buffer.started' || type === 'output_audio_buffer.stopped' || type === 'output_audio_buffer.cleared') {
+      if (!reply || responseId && responseId !== reply.id) return;
+      if (type === 'output_audio_buffer.started') reply.audioStarted = true;
+      reply.audioStopped = type !== 'output_audio_buffer.started';
+      // A buffer stop can end one audio part while the response is still generating.
+      notify();
     }
   }
   function meter(media) {
@@ -109,7 +178,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     ending = (async () => {
       diagnostic('transport',{type:'ending',message:error});
       diagnosticsReady = false;
-      epoch++; const id = state.id; release();
+      epoch++; const id = state.id; resetInteraction(); release();
       resumeAt = 0;
       state = { ...state, id:null, busy:true, recording:false, inputLevel:0, outputLevel:0, outputSpeaking:false, inputSpeaking:false,processing:false,backendThinking:false,delegating:false,paused:false,stopped:false,resuming:false,controlBusy:false,phase:error ? 'error' : 'ending', error:errorText(error), needsPlayback:false }; notify();
       if (id) {
@@ -150,7 +219,8 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
   async function start(options = {}, test = false) {
     if (ending || state.busy || state.id) return;
     const token = ++epoch; verified = false; verifying = false; verifyAfter = 0; lastDiagnostic = ''; diagnosticsReady = false;
-    lastOutput = 0; lastInput = 0; outputQuietAt = 0; resumeAt = 0; cancelEvents.clear(); responseRevisions.clear(); inputRevision = 0; activeResponseRevision = null; activeResponseId = null; controlQueue = /** @type {Promise<unknown>} */ (Promise.resolve());
+    resetInteraction(); retiredResponses.clear(); retiredBackendTurns.clear(); inputRevisions.clear(); inputRevision = 0; inputEndedRevision = -1; serviceVad = false;
+    lastOutput = 0; lastInput = 0; outputQuietAt = 0; resumeAt = 0; cancelEvents.clear(); controlQueue = /** @type {Promise<unknown>} */ (Promise.resolve());
     protocol = options.model?.startsWith('gpt-realtime') ? 'realtime' : 'live';
     state = {...initial(),phase:'connecting',busy:true,test}; notify();
     const output = audio(); if (output) output.muted = false;
@@ -184,11 +254,19 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
         const recording = state.phase === 'connected' && !state.paused && !state.test && !state.muted && stream?.getAudioTracks().some(track => track.readyState === 'live' && track.enabled);
         const inputLevel = recording ? level(inputMeter) : 0, outputLevel = state.playbackBlocked ? 0 : rawOutput;
         if (outputLevel > .025) lastOutput = now;
-        const outputSpeaking = !state.paused && !state.playbackBlocked && state.phase === 'connected' && now-lastOutput < 550;
-        if (outputSpeaking) state = {...state,notice:''};
-        if (inputLevel > .04) { lastInput = now; state = {...state,inputSpeaking:true,processing:false,processingSince:state.delegating || state.backendThinking ? state.processingSince : 0,notice:''}; }
-        else if (state.inputSpeaking && now-lastInput > 900 && !state.paused) pending();
-        if ((outputSpeaking || state.outputSpeaking && !outputSpeaking) && !state.backendThinking && !state.delegating) state = {...state,processing:false,processingSince:0,processingElapsed:0};
+        const audibleOutput = !state.paused && !state.playbackBlocked && !state.needsPlayback && state.phase === 'connected' && now-lastOutput < 550;
+        if (audibleOutput && reply) reply.speaking = true;
+        // Keep speaking through pauses inside a reply. Finish only after generation
+        // has ended and the output buffer (or, for Live, its measured tail) has drained.
+        if (reply && !reply.pending && !state.needsPlayback && (!reply.audioStarted || reply.audioStopped) && outputQuietAt && now-Math.max(outputQuietAt,reply.completedAt,lastOutput) > 700) reply = null;
+        const outputSpeaking = audibleOutput || !!reply?.speaking;
+        if (audibleOutput) state = {...state,notice:''};
+        // The meter cannot open a new input turn or cancel a pending reply.
+        // Live has no VAD stop event, so silence is a fallback for confirmed input only.
+        if (!serviceVad && state.inputSpeaking && state.interaction === 'recording' && !state.paused) {
+          if (inputLevel > .04) lastInput = now;
+          else if (now-lastInput > 900) finishInput();
+        }
         state = {...state,recording:!!recording,inputLevel,outputLevel,outputSpeaking}; notify();
       },100);
       peer = new RTCPeerConnection(); stream.getTracks().forEach(track => peer.addTrack(track,stream));
@@ -296,7 +374,7 @@ export function createVoiceSession({ api, audio, onState = () => {}, onTranscrip
     if (action === 'stop' && (state.controlBusy || state.paused)) return;
     if (action === 'pause' && state.paused && !state.stopped && !state.resuming) return;
     const token = epoch, id = state.id, revision = state.revision+1; resumeAt = 0; lastOutput = 0; outputQuietAt = 0;
-    responseRevisions.clear(); activeResponseRevision = null; activeResponseId = null;
+    resetInteraction();
     let cancelled = false;
     state = {...state,paused:true,stopped:action === 'stop',resuming:action === 'stop',controlBusy:true,playbackBlocked:true,revision,recording:false,inputSpeaking:false,inputLevel:0,outputLevel:0,outputSpeaking:false,processing:false,backendThinking:false,delegating:false,processingSince:0,processingElapsed:0,needsPlayback:false,notice};
     stream?.getAudioTracks().forEach(track => { track.enabled = false; }); source?.stop(); source = null;

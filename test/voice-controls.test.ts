@@ -33,3 +33,18 @@ test('a delayed catalog response cannot overwrite the result of a newer reload',
   const old=controls.load(); await controls.load(); complete(catalog('failed')); await old;
   assert.match(nodes.get('test-selection-note').textContent,/已收到语音/);
 });
+
+test('compact interview controls omit model diagnostics and report load failures through the log callback',async t => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis,'document'), nodes = new Map<string,any>();
+  for (const name of ['settings','model','voice','tone','preview']) nodes.set('test-'+name,{innerHTML:'',textContent:'',value:'',disabled:false,setAttribute() {}});
+  Object.defineProperty(globalThis,'document',{configurable:true,value:{getElementById:(id:string)=>nodes.get(id)}});
+  t.after(()=>{ if(previous) Object.defineProperty(globalThis,'document',previous); else Reflect.deleteProperty(globalThis,'document'); });
+  const errors: Error[] = [], catalog = {models:[{id:'gpt-live-1-codex',group:'v1',label:'GPT-Live',check:{status:'failed',message:'PRIVATE_DIAGNOSTIC'}}],voices:{v1:['cove'],defaultV1:'cove'},tones:{natural:'Natural'}};
+  let fail = false;
+  const controls = createVoiceControls({prefix:'test',compact:true,preview:true,escape:String,api:async()=> { if (fail) throw new Error('PRIVATE_DIAGNOSTIC'); return catalog; },onError:(error:Error)=>errors.push(error)});
+  t.after(()=>controls.dispose());
+  assert(!controls.render().includes('selection-note')); assert(!controls.render().includes('models'));
+  await controls.bind(); assert(!nodes.get('test-model').innerHTML.includes('失败')); assert(!nodes.get('test-model').innerHTML.includes('PRIVATE_DIAGNOSTIC'));
+  controls.setPreview(true); controls.setPreview(false);
+  fail = true; await controls.load(); assert.equal(errors.length,1); assert.equal(errors[0].message,'PRIVATE_DIAGNOSTIC');
+});

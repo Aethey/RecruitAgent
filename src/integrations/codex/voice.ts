@@ -298,21 +298,23 @@ export class CodexVoice {
           if (event.method === "turn/started") {
             const turn = event.params.turn as {id?:string} | undefined;
             if (!turn?.id) return;
-            if (session.suspended) { session.activeTurnId = turn.id; void rpc!.request("turn/interrupt",{threadId:session.threadId!,turnId:turn.id}).catch(error => this.emit(id,"voice-activity",{activity:"failed",message:voiceError(error)})); return; }
+            if (session.suspended) { session.activeTurnId = turn.id; void rpc!.request("turn/interrupt",{threadId:session.threadId!,turnId:turn.id}).catch(error => this.emit(id,"voice-activity",{activity:"failed",turnId:turn.id,message:voiceError(error)})); return; }
             session.activeTurnId = turn.id; clearTimeout(session.turnTimer);
             this.emit(id,"voice-activity",{activity:"thinking",turnId:turn.id});
             session.turnTimer = setTimeout(() => {
-              void this.control(id,{action:"stop"}).then(() => this.emit(id,"voice-activity",{activity:"timeout",message:formatMessage('zh', "ui.thisTurnTimedOutAndHasBeenStopped")})).catch(error => this.emit(id,"voice-activity",{activity:"failed",message:voiceError(error)}));
+              if (session.ended || session.activeTurnId !== turn.id) return;
+              void this.control(id,{action:"stop"}).then(() => this.emit(id,"voice-activity",{activity:"timeout",turnId:turn.id,message:formatMessage('zh', "ui.thisTurnTimedOutAndHasBeenStopped")})).catch(error => this.emit(id,"voice-activity",{activity:"failed",turnId:turn.id,message:voiceError(error)}));
             },45000);
           } else if (event.method === "turn/completed") {
             const turn = event.params.turn as {id?:string;status?:string;error?:{message?:string}} | undefined;
             if (!turn?.id || turn.id !== session.activeTurnId) return;
             clearTimeout(session.turnTimer); session.activeTurnId = undefined;
-            this.emit(id,"voice-activity",{activity:turn.status === "failed" || turn.error ? "failed" : turn.status === "interrupted" ? "stopped" : "processing",message:turn.error?.message ? voiceError(turn.error.message) : turn.status === "failed" ? formatMessage('zh', "ui.backgroundProcessingFailedStopThisRoundThenSpeak") : ""});
+            this.emit(id,"voice-activity",{activity:turn.status === "failed" || turn.error ? "failed" : turn.status === "interrupted" ? "stopped" : "processing",turnId:turn.id,message:turn.error?.message ? voiceError(turn.error.message) : turn.status === "failed" ? formatMessage('zh', "ui.backgroundProcessingFailedStopThisRoundThenSpeak") : ""});
           } else if (event.method === "error" && session.activeTurnId && event.params.willRetry !== true) {
+            const turnId = session.activeTurnId;
             clearTimeout(session.turnTimer); session.activeTurnId = undefined;
             const error = event.params.error as {message?:string} | undefined;
-            this.emit(id,"voice-activity",{activity:"failed",message:voiceError(error?.message ?? formatMessage('zh', "ui.backgroundProcessingFailedStopThisRoundThenSpeak"))});
+            this.emit(id,"voice-activity",{activity:"failed",turnId,message:voiceError(error?.message ?? formatMessage('zh', "ui.backgroundProcessingFailedStopThisRoundThenSpeak"))});
           } else if (event.method === "thread/realtime/sdp" && typeof event.params.sdp === "string") { clearTimeout(timer); resolveAnswer(event.params.sdp); }
           else if (event.method === "thread/realtime/error" || event.method === "voice/processExited") {
             const message = voiceError(event.params.message ?? formatMessage('zh', "voice.connectionFailed"));

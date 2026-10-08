@@ -1,6 +1,6 @@
 import { t, languageTag, catalogText, errorText } from './i18n.js';
 /** @param {{api: import('../src/generated/api-client.js').ApiClient, [option: string]: any}} options */
-export function createVoiceControls({ api, escape, prefix, initial = {}, tips = false, language = false, preview = false, onChange = () => {}, onTest = () => {}, onPreview = () => {}, onError = () => {} }) {
+export function createVoiceControls({ api, escape, prefix, initial = {}, tips = false, language = false, preview = false, compact = false, onChange = () => {}, onTest = () => {}, onPreview = () => {}, onError = () => {} }) {
   let settings = {model:'gpt-live-1-codex',voice:'cove',tone:'natural',showTips:true,...(language ? {language:'zh'} : {}),...initial}, catalog = null, alive = true, locked = false, previewActive = false;
   let changes = Promise.resolve(), revision = 0;
   let session = null, loadRevision = 0;
@@ -15,10 +15,10 @@ export function createVoiceControls({ api, escape, prefix, initial = {}, tips = 
         <div class="field"><label for="${prefix}-tone">${t("ui.tone")}</label><select id="${prefix}-tone" disabled></select></div>
         ${language ? `<div class="field"><label for="${prefix}-language">${t("ui.interviewLanguage")}</label><select id="${prefix}-language" disabled></select><small class="voice-language-note">${t("ui.languageForQuestionsTipsAndFeedback")}</small></div>` : ''}
       </div>
-      ${preview ? `<p id="${prefix}-preview-note" class="voice-note voice-preview-note" role="status">${t("ui.previewTheCurrentVoiceToneAndLanguageWithout")}</p>` : ''}
+      ${preview && !compact ? `<p id="${prefix}-preview-note" class="voice-note voice-preview-note" role="status">${t("ui.previewTheCurrentVoiceToneAndLanguageWithout")}</p>` : ''}
       ${tips ? `<label class="voice-tips-choice"><input id="${prefix}-tips" type="checkbox" ${settings.showTips ? 'checked' : ''}> ${t("ui.showAnswerKeyPointTips")}</label><p class="voice-note">${t("ui.whenEnabledShowsOneOrMoreKeyPoints")}</p>` : ''}
-      <p id="${prefix}-selection-note" class="voice-note" role="status">${t("ui.queryingLocalCodex")}</p><button type="button" class="button flat small" id="${prefix}-test-model" disabled>${t("ui.checkSelectedVoiceModel")}</button>
-      <details class="voice-model-directory"><summary>${t("ui.viewVoiceModelsAndValidationResults")}</summary><p class="voice-note">${t("ui.codexDoesNotProvideACompleteAccountModel")}</p><div id="${prefix}-models"></div><a href="https://developers.openai.com/api/docs/models" target="_blank" rel="noreferrer">${t("ui.officialModelCatalog")}</a></details>
+      ${compact ? '' : `<p id="${prefix}-selection-note" class="voice-note" role="status">${t("ui.queryingLocalCodex")}</p><button type="button" class="button flat small" id="${prefix}-test-model" disabled>${t("ui.checkSelectedVoiceModel")}</button>
+      <details class="voice-model-directory"><summary>${t("ui.viewVoiceModelsAndValidationResults")}</summary><p class="voice-note">${t("ui.codexDoesNotProvideACompleteAccountModel")}</p><div id="${prefix}-models"></div><a href="https://developers.openai.com/api/docs/models" target="_blank" rel="noreferrer">${t("ui.officialModelCatalog")}</a></details>`}
     </section>`;
   }
   function update() {
@@ -26,15 +26,15 @@ export function createVoiceControls({ api, escape, prefix, initial = {}, tips = 
     const model = catalog.models.find(m => m.id === settings.model) ?? catalog.models[0]; settings.model = model.id;
     const voices = catalog.voices[model.group];
     if (!voices.includes(settings.voice)) settings.voice = model.group === 'v1' ? catalog.voices.defaultV1 : catalog.voices.defaultV2;
-    $('model').innerHTML = catalog.models.map(m => `<option value="`+escape(m.id)+'">'+escape(catalogText(m.label))+' · '+(m.id === settings.model && session?.phase === 'connected' ? t(session.audioVerified ? 'ui.voiceReceived' : 'ui.onCall') : status(m.check))+`</option>`).join(''); (/** @type {HTMLInputElement} */ ($('model'))).value = settings.model;
+    $('model').innerHTML = catalog.models.map(m => `<option value="`+escape(m.id)+'">'+escape(catalogText(m.label))+(compact ? '' : ' · '+(m.id === settings.model && session?.phase === 'connected' ? t(session.audioVerified ? 'ui.voiceReceived' : 'ui.onCall') : status(m.check)))+`</option>`).join(''); (/** @type {HTMLInputElement} */ ($('model'))).value = settings.model;
     $('voice').innerHTML = voices.map(voice => `<option value="`+escape(voice)+'">'+escape(voice[0].toUpperCase()+voice.slice(1))+`</option>`).join(''); (/** @type {HTMLInputElement} */ ($('voice'))).value = settings.voice;
     $('tone').innerHTML = Object.entries(catalog.tones).map(([id,label]) => `<option value="`+escape(id)+'">'+escape(catalogText(label))+`</option>`).join(''); (/** @type {HTMLInputElement} */ ($('tone'))).value = settings.tone;
     if (language) { $('language').innerHTML = Object.entries(catalog.languages).map(([id,label]) => `<option value="`+escape(id)+'">'+escape(label)+`</option>`).join(''); (/** @type {HTMLInputElement} */ ($('language'))).value = settings.language; }
     for (const name of ['model','voice','tone','language','test-model']) if ($(name)) (/** @type {HTMLButtonElement} */ ($(name))).disabled = locked;
     if (preview) { (/** @type {HTMLButtonElement} */ ($('preview'))).disabled = locked && !previewActive; $('preview').textContent = previewActive ? t("ui.stopPreview") : t("ui.previewVoice"); $('preview').setAttribute('aria-pressed',String(previewActive)); }
     if ($('tips')) (/** @type {HTMLInputElement} */ ($('tips'))).checked = settings.showTips;
-    $('selection-note').textContent = session?.phase === 'connected' ? model.id+' · '+t(session.audioVerified ? 'ui.voiceReceived' : 'voice.connectedAwaitingAudio') : model.id+' · '+status(model.check)+(model.check?.at ? ' · '+new Date(model.check.at).toLocaleString(languageTag()) : t("ui.youCanTestTheConnectionFirst"))+(model.check?.status === 'failed' && model.check.message ? ' · '+errorText(model.check.message) : '');
-    $('models').innerHTML = `<table class="voice-model-table"><thead><tr><th>${t("ui.model")}</th><th>${t("ui.validationResult")}</th></tr></thead><tbody>`+catalog.models.map(m => `<tr><td>`+escape(m.id)+`<small>`+(m.source === 'codex' ? t("ui.nativeCodex") : t("ui.officialAPICandidates"))+`</small></td><td>`+status(m.check)+(m.check?.message ? `<p>`+escape(errorText(m.check.message))+`</p>` : '')+`</td></tr>`).join('')+`</tbody></table>`;
+    if ($('selection-note')) $('selection-note').textContent = session?.phase === 'connected' ? model.id+' · '+t(session.audioVerified ? 'ui.voiceReceived' : 'voice.connectedAwaitingAudio') : model.id+' · '+status(model.check)+(model.check?.at ? ' · '+new Date(model.check.at).toLocaleString(languageTag()) : t("ui.youCanTestTheConnectionFirst"))+(model.check?.status === 'failed' && model.check.message ? ' · '+errorText(model.check.message) : '');
+    if ($('models')) $('models').innerHTML = `<table class="voice-model-table"><thead><tr><th>${t("ui.model")}</th><th>${t("ui.validationResult")}</th></tr></thead><tbody>`+catalog.models.map(m => `<tr><td>`+escape(m.id)+`<small>`+(m.source === 'codex' ? t("ui.nativeCodex") : t("ui.officialAPICandidates"))+`</small></td><td>`+status(m.check)+(m.check?.message ? `<p>`+escape(errorText(m.check.message))+`</p>` : '')+`</td></tr>`).join('')+`</tbody></table>`;
   }
   async function load() {
     const current = ++loadRevision;
@@ -53,7 +53,7 @@ export function createVoiceControls({ api, escape, prefix, initial = {}, tips = 
       });
     };
     for (const name of ['model','voice','tone','language','tips']) if ($(name)) $(name).onchange = () => { void changed(); };
-    $('test-model').onclick = () => { void changes.then(() => onTest({...settings})).catch(onError); };
+    if ($('test-model')) $('test-model').onclick = () => { void changes.then(() => onTest({...settings})).catch(onError); };
     if (preview) $('preview').onclick = () => { void (previewActive ? Promise.resolve(onPreview({...settings})) : changes.then(() => onPreview({...settings}))).catch(onError); };
     return load();
   }

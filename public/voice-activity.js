@@ -2,6 +2,20 @@ import { t, message, catalogText, errorText } from './i18n.js';
 
 const stages = {waiting:t("ui.readyToStart"),asking:t("ui.codexIsAskingAQuestion"),answering:t("ui.listeningToYourAnswer"),feedback:t("ui.codexIsGivingFeedback"),assisting:t("ui.codexIsRespondingToYourRequest"),ready:t("ui.youCanAnswerAgainOrMoveToThe"),ended:t("ui.thisInterviewHasEnded")};
 
+// Interview presentation is independent of transport, timeout and backend substates.
+export function interviewActivity(state, preparing = false) {
+  const result = (activity, label, level = 0) => ({activity, label, level});
+  if (preparing || state.phase === 'connecting' || state.phase === 'ending' || state.controlBusy || state.resuming) return result('processing', t('interview.activity.processing'));
+  if (state.phase !== 'connected' || state.paused || state.error) return result('idle', '');
+  // Live sessions provide the conversation phase. The fallback keeps this display
+  // helper compatible with snapshots created before interaction was included.
+  const interaction = state.interaction ?? (state.outputSpeaking && !state.playbackBlocked && !state.needsPlayback ? 'speaking' : state.processing || state.backendThinking || state.delegating ? 'processing' : state.recording ? 'recording' : 'idle');
+  if (interaction === 'speaking' && !state.playbackBlocked && !state.needsPlayback) return result('speaking', t('interview.activity.speaking'), state.outputLevel ?? 0);
+  if (interaction === 'processing') return result('processing', t('interview.activity.processing'));
+  if (interaction === 'recording' && state.recording && !state.muted && !state.test) return result('recording', t('interview.activity.recording'), state.inputLevel ?? 0);
+  return result('idle', '');
+}
+
 export function voiceActivity(state, mode = 'interview', stage = 'waiting', preparing = false) {
   const level = Math.max(state.inputLevel ?? 0,state.outputLevel ?? 0);
   const capturing = !!state.recording && !state.test && mode !== 'preview' && mode !== 'probe';

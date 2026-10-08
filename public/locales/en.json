@@ -2915,5 +2915,15 @@
   "ui.officialDocumentation": "Official documentation",
   "study.jvmDomain": "Kotlin / Java / Android",
   "voice.lastCheckFailed": "Last check failed",
-  "voice.connectedAwaitingAudio": "Current call connected, awaiting audio verification"
+  "voice.connectedAwaitingAudio": "Current call connected, awaiting audio verification",
+  "interview.activity.recording": "Recording",
+  "interview.activity.processing": "Loading",
+  "interview.activity.speaking": "AI speaking",
+  "interview.transcript.latest": "↓ Back to latest",
+  "interview.voice.content": "This question",
+  "interview.voice.conversation": "Conversation",
+  "interview.voice.feedback": "Feedback",
+  "interview.voice.ai": "AI interviewer",
+  "interview.voice.interrupt": "Interrupt AI",
+  "interview.voice.privacy": "Audio and privacy"
 }

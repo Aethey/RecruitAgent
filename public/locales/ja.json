@@ -2915,5 +2915,15 @@
   "ui.officialDocumentation": "公式資料",
   "study.jvmDomain": "Kotlin / Java / Android",
   "voice.lastCheckFailed": "前回の確認に失敗",
-  "voice.connectedAwaitingAudio": "今回の通話は接続済み、音声の確認待ち"
+  "voice.connectedAwaitingAudio": "今回の通話は接続済み、音声の確認待ち",
+  "interview.activity.recording": "録音中",
+  "interview.activity.processing": "処理中",
+  "interview.activity.speaking": "AI 発話中",
+  "interview.transcript.latest": "↓ 最新に戻る",
+  "interview.voice.content": "この問題の記録",
+  "interview.voice.conversation": "会話",
+  "interview.voice.feedback": "フィードバック",
+  "interview.voice.ai": "AI 面接官",
+  "interview.voice.interrupt": "AI の発話を止める",
+  "interview.voice.privacy": "音声とプライバシー"
 }

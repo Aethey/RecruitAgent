@@ -2,7 +2,30 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 // The labels must follow microphone capture, not transcripts or a running timer.
 // @ts-ignore Browser module has no TypeScript declarations.
-import { voiceActivity } from '../public/voice-activity.js';
+import { voiceActivity, interviewActivity } from '../public/voice-activity.js';
+
+test('interview substates collapse to exactly three stable labels without exposing errors or elapsed time', () => {
+  const live = {phase:'connected',recording:true,inputLevel:.4,outputLevel:.7};
+  assert.equal(interviewActivity(live).label, '录音中');
+  for (const extra of [{processing:true}, {backendThinking:true}, {delegating:true}, {processing:true,processingElapsed:20}, {processing:true,processingElapsed:44}]) {
+    const activity = interviewActivity({...live,...extra});
+    assert.equal(activity.activity, 'processing'); assert.equal(activity.label, '思考中');
+  }
+  for (const extra of [{phase:'connecting'}, {phase:'ending'}, {paused:true,resuming:true,controlBusy:true}]) assert.equal(interviewActivity({...live,...extra}).label, '思考中');
+  assert.equal(interviewActivity(live,true).label, '思考中');
+  const speaking = interviewActivity({...live,outputSpeaking:true,backendThinking:true,processing:true});
+  assert.equal(speaking.activity, 'speaking'); assert.equal(speaking.label, '说话中'); assert.equal(speaking.level, .7);
+  assert.equal(interviewActivity({...live,notice:'PRIVATE_DIAGNOSTIC'}).label, '录音中');
+});
+
+test('inactive capture and blocked playback never claim that the interview is recording or speaking', () => {
+  const live = {phase:'connected',recording:true};
+  for (const extra of [{phase:'idle'}, {phase:'ended'}, {phase:'error',error:'PRIVATE_DIAGNOSTIC'}, {paused:true}, {muted:true}, {test:true}, {recording:false}]) {
+    const activity = interviewActivity({...live,...extra});
+    assert.equal(activity.activity, 'idle'); assert.equal(activity.label, '');
+  }
+  for (const extra of [{needsPlayback:true}, {playbackBlocked:true}]) assert.notEqual(interviewActivity({...live,outputSpeaking:true,...extra}).activity,'speaking');
+});
 
 test('recording animation follows a connected live microphone and stops when muted, ended or failed',() => {
   const live = {phase:'connected',recording:true,muted:false,test:false,inputLevel:.4,outputLevel:0,outputSpeaking:false};

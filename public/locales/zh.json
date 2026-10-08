@@ -2915,5 +2915,15 @@
   "ui.officialDocumentation": "官方资料",
   "study.jvmDomain": "Kotlin / Java / Android",
   "voice.lastCheckFailed": "上次检查失败",
-  "voice.connectedAwaitingAudio": "本次通话已连接，等待音频验证"
+  "voice.connectedAwaitingAudio": "本次通话已连接，等待音频验证",
+  "interview.activity.recording": "录音中",
+  "interview.activity.processing": "处理中",
+  "interview.activity.speaking": "AI 说话中",
+  "interview.transcript.latest": "↓ 回到最新",
+  "interview.voice.content": "本题记录",
+  "interview.voice.conversation": "对话",
+  "interview.voice.feedback": "点评",
+  "interview.voice.ai": "AI 面试官",
+  "interview.voice.interrupt": "打断 AI",
+  "interview.voice.privacy": "语音与隐私"
 }

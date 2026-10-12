@@ -9,12 +9,12 @@ test('interview substates collapse to exactly three stable labels without exposi
   assert.equal(interviewActivity(live).label, '录音中');
   for (const extra of [{processing:true}, {backendThinking:true}, {delegating:true}, {processing:true,processingElapsed:20}, {processing:true,processingElapsed:44}]) {
     const activity = interviewActivity({...live,...extra});
-    assert.equal(activity.activity, 'processing'); assert.equal(activity.label, '思考中');
+    assert.equal(activity.activity, 'processing'); assert.equal(activity.label, '处理中');
   }
-  for (const extra of [{phase:'connecting'}, {phase:'ending'}, {paused:true,resuming:true,controlBusy:true}]) assert.equal(interviewActivity({...live,...extra}).label, '思考中');
-  assert.equal(interviewActivity(live,true).label, '思考中');
+  for (const extra of [{phase:'connecting'}, {phase:'ending'}, {paused:true,resuming:true,controlBusy:true}]) assert.equal(interviewActivity({...live,...extra}).label, '处理中');
+  assert.equal(interviewActivity(live,true).label, '处理中');
   const speaking = interviewActivity({...live,outputSpeaking:true,backendThinking:true,processing:true});
-  assert.equal(speaking.activity, 'speaking'); assert.equal(speaking.label, '说话中'); assert.equal(speaking.level, .7);
+  assert.equal(speaking.activity, 'speaking'); assert.equal(speaking.label, 'AI 说话中'); assert.equal(speaking.level, .7);
   assert.equal(interviewActivity({...live,notice:'PRIVATE_DIAGNOSTIC'}).label, '录音中');
 });
 

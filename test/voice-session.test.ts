@@ -129,8 +129,11 @@ test('stop cancels the current reply and automatically restores listening after 
   await tick(800);
   assert.equal(session.state().paused,false); assert.equal(output.muted,false); assert.equal(tracks[0].enabled,true); assert.equal(session.state().id,id);
   assert.equal(session.state().recording,true); assert.equal(session.state().controlBusy,false);
-  message({type:'response.created'}); assert.equal(session.state().processing,true);
-  event('voice-activity',{activity:'failed',message:'无法核对'}); assert.equal(session.state().notice,'无法核对'); assert.equal(session.state().processing,false);
+  message({type:'response.created',response:{id:'resumed'}}); assert.equal(session.state().processing,true);
+  // A failed backend task does not complete the realtime reply it belongs to.
+  event('voice-activity',{activity:'failed',message:'无法核对'}); assert.equal(session.state().notice,'无法核对'); assert.equal(session.state().processing,true);
+  message({type:'response.done',response:{id:'resumed',status:'completed'}});
+  await tick(800); assert.equal(session.state().processing,false); assert.equal(session.state().recording,true);
   assert.equal(counts().microphoneRequests,1);
 });
 
@@ -258,12 +261,17 @@ test('native turns without transcript completion still expose one complete respo
 });
 
 test('a completed native transcript segment does not clear processing before the actual response ends',async t => {
-  const {session,message,event} = browserFixture(t);
+  const {session,message,event,tick} = browserFixture(t);
   await session.start({},false);
   message({type:'response.created',response:{id:'segments'}});
   event('transcript',{role:'assistant',text:'第一段。',done:true,source:'segment'});
   assert.equal(session.state().processing,true);
   message({type:'response.done',response:{id:'segments',status:'completed'}});
+  // Generation completion still waits for the output tail to drain.
+  assert.equal(session.state().processing,true);
+  await tick();
+  assert.equal(session.state().processing,true);
+  await tick(800);
   assert.equal(session.state().processing,false);
 });
 

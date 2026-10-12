@@ -205,16 +205,16 @@ export function createEntertainment({ escape, pageHeading }) {
     // Model updates and completed background jobs can rerender the app. Keep the active card.
     if (root?.isConnected) return;
     dispose();
-    element('#page').innerHTML = pageHeading(t("chrome.aLittleCuriosityALittleMagic"), t("ui.exploreCards"), t("ui.letKnowledgeEmergeFromTheMistPickA"), `<span class="ent-heading-tag">${t("entertainment.knowledgeCards", { length: KNOWLEDGE_CARDS.length })}</span>`) + `
+    element('#page').innerHTML = pageHeading(t("ui.exploreCards"), t("pages.cardsIntro"), `<span class="ent-heading-tag">${t("entertainment.knowledgeCards", { length: KNOWLEDGE_CARDS.length })}</span>`) + `
       <section id="ent-scene" class="ent-scene" data-phase="idle" aria-label="${t("ui.knowledgeCardExploration")}">
         <canvas class="ent-smoke" aria-hidden="true"></canvas><div class="ent-stars" aria-hidden="true"></div><div class="ent-reveal" aria-hidden="true"></div>
-        <div class="ent-room-header"><span class="ent-room-title"><span aria-hidden="true">✧</span> ${t("chrome.theKnowledgeRoom")}</span><button id="ent-stop" class="ent-text-button" type="button" hidden>${t("ui.backToStart")}</button><span class="ent-room-note">${t("ui.followYourCuriosity")}</span></div>
+        <div class="ent-room-header"><span class="ent-room-title"><span aria-hidden="true">✧</span> ${t("chrome.theKnowledgeRoom")}</span><button id="ent-stop" class="ent-text-button" type="button" hidden>${t("ui.backToStart")}</button></div>
         <div class="ent-categories" role="group" aria-label="${t("ui.domains")}">
           ${[['all', t("ui.all"), KNOWLEDGE_CARDS.length], ...Object.entries(CARD_CATEGORIES).map(([id, meta]) => [id, catalogText(meta.label), countFor(id)])].map(([id, label, count]) => `<button type="button" data-ent-category="${id}" aria-pressed="${category === id}">${label}<small>${count}</small></button>`).join('')}
         </div>
         <div id="ent-intro" class="ent-intro">
-          <div class="ent-intro-deck" aria-hidden="true"><span class="ent-preview-card ent-preview-left">{ }</span><span class="ent-preview-card ent-preview-right">⌘</span><span class="ent-preview-card ent-preview-main"><small>${t("chrome.aLittleDiscovery")}</small><span>?</span><i>${t("ui.theAnswerIsOnTheOtherSide")}</i></span><span class="ent-orbit-star">✧</span></div>
-          <span class="ent-intro-eyebrow">${t("chrome.turnCuriosityIntoDiscovery")}</span><h2>${t("ui.turnKnowledgeIntoALittleFun")}</h2><p>${t("ui.takeYourTimeThinkFirst")}<br>${t("ui.thenFlipToSeeTheAnswer")}</p>
+          <div class="ent-intro-deck" aria-hidden="true"><span class="ent-preview-card ent-preview-left">{ }</span><span class="ent-preview-card ent-preview-right">⌘</span><span class="ent-preview-card ent-preview-main"><span>?</span><i>${t("ui.theAnswerIsOnTheOtherSide")}</i></span><span class="ent-orbit-star">✧</span></div>
+          <h2>${t("ui.knowledgeCardExploration")}</h2><p>${t("pages.cardsGuide")}</p>
           <button id="ent-start" class="ent-start" type="button">${t("ui.startExploring")} <span aria-hidden="true">↗</span></button>
           <small id="ent-start-note">${t("entertainment.knowledgeCardsRandomOrder", { value2: countFor(category) })}</small><p id="ent-opening-status" class="visually-hidden" role="status" hidden>${t("ui.theMistIsClearingYourCardsAreComing")}</p>
         </div>

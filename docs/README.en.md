@@ -16,7 +16,7 @@ Released under the MIT license. Documents, learning records and login credential
 
 ## Screenshots
 
-These screenshots show the Japanese interface. The voice interview image is cropped from the running app and contains no personal documents or account identifiers. The other images use an isolated demo environment. `Test Model` is a demo model.
+These screenshots show the Japanese interface in an isolated demo environment. Interview questions, answers, and feedback are samples. `Test Model` is a demo model.
 
 ### Interview preparation
 
@@ -26,9 +26,9 @@ Choose an interview type and topic, then prepare questions using the documents y
 
 ### Voice interview
 
-Choose the interview language, voice and tone, then answer Codex's questions by voice. Read the answer transcript and feedback on the same page.
+Answer interview questions by voice. View questions, answer tips, and saved answer transcripts and feedback.
 
-![Japanese voice interview: voice settings, question, answer and feedback](images/voice-interview.png)
+![Japanese voice interview record: question, saved answer and feedback](images/voice-interview.png)
 
 ### Algorithm practice
 
@@ -44,9 +44,9 @@ Choose a technical field and topic to review your knowledge.
 
 ### Knowledge cards
 
-Choose a category and start exploring the knowledge cards.
+Browse knowledge cards by category and click a card to switch between its question and answer.
 
-![Japanese knowledge card entry: categories and exploration](images/knowledge-cards.jpg)
+![Japanese knowledge cards: design pattern answers and key points](images/knowledge-cards.jpg)
 
 ## Download and launch
 

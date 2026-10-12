@@ -267,7 +267,7 @@ export function createVoiceInterview({ api, escape, pageHeading, date, getState 
       }
       return result;
     },onPreview:settings => preview(settings)});
-    element('#page').innerHTML = pageHeading(t("chrome.voiceInterview"),escape(interviewTitle(set)),t("ui.codexAsksQuestionsByVoiceAndYouAnswer"),`<a class="button flat" href="#interview">${t("ui.chooseNextSet")}</a>`)+
+    element('#page').innerHTML = pageHeading(escape(interviewTitle(set)),t("pages.voiceInterviewIntro"),`<a class="button flat" href="#interview">${t("ui.chooseNextSet")}</a>`)+
       `<details class="interview-settings"><summary>${t('ui.voiceSettings')}</summary>${controls.render()}
         <details class="voice-interview-test"><summary>${t("ui.testVoiceInterviewWithoutAMicrophone")}</summary><p class="voice-note">${t("ui.useASyntheticAnswerWithNoClearConclusion")}</p><button id="interview-voice-test" class="button flat small" type="button" disabled>${t("ui.connectToTheInterviewWithSyntheticSpeech")}</button><button id="interview-voice-sample" class="button flat small" type="button" hidden disabled>${t("ui.playSynthesizedAnswer")}</button></details>
       </details>`+
